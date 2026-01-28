@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="745.0" prefWidth="1215.0" spacing="10.0" style="-fx-padding: 25;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/25" fx:controller="com.krisapps.incomeutility_v2.IncomeUtilityController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+   <children>
+      <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="KrisApps Income Utility v2.0">
+         <font>
+            <Font name="System Bold" size="22.0" />
+         </font>
+      </Label>
+      <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" spacing="10.0" styleClass="utility-view" VBox.vgrow="ALWAYS">
+         <children>
+            <VBox maxHeight="1.7976931348623157E308" maxWidth="250.0" minHeight="-Infinity" minWidth="200.0" styleClass="utility-view-selector" HBox.hgrow="SOMETIMES">
+               <children>
+                  <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Available utilities">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
+                     <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </padding>
+                  </VBox>
+               </children>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+            </VBox>
+            <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" styleClass="utility-view-primary" HBox.hgrow="ALWAYS">
+               <children>
+                  <VBox fx:id="pricerPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" StackPane.alignment="TOP_LEFT">
+                     <children>
+                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Pricer">
+                           <font>
+                              <Font name="System Bold" size="16.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
+                     <children>
+                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
+                           <font>
+                              <Font name="System Bold" size="16.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
+                     <children>
+                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
+                           <font>
+                              <Font name="System Bold" size="16.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
+                     <children>
+                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
+                           <font>
+                              <Font name="System Bold" size="16.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
+                     <children>
+                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
+                           <font>
+                              <Font name="System Bold" size="16.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
+                     <children>
+                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
+                           <font>
+                              <Font name="System Bold" size="16.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
+                     <children>
+                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
+                           <font>
+                              <Font name="System Bold" size="16.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+               </children>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+            </StackPane>
+         </children>
+      </HBox>
+   </children>
+   <stylesheets>
+      <URL value="@stylesheets/main.css" />
+      <URL value="@stylesheets/utilities.css" />
+   </stylesheets>
+</VBox>

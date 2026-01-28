@@ -1,0 +1,9 @@
+* {
+    -fx-font-family: "Segoe UI" !important;
+}
+
+.split-pane-divider {
+    -fx-background-color: "gray";
+    -fx-fill-width: 1px;
+    -fx-padding: 0 1 0 0;
+}
