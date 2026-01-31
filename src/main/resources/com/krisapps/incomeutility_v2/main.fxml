@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="745.0" prefWidth="1215.0" spacing="10.0" style="-fx-padding: 25;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/25" fx:controller="com.krisapps.incomeutility_v2.IncomeUtilityController">
+<VBox prefHeight="745.0" prefWidth="1215.0" spacing="10.0" style="-fx-padding: 25;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.krisapps.incomeutility_v2.IncomeUtilityController">
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
     </padding>
@@ -18,100 +20,99 @@
             <Font name="System Bold" size="22.0" />
          </font>
       </Label>
-      <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" spacing="10.0" styleClass="utility-view" VBox.vgrow="ALWAYS">
+      <VBox styleClass="utility-view">
          <children>
-            <VBox maxHeight="1.7976931348623157E308" maxWidth="250.0" minHeight="-Infinity" minWidth="200.0" styleClass="utility-view-selector" HBox.hgrow="SOMETIMES">
-               <children>
-                  <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Available utilities">
-                     <font>
-                        <Font name="System Bold" size="16.0" />
-                     </font>
-                  </Label>
-                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
-                     <padding>
-                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                     </padding>
-                  </VBox>
-               </children>
+            <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Available utilities">
+               <font>
+                  <Font name="System Bold" size="22.0" />
+               </font>
+            </Label>
+            <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Click on the utility to open it, or shift-click to bring the selected utility to the front">
                <padding>
-                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                  <Insets bottom="5.0" />
                </padding>
-            </VBox>
-            <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" styleClass="utility-view-primary" HBox.hgrow="ALWAYS">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            <TilePane alignment="CENTER_LEFT" hgap="20.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" styleClass="utility-container" tileAlignment="CENTER_LEFT" vgap="40.0">
                <children>
-                  <VBox fx:id="pricerPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" StackPane.alignment="TOP_LEFT">
+                  <VBox fx:id="mimoCell" alignment="CENTER" styleClass="utility-cell">
                      <children>
-                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Pricer">
+                        <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../../../../../../Pictures/profile_logo.jpg" />
+                           </image>
+                        </ImageView>
+                        <Label alignment="CENTER" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Money In Money Out">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
                            <font>
                               <Font name="System Bold" size="16.0" />
                            </font>
+                           <styleClass>
+                              <String fx:value="medium-label" />
+                              <String fx:value="bold" />
+                           </styleClass>
                         </Label>
                      </children>
                   </VBox>
-                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
+                  <VBox fx:id="pricerCell" alignment="CENTER" styleClass="utility-cell">
                      <children>
-                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
+                        <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../../../../../../Pictures/profile_logo.jpg" />
+                           </image>
+                        </ImageView>
+                        <Label alignment="CENTER" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Pricer">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
                            <font>
                               <Font name="System Bold" size="16.0" />
                            </font>
+                           <styleClass>
+                              <String fx:value="medium-label" />
+                              <String fx:value="bold" />
+                           </styleClass>
                         </Label>
                      </children>
                   </VBox>
-                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
+                  <VBox fx:id="subscriptionsCell" alignment="CENTER" styleClass="utility-cell">
                      <children>
-                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
+                        <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../../../../../../Pictures/profile_logo.jpg" />
+                           </image>
+                        </ImageView>
+                        <Label alignment="CENTER" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Subscriptions">
+                           <padding>
+                              <Insets top="5.0" />
+                           </padding>
                            <font>
                               <Font name="System Bold" size="16.0" />
                            </font>
-                        </Label>
-                     </children>
-                  </VBox>
-                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
-                     <children>
-                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
-                           <font>
-                              <Font name="System Bold" size="16.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </VBox>
-                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
-                     <children>
-                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
-                           <font>
-                              <Font name="System Bold" size="16.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </VBox>
-                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
-                     <children>
-                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
-                           <font>
-                              <Font name="System Bold" size="16.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </VBox>
-                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" visible="false" StackPane.alignment="TOP_LEFT">
-                     <children>
-                        <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Utility name">
-                           <font>
-                              <Font name="System Bold" size="16.0" />
-                           </font>
+                           <styleClass>
+                              <String fx:value="medium-label" />
+                              <String fx:value="bold" />
+                           </styleClass>
                         </Label>
                      </children>
                   </VBox>
                </children>
                <padding>
-                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                  <Insets top="5.0" />
                </padding>
-            </StackPane>
+            </TilePane>
          </children>
-      </HBox>
+         <VBox.margin>
+            <Insets top="10.0" />
+         </VBox.margin>
+      </VBox>
    </children>
    <stylesheets>
+      <URL value="@stylesheets/core-ui.css" />
       <URL value="@stylesheets/main.css" />
-      <URL value="@stylesheets/utilities.css" />
    </stylesheets>
 </VBox>

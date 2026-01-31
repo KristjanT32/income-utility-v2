@@ -1,0 +1,276 @@
+* {
+    -fx-font-family: "Segoe UI";
+    -fx-effect: null;
+    -fx-background-insets: 0;
+}
+
+.button, .menu-button {
+    -fx-background-color: #dadada;
+}
+
+.rounded-container {
+    -fx-border-color: "gray";
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-padding: 1px;
+}
+
+.rounded-container:hover {
+    -fx-border-color: "black";
+}
+
+
+/*<editor-fold desc="Labels>"*/
+
+.title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.normal-label.bold, .medium-label.bold, .large-label.bold, .xl-label.bold {
+    -fx-font-weight: bold;
+}
+
+.header {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.normal-label {
+    -fx-font-size: 12px;
+}
+
+.medium-label {
+    -fx-font-size: 14px;
+}
+
+.large-label {
+    -fx-font-size: 16px;
+}
+
+.xl-label {
+    -fx-font-size: 20px;
+}
+
+/*</editor-fold>*/
+
+/*<editor-fold desc="Buttons">*/
+.menu-button {
+    -fx-border-color: gray;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+
+.menu-button:hover {
+    -fx-border-color: black;
+}
+
+.menu-button > .label {
+    -fx-font-size: 14px;
+}
+
+/*</editor-fold>*/
+
+/*<editor-fold desc="List View">*/
+.list-view {
+    -fx-border-color: #787878;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+}
+
+.list-view .scroll-bar .thumb {
+    -fx-background-color: #a5a5a5;
+}
+/*</editor-fold>*/
+
+/* <editor-fold desc="Context menus"> */
+.menu-bar {
+    -fx-border-width: 0 0 1px 0;
+    -fx-border-color: black;
+    -fx-background-color: white;
+    -fx-padding: 2px;
+}
+
+.menu-bar .menu {
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-padding: 5px;
+}
+
+.menu-bar .menu:focused, .menu-bar .menu:hover, .menu-bar .menu:showing {
+    -fx-background-color: #393939;
+}
+
+.context-menu {
+    -fx-background-color: #c8c8c8;
+    -fx-border-color: black;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 2px;
+}
+
+.context-menu .menu-item {
+!important;
+    -fx-background-color: #c8c8c8;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+
+.context-menu .menu-item:focused, .context-menu .menu-item:hover {
+    -fx-background-color: #393939 !important;
+}
+
+/* </editor-fold> */
+
+/*<editor-fold desc="Date Picker and Spinner">*/
+.date-picker > .text-field, .spinner > .text-field {
+    -fx-border-radius: 10px 0 0 10px;
+    -fx-background-radius: 10px 0 0 10px;
+}
+
+.date-picker, .spinner {
+    -fx-border-color: gray;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+
+.date-picker:hover, .spinner:hover {
+    -fx-border-color: black;
+}
+
+
+.date-picker > .arrow-button {
+    -fx-background-color: #c8c8c8;
+    -fx-border-width: 0 0 0 1px;
+    -fx-border-style: solid;
+    -fx-border-color: #9c9c9c;
+
+    -fx-border-radius: 0 10px 10px 0;
+    -fx-background-radius: 0 10px 10px 0;
+}
+
+.date-picker > .arrow-button:hover {
+    -fx-background-color: #bcbcbc;
+}
+
+.date-picker > .arrow-button:pressed {
+    -fx-background-color: #787878;
+}
+
+.spinner > .increment-arrow-button, .spinner > .decrement-arrow-button {
+    -fx-background-color: #c8c8c8;
+    -fx-border-width: 0 0 0 1px;
+    -fx-border-style: solid;
+    -fx-border-color: #9c9c9c;
+}
+
+.spinner > .increment-arrow-button:hover, .spinner > .decrement-arrow-button:hover {
+    -fx-background-color: #bcbcbc;
+}
+
+.spinner > .increment-arrow-button:pressed, .spinner > .decrement-arrow-button:pressed {
+    -fx-background-color: #787878;
+}
+
+/*</editor-fold>*/
+
+/* <editor-fold desc="Text Field and Text Area"> */
+
+.text-field, .text-area {
+    -fx-background-color: #c8c8c8;
+    -fx-background-radius: 20px;
+
+    -fx-border-radius: 20px;
+    -fx-border-color: #c8c8c8;
+    -fx-border-width: 1px;
+    -fx-border-style: solid;
+}
+
+.text-field, .text-area {
+    -fx-prompt-text-fill: #3a3a3a;
+}
+
+.text-area:hover, .text-field:hover {
+    -fx-background-color: #939393;
+}
+
+/* </editor-fold> */
+
+/* <editor-fold desc="Button"> */
+
+.button {
+    -fx-background-color: #c8c8c8;
+    -fx-background-radius: 20px;
+
+    -fx-border-radius: 20px;
+    -fx-border-color: #c8c8c8;
+    -fx-border-width: 1px;
+    -fx-border-style: solid;
+    -fx-text-fill: black;
+}
+
+.button:hover {
+    -fx-background-color: #939393;
+}
+
+.button.destructive {
+    -fx-background-color: #ff5959;
+    -fx-border-color: #ff5959;
+}
+
+.button.destructive:hover {
+    -fx-background-color: #b83f3f;
+    -fx-border-color: #b83f3f;
+}
+
+.button.destructive:pressed {
+    -fx-background-color: #802d2d;
+    -fx-border-color: #802d2d;
+}
+
+.button:pressed {
+    -fx-background-color: #787878;
+}
+
+/* </editor-fold> */
+
+/* <editor-fold desc="Inline Text Field and Text Area"> */
+.text-field.inline, .text-area.inline {
+    -fx-background-color: transparent;
+
+    -fx-border-color: #c8c8c8;
+    -fx-border-width: 0 0 2px 0;
+    -fx-border-radius: 0px;
+    -fx-border-style: solid;
+
+    -fx-prompt-text-fill: #3a3a3a;
+}
+
+.text-field.inline:hover, .text-area.inline:hover {
+    -fx-border-color: black;
+}
+
+/* </editor-fold> */
+
+/* <editor-fold desc="Inline Combo Box"> */
+.combo-box.inline {
+    -fx-background-color: transparent;
+    -fx-border-width: 0 0 2px 0;
+    -fx-border-radius: 0px;
+    -fx-border-style: solid;
+    -fx-border-color: #c8c8c8;
+}
+
+.combo-box.inline:hover {
+    -fx-border-color: black;
+}
+
+.combo-box.inline .list-cell {
+    -fx-background-color: transparent !important;
+    -fx-border-width: 0 !important;
+}
+
+/* </editor-fold> */
+
