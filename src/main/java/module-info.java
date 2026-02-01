@@ -4,6 +4,8 @@ module com.krisapps.incomeutility_v2 {
 
     requires org.kordamp.ikonli.javafx;
     requires org.jetbrains.annotations;
+    requires java.logging;
+    requires com.google.gson;
 
     opens com.krisapps.incomeutility_v2 to javafx.fxml;
     opens com.krisapps.incomeutility_v2.subutilities.money_flow to javafx.fxml;

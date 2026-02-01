@@ -2,6 +2,9 @@ package com.krisapps.incomeutility_v2;
 
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
 import javafx.fxml.FXML;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -11,6 +14,12 @@ public class IncomeUtilityController {
 
     public final UtilityManager utilities = UtilityManager.create();
     public final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(4);
+
+    @FXML
+    private VBox root;
+
+    @FXML
+    private TilePane utilitiesView;
 
     @FXML
     private VBox mimoCell;
