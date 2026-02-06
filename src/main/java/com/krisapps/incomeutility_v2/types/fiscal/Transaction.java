@@ -1,5 +1,6 @@
 package com.krisapps.incomeutility_v2.types.fiscal;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
@@ -20,32 +21,32 @@ public class Transaction {
         }
     }
 
-    public Transaction(Type type, double amount, Account account) {
+    public Transaction(Type type, double amount, UUID account, Date timestamp) {
         this.type = type;
         this.amount = amount;
-        if (type == Type.MONEY_RECEIVED) {
-            this.target = account;
-        } else if (type == Type.MONEY_WITHDRAWN) {
-            this.source = account;
+        if (type == Type.MONEY_RECEIVED || type == Type.MONEY_WITHDRAWN) {
+            this.targetAccountId = account;
         }
-        this.id = UUID.randomUUID();
+        this.id = java.util.UUID.randomUUID();
+        this.timestamp = timestamp;
     }
 
-    public Transaction(Type type, double amount, Account from, Account to) {
+    public Transaction(Type type, double amount, UUID from, UUID to, Date timestamp) {
         this.type = type;
         this.amount = amount;
-        this.source = from;
-        this.target = to;
-        this.id = UUID.randomUUID();
+        this.sourceAccountId = from;
+        this.targetAccountId = to;
+        this.id = java.util.UUID.randomUUID();
+        this.timestamp = timestamp;
     }
 
     private Transaction.Type type;
     private double amount;
-    private Account source;
-    private Account target;
+    private UUID sourceAccountId;
+    private UUID targetAccountId;
 
     private Date timestamp;
-    private UUID id;
+    private final java.util.UUID id;
 
     public Type getType() {
         return type;
@@ -55,12 +56,47 @@ public class Transaction {
         return amount;
     }
 
-    public Account getSource() {
-        return source;
+    public UUID getSourceAccountId() {
+        return sourceAccountId;
     }
 
-    public Account getTarget() {
-        return target;
+    public UUID getTargetAccountId() {
+        return targetAccountId;
     }
 
+    public UUID getId() {
+        return id;
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public void setSourceAccountId(UUID sourceAccountId) {
+        this.sourceAccountId = sourceAccountId;
+    }
+
+    public void setTargetAccountId(UUID targetAccountId) {
+        this.targetAccountId = targetAccountId;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public boolean isRelated(Account account) {
+        return this.sourceAccountId == account.getId() || this.targetAccountId == account.getId();
+    }
+
+    public boolean isRelated(UUID accountId) {
+        return this.sourceAccountId == accountId || this.targetAccountId == accountId;
+    }
 }

@@ -178,6 +178,18 @@
 
 /* <editor-fold desc="Text Field and Text Area"> */
 
+.text-field.medium, .text-area.medium {
+    -fx-font-size: 14px;
+}
+
+.text-field.large, .text-area.large {
+    -fx-font-size: 16px;
+}
+
+.text-field.xl, .text-area.xl {
+    -fx-font-size: 20px;
+}
+
 .text-field, .text-area {
     -fx-background-color: #c8c8c8;
     -fx-background-radius: 20px;
@@ -233,6 +245,42 @@
 .button:pressed {
     -fx-background-color: #787878;
 }
+
+/* </editor-fold> */
+
+/* <editor-fold desc="Combo Box"> */
+
+.combo-box {
+    -fx-background-color: #c8c8c8;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+}
+
+.combo-box .list-cell {
+    -fx-border-width: 1px;
+    -fx-border-color: #c8c8c8;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #c8c8c8;
+    -fx-border-color: black;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+
+.combo-box-popup .list-view .list-cell {
+!important;
+    -fx-background-color: #c8c8c8;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+
+.combo-box-popup .list-view .list-cell:focused, .combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #393939 !important;
+}
+
 
 /* </editor-fold> */
 

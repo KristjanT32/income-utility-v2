@@ -14,7 +14,7 @@ public class IncomeUtilityApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(IncomeUtilityApplication.class.getResource("main.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 320, 240);
+        Scene scene = new Scene(fxmlLoader.load(), 960, 500);
         stage.setTitle("KrisApps Income Utility v2.0");
         stage.setScene(scene);
 

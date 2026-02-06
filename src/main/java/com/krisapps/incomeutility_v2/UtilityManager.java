@@ -4,6 +4,7 @@ import com.krisapps.incomeutility_v2.exceptions.NotInitializedException;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
 import com.krisapps.incomeutility_v2.subutilities.money_flow.MoneyFlowUtility;
+import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -11,6 +12,7 @@ import javafx.scene.control.ButtonType;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.logging.Level;
 
 public class UtilityManager {
     public static UtilityManager instance;
@@ -56,7 +58,7 @@ public class UtilityManager {
                 try {
                     register(utility);
                 } catch (IOException e) {
-                    System.err.println(String.format("Failed to start %s: ", utility.getName()) + e.getMessage());
+                    log(String.format("Failed to start %s: ", utility.getName()) + e.getMessage(), Level.SEVERE);
                     e.printStackTrace();
                 }
             }
@@ -111,7 +113,7 @@ public class UtilityManager {
     private void stopUtility(String processId) {
         Optional<SubUtility> util = Optional.ofNullable(activeUtilities.get(processId));
         util.ifPresentOrElse(SubUtility::stop, () -> {
-            System.err.println(String.format("Attempted to stop non-existent utility with process id: %s", processId));
+            log(String.format("Attempted to stop non-existent utility with process id: %s", processId), Level.WARNING);
         });
     }
 
@@ -125,22 +127,23 @@ public class UtilityManager {
                 processId, process.start(processId)
         );
 
-        System.out.printf("\nRegistered new active process '%s' (id: %s)", process.getName(), processId);
+        log(String.format("Registered new active process '%s' (id: %s)", process.getName(), processId), Level.INFO);
     }
 
     private void unregister(String processId) {
         if (activeUtilities.containsKey(processId)) {
 
             SubUtility util = activeUtilities.get(processId);
-            System.out.printf("\nUnregistering active process for '%s' (%s)%n", util.getName(), processId);
+            log(String.format("Unregistering active process for '%s' (%s)%n", util.getName(), processId), Level.INFO);
 
             activeUtilities.remove(processId);
         } else {
-            System.err.printf("\nFailed to unregister '%s' - process not found in registry.", processId);
+            log(String.format("Failed to unregister '%s' - process not found in registry.", processId), Level.WARNING);
         }
     }
 
-
-
+    private static void log(String msg, Level level) {
+        DataManager.log("[Process Registry] " + msg, level);
+    }
 
 }

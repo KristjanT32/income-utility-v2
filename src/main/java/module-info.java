@@ -6,8 +6,13 @@ module com.krisapps.incomeutility_v2 {
     requires org.jetbrains.annotations;
     requires java.logging;
     requires com.google.gson;
+    requires javafx.graphics;
+    requires java.desktop;
 
     opens com.krisapps.incomeutility_v2 to javafx.fxml;
     opens com.krisapps.incomeutility_v2.subutilities.money_flow to javafx.fxml;
+    opens com.krisapps.incomeutility_v2.dialogs to javafx.fxml;
+    opens com.krisapps.incomeutility_v2.util to com.google.gson;
+    opens com.krisapps.incomeutility_v2.types.fiscal to com.google.gson;
     exports com.krisapps.incomeutility_v2;
 }

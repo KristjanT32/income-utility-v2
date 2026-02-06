@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.ToNumberPolicy;
 import com.google.gson.stream.JsonReader;
+import com.krisapps.incomeutility_v2.types.fiscal.Account;
+import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTimeTypeAdapter;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTypeAdapter;
 
@@ -16,7 +18,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import java.util.*;
 import java.util.logging.Level;
 
 public class DataManager {
@@ -40,22 +42,22 @@ public class DataManager {
 
     public static void log(String msg) {
         if (msg.toLowerCase().contains("failed") || msg.toLowerCase().contains("error") || msg.toLowerCase().contains("fail") || msg.toLowerCase().contains("couldn't") || msg.toLowerCase().contains("could not")) {
-            System.out.println(String.format("[%s TripPlanner/ERROR]: ", Formatting.formatDate(Date.from(Instant.now()), true)) + msg);
+            System.out.println(String.format("[%s IncomeUtility/ERROR]: ", Formatting.formatDate(Date.from(Instant.now()), true)) + msg);
         } else {
-            System.out.println(String.format("[%s TripPlanner/INFO]: ", Formatting.formatDate(Date.from(Instant.now()), true)) + msg);
+            System.out.println(String.format("[%s IncomeUtility/INFO]: ", Formatting.formatDate(Date.from(Instant.now()), true)) + msg);
         }
     }
 
     public static void log(String msg, Level level) {
-        System.out.println(String.format("[%s TripPlanner/%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), level.getName()) + msg);
+        System.out.println(String.format("[%s IncomeUtility/%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), level.getName()) + msg);
     }
 
     private void firstTimeFileSetup() {
         log("No files found, initializing first-time setup.");
 
         try {
-            log("Creating a data directory at: " + Path.of(System.getProperty("user.home") + File.separator + "TripPlanner Data"));
-            Files.createDirectory(Path.of(System.getProperty("user.home") + File.separator + "TripPlanner Data"));
+            log("Creating a data directory at: " + Path.of(System.getProperty("user.home") + File.separator + "IncomeUtility v2"));
+            Files.createDirectory(Path.of(System.getProperty("user.home") + File.separator + "IncomeUtility v2"));
         } catch (IOException e) {
             log("Failed to create data directory: " + e.getMessage());
         }
@@ -124,6 +126,79 @@ public class DataManager {
             return new Data();
         }
     }
+
+    //<editor-fold desc="Data access">
+
+    public HashSet<Account> getAccounts() {
+        Data d = getData();
+        return new HashSet<>(d.accounts.values());
+    }
+
+    public Optional<Account> getAccount(UUID accountId) {
+        Data d = getData();
+        return Optional.ofNullable(d.accounts.get(accountId));
+    }
+
+    public List<Transaction> getTransactions(Account account) {
+        return getTransactions(account.getId());
+    }
+
+    public List<Transaction> getTransactions(UUID accountId) {
+        Data d = getData();
+        return d.transactions.values().stream().filter(t -> t.isRelated(accountId)).toList();
+    }
+
+    public Optional<Transaction> getTransaction(UUID transactionId) {
+        Data d = getData();
+        return Optional.ofNullable(d.transactions.get(transactionId));
+    }
+
+    //</editor-fold>
+
+    //<editor-fold desc="Data modification">
+    public void addAccount(Account account) {
+        Data d = getData();
+        d.accounts.putIfAbsent(account.getId(), account);
+        saveData(d);
+    }
+
+    public void updateAccount(UUID accountId, Account data) {
+        Data d = getData();
+        d.accounts.replace(accountId, data);
+        saveData(d);
+    }
+
+    public void deleteAccount(UUID accountId) {
+        Data d = getData();
+        d.accounts.remove(accountId);
+        saveData(d);
+    }
+
+
+    public void addTransaction(Transaction transaction) {
+        Data d = getData();
+        d.transactions.putIfAbsent(transaction.getId(), transaction);
+        saveData(d);
+
+        if (transaction.getType() == Transaction.Type.MONEY_TRANSFERRED) {
+            log("New transaction: TRANSFER (%s -> %s) %su [#%s]".formatted(transaction.getSourceAccountId(), transaction.getTargetAccountId(), transaction.getAmount(), transaction.getId()));
+        } else {
+            log("New transaction: %s (%s) %su [#%s]".formatted(transaction.getType().getDisplayName(), transaction.getTargetAccountId(), transaction.getAmount(), transaction.getId()));
+        }
+    }
+
+    public void updateTransaction(UUID transactionId, Transaction data) {
+        Data d = getData();
+        d.transactions.replace(transactionId, data);
+        saveData(d);
+    }
+
+    public void deleteTransaction(UUID transactionId) {
+        Data d = getData();
+        d.transactions.remove(transactionId);
+        saveData(d);
+    }
+    //</editor-fold>
 
     /**
      * Contains various methods for formatting data.
@@ -216,11 +291,13 @@ public class DataManager {
         }
     }
 
-    public class Data {
-
+    private static class Data {
+        private final HashMap<UUID, Transaction> transactions;
+        private final HashMap<UUID, Account> accounts;
 
         public Data() {
-
+            this.transactions = new HashMap<>();
+            this.accounts = new HashMap<>();
         }
     }
 }

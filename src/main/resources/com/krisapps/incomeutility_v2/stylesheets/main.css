@@ -45,3 +45,17 @@
     -fx-border-color: black;
     -fx-border-width: 1px;
 }
+
+.account-cell {
+    -fx-border-width: 1px;
+    -fx-border-color: gray;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 5px;
+    -fx-cursor: hand;
+}
+
+.account-cell:hover {
+    -fx-border-color: black;
+    -fx-border-width: 1px;
+}

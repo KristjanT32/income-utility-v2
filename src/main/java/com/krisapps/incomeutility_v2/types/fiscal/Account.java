@@ -1,17 +1,46 @@
 package com.krisapps.incomeutility_v2.types.fiscal;
 
-import com.krisapps.incomeutility_v2.exceptions.OperationNotPermittedException;
-
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 
 public class Account {
+    
+    public enum Type {
+        CASH("Cash"),
+        BANK_ACCOUNT("Bank account"),
+        SAVINGS("Savings"),
+        OTHER("Other"),
+
+
+        UNKNOWN("Unknown type")
+        ;
+
+        private String displayName;
+
+        Type(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public static Account.Type ofDisplayName(String displayName) {
+            return Arrays.stream(values()).filter(t -> t.displayName.equals(displayName)).findFirst().orElse(UNKNOWN);
+        }
+    }
 
     private String name = "";
     private double balance = 0.0d;
     private HashSet<Transaction> transactions = new HashSet<>();
+    private final java.util.UUID id;
+    private Account.Type type;
 
     private boolean isDefault;
+
+    public Account() {
+        this.id = java.util.UUID.randomUUID();
+    }
 
     public String getName() {
         return name;
@@ -21,57 +50,32 @@ public class Account {
         return balance;
     }
 
+    public java.util.UUID getId() {
+        return id;
+    }
+
+    public Account.Type getType() {
+        return type;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
+    }
+
+    public void setType(Account.Type type) {
+        this.type = type;
+    }
+
     public boolean isDefault() {
         return isDefault;
-    }
-
-    public boolean withdraw(double amount) {
-        if (balance >= amount) {
-            this.balance += amount;
-            return true;
-        } else {
-            throw new OperationNotPermittedException(this, Transaction.Type.MONEY_WITHDRAWN, "Insufficient balance");
-        }
-    }
-
-    public boolean deposit(double amount) {
-        if (amount > 0) {
-            this.balance += amount;
-            return true;
-        } else {
-            throw new IllegalArgumentException("Amount cannot be negative.");
-        }
-    }
-
-    public boolean transfer(Account to, double amount) {
-        return withdraw(amount) && to.deposit(amount);
-    }
-
-    public void apply(Transaction transaction) {
-        if (!transaction.getSource().equals(this) && !transaction.getTarget().equals(this)) {
-            throw new OperationNotPermittedException(this, transaction.getType(), "The specified account is neither the target nor the source of the transaction");
-        }
-
-        switch (transaction.getType()) {
-            case MONEY_RECEIVED -> {
-                if (transaction.getTarget().equals(this)) {
-                    deposit(transaction.getAmount());
-                }
-            }
-            case MONEY_WITHDRAWN -> {
-                if (transaction.getSource().equals(this)) {
-                    withdraw(transaction.getAmount());
-                }
-            }
-            case MONEY_TRANSFERRED -> {
-                if (transaction.getSource().equals(this)) {
-                    withdraw(transaction.getAmount());
-                } else if (transaction.getTarget().equals(this)) {
-                    deposit(transaction.getAmount());
-                }
-            }
-        }
-        transactions.add(transaction);
     }
 
     @Override
@@ -79,7 +83,12 @@ public class Account {
         if (!(obj instanceof Account)) {
             return false;
         } else {
-            return ((Account)obj).getName().equals(this.name);
+            return ((Account)obj).getName().equals(this.name) && ((Account)obj).getId().equals(this.id);
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Account(name = %s, balance = %s, type = %s, uuid = %s)", this.name, this.balance, this.type.name(), this.id.toString());
     }
 }
