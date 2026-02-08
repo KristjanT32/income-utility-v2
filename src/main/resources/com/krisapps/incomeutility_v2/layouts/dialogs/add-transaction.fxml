@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="448.0" prefWidth="403.0" spacing="10.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+    <children>
+        <Label styleClass="title" text="Register transaction">
+            <VBox.margin>
+                <Insets />
+            </VBox.margin>
+        </Label>
+        <VBox spacing="5.0">
+            <children>
+                <Label text="Transaction type">
+               <styleClass>
+                  <String fx:value="normal-label" />
+                  <String fx:value="bold" />
+               </styleClass></Label>
+                <ComboBox fx:id="transactionTypeSelector" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="35.0" minWidth="-Infinity" promptText="Bank account, cash..." styleClass="medium" />
+            </children>
+        </VBox>
+        <VBox spacing="5.0">
+            <children>
+                <Label text="Amount">
+               <styleClass>
+                  <String fx:value="normal-label" />
+                  <String fx:value="bold" />
+               </styleClass></Label>
+              <TextField fx:id="amountField" minHeight="35.0" promptText="0.00" styleClass="medium">
+                  <font>
+                      <Font size="16.0" />
+                  </font>
+              </TextField>
+            </children>
+        </VBox>
+        <StackPane>
+            <children>
+                <VBox fx:id="singleTargetTransactionPanel" spacing="5.0">
+                    <children>
+                        <Label fx:id="singleTargetLabel" maxWidth="1.7976931348623157E308" text="From">
+                     <styleClass>
+                        <String fx:value="normal-label" />
+                        <String fx:value="bold" />
+                     </styleClass></Label>
+                        <ComboBox fx:id="singleTargetSelector" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" styleClass="medium" />
+                    </children>
+                    <padding>
+                        <Insets bottom="10.0" top="10.0" />
+                    </padding>
+                </VBox>
+                <VBox fx:id="dualTargetTransactionPanel" spacing="5.0">
+                    <children>
+                        <HBox alignment="CENTER" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
+                            <children>
+                                <Label maxWidth="1.7976931348623157E308" text="From" HBox.hgrow="ALWAYS">
+                           <styleClass>
+                              <String fx:value="normal-label" />
+                              <String fx:value="bold" />
+                           </styleClass></Label>
+                                <Label alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="To" HBox.hgrow="ALWAYS">
+                           <styleClass>
+                              <String fx:value="normal-label" />
+                              <String fx:value="bold" />
+                           </styleClass></Label>
+                            </children>
+                        </HBox>
+                        <HBox alignment="CENTER" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
+                            <children>
+                                <ComboBox fx:id="fromSelector" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" styleClass="medium" HBox.hgrow="ALWAYS" />
+                                <FontIcon iconLiteral="fltfal-arrow-right-20" iconSize="20">
+                                    <HBox.margin>
+                                        <Insets left="20.0" right="20.0" />
+                                    </HBox.margin>
+                                </FontIcon>
+                                <ComboBox fx:id="toSelector" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="150.0" styleClass="medium" HBox.hgrow="ALWAYS" />
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="10.0" top="10.0" />
+                    </padding>
+                </VBox>
+            </children>
+        </StackPane>
+        <VBox spacing="5.0">
+            <children>
+                <Label text="Comment">
+               <styleClass>
+                  <String fx:value="normal-label" />
+                  <String fx:value="bold" />
+               </styleClass></Label>
+                <TextArea fx:id="commentField" prefHeight="95.0" prefWidth="624.0" styleClass="medium" />
+                <Label text="Category">
+               <styleClass>
+                  <String fx:value="normal-label" />
+                  <String fx:value="bold" />
+               </styleClass></Label>
+            </children>
+        </VBox>
+      <VBox spacing="5.0">
+         <children>
+            <ComboBox fx:id="categorySelector" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" styleClass="medium" />
+            <TextField fx:id="customCategoryField" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" promptText="Custom category" styleClass="medium" />
+         </children>
+      </VBox>
+    </children>
+    <stylesheets>
+        <URL value="@../../stylesheets/core-ui.css" />
+        <URL value="@../../stylesheets/main.css" />
+    </stylesheets>
+</VBox>

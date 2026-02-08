@@ -1,14 +1,25 @@
 package com.krisapps.incomeutility_v2.types.fiscal;
 
-import java.time.Instant;
+import com.krisapps.incomeutility_v2.types.organization.TransactionCategory;
+import com.krisapps.incomeutility_v2.util.DataManager;
+
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 public class Transaction {
+    public String getCustomCategory() {
+        return customCategory;
+    }
+
+    public void setCustomCategory(String customCategory) {
+        this.customCategory = customCategory;
+    }
+
     public enum Type {
-        MONEY_RECEIVED("Deposit"),
-        MONEY_WITHDRAWN("Withdrawal"),
-        MONEY_TRANSFERRED("Transfer"),
+        DEPOSIT("Deposit"),
+        WITHDRAWAL("Withdrawal"),
+        TRANSFER("Transfer"),
         ;
 
         private final String displayName;
@@ -21,22 +32,29 @@ public class Transaction {
         }
     }
 
-    public Transaction(Type type, double amount, UUID account, Date timestamp) {
+    public Transaction(Type type, double amount, UUID account, Date timestamp, TransactionCategory category, String customCategory, String comment) {
         this.type = type;
         this.amount = amount;
-        if (type == Type.MONEY_RECEIVED || type == Type.MONEY_WITHDRAWN) {
+        if (type == Type.DEPOSIT || type == Type.WITHDRAWAL) {
             this.targetAccountId = account;
         }
-        this.id = java.util.UUID.randomUUID();
+        this.category = category == null ? TransactionCategory.of(type) : category;
+        this.customCategory = customCategory == null ? "" : customCategory;
+        this.comment = comment == null ? "" : comment;
+
+        this.id = UUID.randomUUID();
         this.timestamp = timestamp;
     }
 
-    public Transaction(Type type, double amount, UUID from, UUID to, Date timestamp) {
+    public Transaction(Type type, double amount, UUID from, UUID to, Date timestamp, TransactionCategory category, String customCategory, String comment) {
         this.type = type;
         this.amount = amount;
         this.sourceAccountId = from;
         this.targetAccountId = to;
-        this.id = java.util.UUID.randomUUID();
+        this.category = category == null ? TransactionCategory.of(type) : category;
+        this.customCategory = customCategory == null ? "" : customCategory;
+        this.comment = comment == null ? "" : comment;
+        this.id = UUID.randomUUID();
         this.timestamp = timestamp;
     }
 
@@ -44,9 +62,12 @@ public class Transaction {
     private double amount;
     private UUID sourceAccountId;
     private UUID targetAccountId;
+    private TransactionCategory category;
+    private String customCategory;
+    private String comment;
 
     private Date timestamp;
-    private final java.util.UUID id;
+    private final UUID id;
 
     public Type getType() {
         return type;
@@ -72,6 +93,22 @@ public class Transaction {
         return timestamp;
     }
 
+    public TransactionCategory getCategory() {
+        return category;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setCategory(TransactionCategory category) {
+        this.category = category;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
     public void setType(Type type) {
         this.type = type;
     }
@@ -93,10 +130,25 @@ public class Transaction {
     }
 
     public boolean isRelated(Account account) {
-        return this.sourceAccountId == account.getId() || this.targetAccountId == account.getId();
+        return isRelated(account.getId());
     }
 
     public boolean isRelated(UUID accountId) {
-        return this.sourceAccountId == accountId || this.targetAccountId == accountId;
+        if (sourceAccountId != null) {
+            return this.sourceAccountId.equals(accountId);
+        } else if (targetAccountId != null) {
+            return this.targetAccountId.equals(accountId);
+        } else {
+            return false;
+        }
+    }
+
+    public String formatAmount(DataManager dataManager) {
+        Optional<Account> source = dataManager.getAccount(this.sourceAccountId);
+        if (source.isPresent()) {
+            return DataManager.Formatting.formatMoney(this.amount, source.get().getCurrencyConfig().getCurrencySymbol(), source.get().getCurrencyConfig().isCurrencySymbolPrefix());
+        } else {
+            return DataManager.Formatting.formatMoney(this.amount, CurrencyConfig.DEFAULT.getCurrencySymbol(), CurrencyConfig.DEFAULT.isCurrencySymbolPrefix());
+        }
     }
 }

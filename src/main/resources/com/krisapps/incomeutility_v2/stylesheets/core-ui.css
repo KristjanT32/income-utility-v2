@@ -82,6 +82,13 @@
 .list-view .scroll-bar .thumb {
     -fx-background-color: #a5a5a5;
 }
+
+.list-view .list-cell {
+    -fx-border-color: transparent;
+    -fx-border-width: 1px;
+
+    -fx-background-color: inherit;
+}
 /*</editor-fold>*/
 
 /* <editor-fold desc="Context menus"> */
@@ -110,7 +117,7 @@
     -fx-padding: 2px;
 }
 
-.context-menu .menu-item {
+.context-menu .menu-item{
 !important;
     -fx-background-color: #c8c8c8;
     -fx-border-radius: 10px;
@@ -192,12 +199,22 @@
 
 .text-field, .text-area {
     -fx-background-color: #c8c8c8;
-    -fx-background-radius: 20px;
+    -fx-background-radius: 10px;
 
-    -fx-border-radius: 20px;
+    -fx-border-radius: 10px;
     -fx-border-color: #c8c8c8;
     -fx-border-width: 1px;
     -fx-border-style: solid;
+}
+
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+}
+.text-area .scroll-pane .viewport{
+    -fx-background-color: transparent;
+}
+.text-area .scroll-pane .content{
+    -fx-background-color: transparent;
 }
 
 .text-field, .text-area {
@@ -214,9 +231,9 @@
 
 .button {
     -fx-background-color: #c8c8c8;
-    -fx-background-radius: 20px;
+    -fx-background-radius: 10px;
 
-    -fx-border-radius: 20px;
+    -fx-border-radius: 10px;
     -fx-border-color: #c8c8c8;
     -fx-border-width: 1px;
     -fx-border-style: solid;
@@ -251,16 +268,32 @@
 /* <editor-fold desc="Combo Box"> */
 
 .combo-box {
+    -fx-font-size: 12px;
+}
+
+.combo-box.medium {
+    -fx-font-size: 14px;
+}
+
+.combo-box.large {
+    -fx-font-size: 16px;
+}
+
+.combo-box.xl {
+    -fx-font-size: 20px;
+}
+
+.combo-box {
     -fx-background-color: #c8c8c8;
-    -fx-border-radius: 20px;
-    -fx-background-radius: 20px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
 }
 
 .combo-box .list-cell {
     -fx-border-width: 1px;
     -fx-border-color: #c8c8c8;
-    -fx-border-radius: 20px;
-    -fx-background-radius: 20px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
 }
 
 .combo-box-popup .list-view {

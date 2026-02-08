@@ -145,12 +145,25 @@ public class DataManager {
 
     public List<Transaction> getTransactions(UUID accountId) {
         Data d = getData();
+
         return d.transactions.values().stream().filter(t -> t.isRelated(accountId)).toList();
     }
 
     public Optional<Transaction> getTransaction(UUID transactionId) {
         Data d = getData();
         return Optional.ofNullable(d.transactions.get(transactionId));
+    }
+
+    public ArrayList<String> getCustomTransactionCategories() {
+        Data d = getData();
+        return d.customTransactionCategories;
+    }
+
+
+
+    public Optional<UUID> getLastActiveAccount() {
+        Data d = getData();
+        return d.getLastActiveAccountId();
     }
 
     //</editor-fold>
@@ -178,13 +191,8 @@ public class DataManager {
     public void addTransaction(Transaction transaction) {
         Data d = getData();
         d.transactions.putIfAbsent(transaction.getId(), transaction);
+        System.out.print(d.transactions);
         saveData(d);
-
-        if (transaction.getType() == Transaction.Type.MONEY_TRANSFERRED) {
-            log("New transaction: TRANSFER (%s -> %s) %su [#%s]".formatted(transaction.getSourceAccountId(), transaction.getTargetAccountId(), transaction.getAmount(), transaction.getId()));
-        } else {
-            log("New transaction: %s (%s) %su [#%s]".formatted(transaction.getType().getDisplayName(), transaction.getTargetAccountId(), transaction.getAmount(), transaction.getId()));
-        }
     }
 
     public void updateTransaction(UUID transactionId, Transaction data) {
@@ -196,6 +204,19 @@ public class DataManager {
     public void deleteTransaction(UUID transactionId) {
         Data d = getData();
         d.transactions.remove(transactionId);
+        saveData(d);
+    }
+
+
+    /**
+     * Updates the saved ID of the last open account.
+     * @param account The account whose ID to set as the new last open account ID.
+     */
+    public void updateLastOpenAccount(Account account) {
+        if (account == null) return;
+
+        Data d = getData();
+        d.lastActiveAccountId = account.getId().toString();
         saveData(d);
     }
     //</editor-fold>
@@ -271,6 +292,14 @@ public class DataManager {
             return DateTimeFormatter.ofPattern("HH:mm:ss").format(LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
         }
 
+        public static String capitalize(String str) {
+            if (str.isEmpty()) {
+                return str;
+            }
+
+            return Character.toString(str.charAt(0)).toUpperCase() + str.toLowerCase().substring(1);
+        }
+
         public static String getNumberSuffix(int number) {
             return switch (String.valueOf(number).charAt(String.valueOf(number).length() - 1)) {
                 case 1 -> "st";
@@ -294,10 +323,30 @@ public class DataManager {
     private static class Data {
         private final HashMap<UUID, Transaction> transactions;
         private final HashMap<UUID, Account> accounts;
+        private String lastActiveAccountId;
+        private final ArrayList<String> customTransactionCategories;
 
         public Data() {
             this.transactions = new HashMap<>();
             this.accounts = new HashMap<>();
+            this.customTransactionCategories = new ArrayList<>();
+            this.lastActiveAccountId = "";
+        }
+
+        public HashMap<UUID, Transaction> getTransactions() {
+            return transactions;
+        }
+
+        public HashMap<UUID, Account> getAccounts() {
+            return accounts;
+        }
+
+        public ArrayList<String> getCustomTransactionCategories() {
+            return customTransactionCategories;
+        }
+
+        public Optional<UUID> getLastActiveAccountId() {
+            return lastActiveAccountId.isEmpty() ? Optional.empty() : Optional.of(UUID.fromString(lastActiveAccountId));
         }
     }
 }

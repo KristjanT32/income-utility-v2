@@ -4,6 +4,8 @@ import com.krisapps.incomeutility_v2.exceptions.InvalidTransactionException;
 import com.krisapps.incomeutility_v2.exceptions.OperationNotPermittedException;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
+import com.krisapps.incomeutility_v2.types.organization.TransactionCategory;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Date;
 import java.util.Optional;
@@ -29,7 +31,19 @@ public class TransactionService {
         return data.getAccount(id);
     }
 
-    public void deposit(double amount, UUID accountId, Date time) {
+    private Optional<Transaction> getTransactionById(UUID id) {
+        return data.getTransaction(id);
+    }
+
+    /**
+     * Deposit <code>amount</code> to the account with the supplied ID.
+     * @param amount The amount to deposit
+     * @param accountId The ID of the account to deposit the money to
+     * @param time The time at which the deposit takes place
+     * @param category The category of the deposit
+     * @param comment Transaction comment
+     */
+    public void deposit(double amount, UUID accountId, Date time, @Nullable TransactionCategory category, @Nullable String customCategory, @Nullable String comment) {
         Optional<Account> a = getAccountById(accountId);
 
         if (a.isEmpty()) {
@@ -44,11 +58,20 @@ public class TransactionService {
 
         double before = account.getBalance();
         account.setBalance(before + amount);
-        data.addTransaction(new Transaction(Transaction.Type.MONEY_RECEIVED, amount, accountId, time));
+        data.addTransaction(new Transaction(Transaction.Type.DEPOSIT, amount, accountId, time, category, customCategory, comment));
         data.updateAccount(accountId, account);
+        log("New transaction registered: DEPOSIT of %s to %s".formatted(amount, account.getName()));
     }
 
-    public void withdraw(double amount, UUID accountId, Date time) {
+    /**
+     * Withdraw <code>amount</code> from the account with the supplied ID.
+     * @param amount The amount to deposit
+     * @param accountId The ID of the account to deposit the money to
+     * @param time The time at which the deposit takes place
+     * @param category The category of the deposit
+     * @param comment Transaction comment
+     */
+    public void withdraw(double amount, UUID accountId, Date time, @Nullable TransactionCategory category, @Nullable String customCategory, @Nullable String comment) {
         Optional<Account> a = getAccountById(accountId);
 
         if (a.isEmpty()) {
@@ -59,14 +82,28 @@ public class TransactionService {
             throw new OperationNotPermittedException(String.format("Cannot withdraw from %s - transacted amount has to be greater than 0.", accountId));
         }
 
+        if (amount > a.get().getBalance()) {
+            throw new OperationNotPermittedException(String.format("Cannot withdraw from %s - insufficient balance to complete transaction.", accountId));
+        }
+
         Account account = a.get();
 
         account.setBalance(account.getBalance() - amount);
-        data.addTransaction(new Transaction(Transaction.Type.MONEY_WITHDRAWN, amount, accountId, time));
+        data.addTransaction(new Transaction(Transaction.Type.WITHDRAWAL, amount, accountId, time, category, customCategory, comment));
         data.updateAccount(accountId, account);
+        log("New transaction registered: WITHDRAWAL of %s from %s".formatted(amount, account.getName()));
     }
 
-    public void transfer(double amount, UUID from, UUID to, Date time) {
+    /**
+     * Transfer <code>amount</code> from account with the id <code>from</code> to the account with the id <code>to</code>.
+     * @param amount The amount to transfer
+     * @param from The ID of the account to withdraw the money from
+     * @param to The ID of the account to deposit the money to
+     * @param time The time at which the deposit takes place
+     * @param category The category of the deposit
+     * @param comment Transaction comment
+     */
+    public void transfer(double amount, UUID from, UUID to, Date time, @Nullable TransactionCategory category, @Nullable String customCategory, @Nullable String comment) {
         Optional<Account> acc1 = getAccountById(from);
         Optional<Account> acc2 = getAccountById(to);
 
@@ -82,6 +119,10 @@ public class TransactionService {
             throw new OperationNotPermittedException("Cannot complete transfer - transacted amount has to be greater than 0.");
         }
 
+        if (amount > acc1.get().getBalance()) {
+            throw new OperationNotPermittedException(String.format("Cannot transfer from %s - insufficient balance to complete transaction.", acc1.get().getId()));
+        }
+
         Account fromAccount = acc1.get();
         Account toAccount = acc2.get();
 
@@ -89,7 +130,26 @@ public class TransactionService {
         toAccount.setBalance(toAccount.getBalance() + amount);
         data.updateAccount(fromAccount.getId(), fromAccount);
         data.updateAccount(toAccount.getId(), toAccount);
-        data.addTransaction(new Transaction(Transaction.Type.MONEY_TRANSFERRED, amount, from, to, time));
+        data.addTransaction(new Transaction(Transaction.Type.TRANSFER, amount, from, to, time, category, customCategory, comment));
+        log("New transaction registered: TRANSFER of %s from %s to %s".formatted(amount, fromAccount.getName(), toAccount.getName()));
+    }
+
+    /**
+     * Performs the supplied transaction and records it as a new transaction.
+     * @param transaction The transaction to perform
+     */
+    public void perform(Transaction transaction) {
+        switch (transaction.getType()) {
+            case DEPOSIT -> {
+                deposit(transaction.getAmount(), transaction.getTargetAccountId(), transaction.getTimestamp(), transaction.getCategory(), transaction.getCustomCategory(), transaction.getComment());
+            }
+            case WITHDRAWAL -> {
+                withdraw(transaction.getAmount(), transaction.getTargetAccountId(), transaction.getTimestamp(), transaction.getCategory(), transaction.getCustomCategory(), transaction.getComment());
+            }
+            case TRANSFER -> {
+                transfer(transaction.getAmount(), transaction.getSourceAccountId(), transaction.getTargetAccountId(), transaction.getTimestamp(), transaction.getCategory(), transaction.getCustomCategory(), transaction.getComment());
+            }
+        }
     }
 
     public void rollback(UUID transactionId) {
@@ -101,7 +161,7 @@ public class TransactionService {
 
         Transaction transactionObject = transaction.get();
         switch (transactionObject.getType()) {
-            case MONEY_RECEIVED -> {
+            case DEPOSIT -> {
                 Optional<Account> a = getAccountById(transactionObject.getTargetAccountId());
                 if (a.isPresent()) {
                     Account account = a.get();
@@ -112,7 +172,7 @@ public class TransactionService {
                     throw new InvalidTransactionException("Cannot rollback %s - transaction target account does not exist.".formatted(transactionId));
                 }
             }
-            case MONEY_WITHDRAWN -> {
+            case WITHDRAWAL -> {
                 Optional<Account> a = getAccountById(transactionObject.getTargetAccountId());
                 if (a.isPresent()) {
                     Account account = a.get();
@@ -123,7 +183,7 @@ public class TransactionService {
                     throw new InvalidTransactionException("Cannot rollback %s - transaction target account does not exist.".formatted(transactionId));
                 }
             }
-            case MONEY_TRANSFERRED -> {
+            case TRANSFER -> {
                 Optional<Account> a = getAccountById(transactionObject.getSourceAccountId());
                 Optional<Account> b = getAccountById(transactionObject.getTargetAccountId());
                 if (a.isPresent() && b.isPresent()) {
@@ -142,5 +202,10 @@ public class TransactionService {
                 }
             }
         }
+        log("Rolled back transaction %s of type %s".formatted(transactionId, transactionObject.getType().getDisplayName()));
+    }
+
+    private void log(String msg) {
+        DataManager.log(msg);
     }
 }

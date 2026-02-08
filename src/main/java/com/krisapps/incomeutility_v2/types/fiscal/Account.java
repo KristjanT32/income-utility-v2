@@ -1,7 +1,9 @@
 package com.krisapps.incomeutility_v2.types.fiscal;
 
+import com.krisapps.incomeutility_v2.util.DataManager;
+
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.UUID;
 
 public class Account {
     
@@ -32,14 +34,20 @@ public class Account {
 
     private String name = "";
     private double balance = 0.0d;
-    private HashSet<Transaction> transactions = new HashSet<>();
-    private final java.util.UUID id;
+    private CurrencyConfig currencyConfig;
+    private final UUID id;
     private Account.Type type;
 
     private boolean isDefault;
 
     public Account() {
-        this.id = java.util.UUID.randomUUID();
+        this.id = UUID.randomUUID();
+        this.currencyConfig = CurrencyConfig.DEFAULT;
+    }
+
+    public Account(CurrencyConfig currencyConfig) {
+        this.id = UUID.randomUUID();
+        this.currencyConfig = currencyConfig;
     }
 
     public String getName() {
@@ -50,7 +58,7 @@ public class Account {
         return balance;
     }
 
-    public java.util.UUID getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -74,8 +82,20 @@ public class Account {
         this.type = type;
     }
 
+    public CurrencyConfig getCurrencyConfig() {
+        return currencyConfig;
+    }
+
+    public void setCurrencyConfig(CurrencyConfig currencyConfig) {
+        this.currencyConfig = currencyConfig;
+    }
+
     public boolean isDefault() {
         return isDefault;
+    }
+
+    public String formatBalance() {
+        return DataManager.Formatting.formatMoney(balance, currencyConfig.getCurrencySymbol(), currencyConfig.isCurrencySymbolPrefix());
     }
 
     @Override
@@ -83,7 +103,7 @@ public class Account {
         if (!(obj instanceof Account)) {
             return false;
         } else {
-            return ((Account)obj).getName().equals(this.name) && ((Account)obj).getId().equals(this.id);
+            return ((Account)obj).getId().equals(this.id);
         }
     }
 

@@ -2,6 +2,7 @@ package com.krisapps.incomeutility_v2.subutilities.money_flow;
 
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
+import com.krisapps.incomeutility_v2.util.DataManager;
 
 public class MoneyFlowUtility extends SubUtility {
 
@@ -12,5 +13,10 @@ public class MoneyFlowUtility extends SubUtility {
     @Override
     public void initialize() {
 
+    }
+
+    @Override
+    public void shutdown(Object controller) {
+        ((MoneyFlowUtilityController) controller).stop();
     }
 }

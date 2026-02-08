@@ -1,6 +1,7 @@
 package com.krisapps.incomeutility_v2.subutilities;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
+import com.krisapps.incomeutility_v2.util.DataManager;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -8,6 +9,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 public abstract class SubUtility {
     private String id;
@@ -48,9 +50,13 @@ public abstract class SubUtility {
 
         initialize();
 
-        this.id = processId;
-        this.instance = window;
-        this.instance.show();
+        try {
+            this.id = processId;
+            this.instance = window;
+            this.instance.show();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
 
         return this;
     }
@@ -58,6 +64,7 @@ public abstract class SubUtility {
     public void stop() {
         if (this.instance != null) {
             Platform.runLater(() -> {
+                shutdown(this.controller);
                 this.instance.close();
                 onCloseCallback.accept(this.id);
             });
@@ -84,5 +91,13 @@ public abstract class SubUtility {
         return id;
     }
 
+    /**
+     * Runs when this sub-utility is initializing.
+     */
     public abstract void initialize();
+
+    /**
+     * Runs when this sub-utility is shut down (closed).
+     */
+    public abstract void shutdown(Object controller);
 }

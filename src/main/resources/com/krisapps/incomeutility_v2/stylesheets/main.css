@@ -39,6 +39,9 @@
     -fx-border-color: gray;
     -fx-padding: 5px;
     -fx-cursor: hand;
+
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
 }
 
 .utility-cell:hover {
@@ -58,4 +61,31 @@
 .account-cell:hover {
     -fx-border-color: black;
     -fx-border-width: 1px;
+}
+
+.transaction-list {
+    -fx-padding: 5px;
+}
+
+.transaction-list .list-cell:filled, .transaction-cell {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.transaction-list .list-cell:selected {
+    -fx-border-color: black;
+}
+
+.transaction-cell.inflow {
+    -fx-background-color: #99ef99;
+}
+
+.transaction-cell.outflow {
+    -fx-background-color: #ec9696;
+}
+
+.transaction-cell.transfer {
+    -fx-background-color: #93d3ea;
 }

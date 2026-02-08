@@ -1,5 +1,6 @@
 package com.krisapps.incomeutility_v2;
 
+import com.krisapps.incomeutility_v2.util.DataManager;
 import javafx.application.Application;
 
 public class Launcher {

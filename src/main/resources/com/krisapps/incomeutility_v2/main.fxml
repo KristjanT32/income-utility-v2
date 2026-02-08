@@ -13,10 +13,9 @@
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-
 <VBox alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" spacing="10.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.krisapps.incomeutility_v2.IncomeUtilityController">
    <children>
-      <VBox fx:id="root" maxHeight="1.7976931348623157E308" maxWidth="1280.0" minHeight="-Infinity" minWidth="-Infinity" style="-fx-padding: 25;" VBox.vgrow="ALWAYS">
+      <VBox fx:id="root" alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1280.0" minHeight="-Infinity" minWidth="-Infinity" VBox.vgrow="ALWAYS">
          <children>
             <Label maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="KrisApps Income Utility v2.0">
                <font>
