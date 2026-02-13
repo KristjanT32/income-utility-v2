@@ -1,6 +1,4 @@
-package com.krisapps.incomeutility_v2.types.organization;
-
-import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
+package com.krisapps.incomeutility_v2.types.transaction;
 
 public enum TransactionCategory {
     GROCERIES,
@@ -21,7 +19,7 @@ public enum TransactionCategory {
     UNKNOWN
     ;
 
-    public static TransactionCategory of(Transaction.Type type) {
+    public static TransactionCategory of(TransactionType type) {
         return switch (type) {
             case DEPOSIT -> DEPOSIT;
             case WITHDRAWAL -> WITHDRAWAL;

@@ -1,13 +1,14 @@
 package com.krisapps.incomeutility_v2.subutilities.money_flow;
 
 import com.krisapps.incomeutility_v2.dialogs.AddSingleTransactionDialog;
+import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
-import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.PopupManager;
 import com.krisapps.incomeutility_v2.util.TransactionService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,11 +16,14 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.util.StringConverter;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 
 /* Controller class for the Money In Money Out utility */
@@ -42,6 +46,9 @@ public class MoneyFlowUtilityController {
     private Label changeLabel;
 
     @FXML
+    private Label transactionsLabel;
+
+    @FXML
     private ComboBox<Account> accountSelector;
 
     @FXML
@@ -53,6 +60,7 @@ public class MoneyFlowUtilityController {
 
 
     private Account selectedAccount;
+    private LocalDate selectedDate;
 
 
     private static void log(String message) {
@@ -87,16 +95,47 @@ public class MoneyFlowUtilityController {
             }
         });
 
+        datePicker.setConverter(new StringConverter<LocalDate>() {
+            DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            @Override
+            public String toString(LocalDate localDate) {
+                if (localDate != null) {
+                    return format.format(localDate);
+                } else {
+                    return "";
+                }
+            }
+
+            @Override
+            public LocalDate fromString(String s) {
+                SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+                try {
+                    return LocalDate.ofInstant(format.parse(s).toInstant(), ZoneId.systemDefault());
+                } catch (ParseException e) {
+                    return null;
+                }
+            }
+        });
+
         accountSelector.setCellFactory(new AccountComboboxCellFactory());
         accountSelector.setButtonCell(new AccountComboboxButtonCell());
         accountSelector.valueProperty().addListener(((_, _, newValue) -> {
             selectedAccount = newValue;
+            transactionList.setCellFactory(new TransactionCellFactory(selectedAccount));
             refreshTransactionList();
         }));
         accountSelector.setItems(FXCollections.observableList(accounts.stream().toList()));
 
+        datePicker.valueProperty().addListener((obs, _, newVal) -> {
+            selectedDate = newVal;
+            if (selectedDate != null) {
+                refreshTransactionList();
+            } else {
+                selectedDate = LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault());
+            }
+        });
         datePicker.setValue(LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault()));
-        transactionList.setCellFactory(new TransactionCellFactory());
 
         data.getLastActiveAccount().ifPresentOrElse(account -> {
             accountSelector.setValue(data.getAccount(account).get());
@@ -106,22 +145,56 @@ public class MoneyFlowUtilityController {
     }
 
     public void refreshTransactionList() {
-        ObservableList<Transaction> items = transactionList.getItems();
-        items.setAll(data.getTransactions(selectedAccount));
-        transactionList.setItems(items);
+        if (selectedAccount == null) {
+            ObservableList<Transaction> items = transactionList.getItems();
+            items.clear();
+            transactionList.setItems(items);
+        } else {
+            ObservableList<Transaction> items = transactionList.getItems();
+            items.setAll(data.getTransactions(selectedAccount));
+            items.removeIf(transaction -> !transaction.getTimestamp().toLocalDate().isEqual(selectedDate));
+            items.sort(Comparator.comparing(Transaction::getTimestamp).reversed());
+            transactionList.setItems(items);
+        }
+
+        Label l = new Label("There are no transactions for the selected period.");
+        l.getStyleClass().add("medium-label");
+        transactionList.setPlaceholder(l);
     }
 
     public void refreshUI() {
         accountSelector.requestLayout();
     }
 
+    @FXML
+    public void nextDay() {
+        datePicker.setValue(datePicker.getValue().plusDays(1));
+    }
+
+    @FXML
+    public void previousDay() {
+        datePicker.setValue(datePicker.getValue().minusDays(1));
+    }
+
+    @FXML
+    public void resetToToday() {
+        datePicker.setValue(LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault()));
+    }
+
+
+
+    @FXML
     public void promptAddSingleTransaction() {
         AddSingleTransactionDialog dlg = new AddSingleTransactionDialog(selectedAccount);
         Optional<Transaction> t = dlg.showAndWait();
         t.ifPresent((transaction -> {
-            transactor.perform(transaction);
-            refreshTransactionList();
-            refreshUI();
+            try {
+                transactor.perform(transaction);
+                refreshTransactionList();
+                refreshUI();
+            } catch (TransactionNotPermittedException exception) {
+                PopupManager.showPopup(exception.getType().getDisplayName() + " not permitted", exception.getReason().getDescription(), Alert.AlertType.ERROR);
+            }
         }));
     }
 }

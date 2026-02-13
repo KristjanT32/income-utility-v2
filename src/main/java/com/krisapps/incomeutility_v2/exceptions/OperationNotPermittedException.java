@@ -1,14 +1,16 @@
 package com.krisapps.incomeutility_v2.exceptions;
 
-import com.krisapps.incomeutility_v2.types.fiscal.Account;
-import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
+import com.krisapps.incomeutility_v2.types.OperationType;
 
 public class OperationNotPermittedException extends RuntimeException {
-    public OperationNotPermittedException(Account source, Transaction.Type transactionType, String message) {
-        super(String.format("Operation '%s' is not allowed on '%s': %s", source.getName(), transactionType.getDisplayName(), message));
+    private OperationType type;
+
+    public OperationNotPermittedException(OperationType type, String message) {
+        this.type = type;
+        super(message);
     }
 
-    public OperationNotPermittedException(String message) {
-        super(message);
+    public OperationType getOperation() {
+        return type;
     }
 }

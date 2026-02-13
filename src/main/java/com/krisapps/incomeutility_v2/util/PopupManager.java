@@ -14,6 +14,7 @@ public class PopupManager {
 
     public enum PopupType {
         NOT_IMPLEMENTED,
+        INSUFFICIENT_BALANCE,
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -25,6 +26,11 @@ public class PopupManager {
                 alert.setTitle("Uh-oh!");
                 alert.setContentText("This feature hasn't been implemented yet. Sorry!");
                 alert.setAlertType(Alert.AlertType.WARNING);
+            }
+            case INSUFFICIENT_BALANCE -> {
+                alert.setTitle("Insufficient balance");
+                alert.setContentText("The transaction cannot be completed as the source account does not have enough funds available.");
+                alert.setAlertType(Alert.AlertType.ERROR);
             }
         }
         alert.setHeaderText(null);
@@ -44,6 +50,16 @@ public class PopupManager {
         a.getButtonTypes().clear();
         a.getButtonTypes().addAll(optionA, optionB);
         return a.showAndWait();
+    }
+
+    public static Optional<ButtonType> showPopup(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(null);
+        alert.getDialogPane().getStylesheets().add(IncomeUtilityController.class.getResource("stylesheets/core-ui.css").toExternalForm());
+        alert.setTitle(title);
+        alert.setContentText(message);
+        alert.setAlertType(type);
+        alert.setHeaderText(null);
+        return alert.showAndWait();
     }
 
     public static String showInputDialog(String title, String message, String inputLabel, @Nullable String inputValue) {

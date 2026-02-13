@@ -2,17 +2,11 @@ package com.krisapps.incomeutility_v2.ui.listview.cell;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
-import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
-import com.krisapps.incomeutility_v2.types.organization.TransactionCategory;
-import com.krisapps.incomeutility_v2.util.DataManager;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.cell.ComboBoxListCell;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Paint;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;

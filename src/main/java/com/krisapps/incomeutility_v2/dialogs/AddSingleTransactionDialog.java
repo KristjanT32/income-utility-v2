@@ -3,10 +3,10 @@ package com.krisapps.incomeutility_v2.dialogs;
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
-import com.krisapps.incomeutility_v2.types.organization.TransactionCategory;
+import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
+import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
-import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.collections.ObservableList;
@@ -33,7 +33,7 @@ public class AddSingleTransactionDialog extends Dialog<Transaction> {
     private VBox dualTargetTransactionPanel;
 
     @FXML
-    private ComboBox<Transaction.Type> transactionTypeSelector;
+    private ComboBox<TransactionType> transactionTypeSelector;
 
     @FXML
     private ComboBox<String> categorySelector;
@@ -100,8 +100,8 @@ public class AddSingleTransactionDialog extends Dialog<Transaction> {
 
         amountField.setTextFormatter(new TextFormatter<>(numbersOnlyFormatter));
 
-        ObservableList<Transaction.Type> items = transactionTypeSelector.getItems();
-        items.setAll(Transaction.Type.values());
+        ObservableList<TransactionType> items = transactionTypeSelector.getItems();
+        items.setAll(TransactionType.values());
         transactionTypeSelector.setItems(items);
 
         HashSet<Account> accounts = data.getAccounts();
@@ -111,10 +111,10 @@ public class AddSingleTransactionDialog extends Dialog<Transaction> {
         refreshTargetAccountSelector(accounts);
         refreshCategorySelector();
 
-        transactionTypeSelector.setValue(Transaction.Type.WITHDRAWAL);
+        transactionTypeSelector.setValue(TransactionType.WITHDRAWAL);
         categorySelector.setValue(TransactionCategory.WITHDRAWAL.name());
 
-        outputTransaction.setType(Transaction.Type.WITHDRAWAL);
+        outputTransaction.setType(TransactionType.WITHDRAWAL);
         outputTransaction.setCategory(TransactionCategory.WITHDRAWAL);
 
         setResultConverter((action) -> {
@@ -191,7 +191,7 @@ public class AddSingleTransactionDialog extends Dialog<Transaction> {
                 ).ifPresent(response -> {
                     if (response.getButtonData() == ButtonBar.ButtonData.APPLY) {
                         singleTargetSelector.setValue(fromSelector.getValue());
-                        transactionTypeSelector.setValue(Transaction.Type.WITHDRAWAL);
+                        transactionTypeSelector.setValue(TransactionType.WITHDRAWAL);
                     }
                 });
             }
@@ -199,14 +199,14 @@ public class AddSingleTransactionDialog extends Dialog<Transaction> {
 
         transactionTypeSelector.valueProperty().addListener((obs, _, newVal) -> {
             outputTransaction.setType(newVal);
-            if (newVal == Transaction.Type.TRANSFER) {
+            if (newVal == TransactionType.TRANSFER) {
                 singleTargetTransactionPanel.setVisible(false);
                 singleTargetTransactionPanel.setManaged(false);
 
                 dualTargetTransactionPanel.setVisible(true);
                 dualTargetTransactionPanel.setManaged(true);
             } else {
-                if (transactionTypeSelector.getValue() == Transaction.Type.WITHDRAWAL) {
+                if (transactionTypeSelector.getValue() == TransactionType.WITHDRAWAL) {
                     singleTargetLabel.setText("From");
                 } else {
                     singleTargetLabel.setText("To");

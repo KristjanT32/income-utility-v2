@@ -17,6 +17,6 @@ module com.krisapps.incomeutility_v2 {
     opens com.krisapps.incomeutility_v2.types.fiscal to com.google.gson;
     opens com.krisapps.incomeutility_v2.ui.listview.cell to javafx.fxml;
 
-    exports com.krisapps.incomeutility_v2.types.organization;
     exports com.krisapps.incomeutility_v2;
+    exports com.krisapps.incomeutility_v2.types.transaction;
 }

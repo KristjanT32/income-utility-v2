@@ -3,6 +3,7 @@
 <?import java.lang.String?>
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
@@ -14,7 +15,7 @@
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="507.0" prefWidth="825.0" spacing="10.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" spacing="10.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <VBox alignment="CENTER" maxWidth="1280.0" minHeight="-Infinity" minWidth="-Infinity" VBox.vgrow="ALWAYS">
          <children>
@@ -26,7 +27,6 @@
                      </font>
                   </Label>
                   <ComboBox fx:id="accountSelector" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="250.0" HBox.hgrow="SOMETIMES" />
-                  <DatePicker fx:id="datePicker" maxHeight="1.7976931348623157E308" maxWidth="250.0" prefWidth="250.0" HBox.hgrow="SOMETIMES" />
                </children>
                <VBox.margin>
                   <Insets bottom="25.0" />
@@ -147,11 +147,44 @@
                         <Insets bottom="5.0" />
                      </VBox.margin>
                      <children>
-                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" styleClass="header" text="Transactions" HBox.hgrow="ALWAYS">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                        </Label>
+                        <HBox maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label fx:id="transactionsLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" styleClass="header" text="Transactions">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font>
+                                 <HBox.margin>
+                                    <Insets right="10.0" />
+                                 </HBox.margin>
+                              </Label>
+                              <HBox alignment="CENTER_LEFT" spacing="5.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <DatePicker fx:id="datePicker" maxHeight="1.7976931348623157E308" maxWidth="250.0" prefWidth="250.0" />
+                                    <Button maxHeight="1.7976931348623157E308" mnemonicParsing="false" onAction="#previousDay">
+                                       <graphic>
+                                          <FontIcon iconLiteral="fltfal-arrow-left-24" iconSize="16" />
+                                       </graphic>
+                                    </Button>
+                                    <Button maxHeight="1.7976931348623157E308" mnemonicParsing="false" onAction="#nextDay">
+                                       <graphic>
+                                          <FontIcon iconLiteral="fltfal-arrow-right-24" iconSize="16" />
+                                       </graphic>
+                                    </Button>
+                                    <Button maxHeight="1.7976931348623157E308" mnemonicParsing="false" onAction="#resetToToday">
+                                       <graphic>
+                                          <FontIcon iconLiteral="fltfal-calendar-24" iconSize="16" />
+                                       </graphic>
+                                    </Button>
+                                 </children>
+                                 <HBox.margin>
+                                    <Insets />
+                                 </HBox.margin>
+                              </HBox>
+                           </children>
+                           <HBox.margin>
+                              <Insets right="10.0" />
+                           </HBox.margin>
+                        </HBox>
                         <MenuButton maxHeight="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" text="New transaction" HBox.hgrow="ALWAYS">
                           <items>
                             <MenuItem mnemonicParsing="false" onAction="#promptAddSingleTransaction" text="Add single" />

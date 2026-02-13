@@ -1,9 +1,10 @@
 package com.krisapps.incomeutility_v2.types.fiscal;
 
-import com.krisapps.incomeutility_v2.types.organization.TransactionCategory;
+import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
+import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,26 +17,10 @@ public class Transaction {
         this.customCategory = customCategory;
     }
 
-    public enum Type {
-        DEPOSIT("Deposit"),
-        WITHDRAWAL("Withdrawal"),
-        TRANSFER("Transfer"),
-        ;
-
-        private final String displayName;
-        private Type(String displayName) {
-            this.displayName = displayName;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
-    }
-
-    public Transaction(Type type, double amount, UUID account, Date timestamp, TransactionCategory category, String customCategory, String comment) {
+    public Transaction(TransactionType type, double amount, UUID account, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment) {
         this.type = type;
         this.amount = amount;
-        if (type == Type.DEPOSIT || type == Type.WITHDRAWAL) {
+        if (type == TransactionType.DEPOSIT || type == TransactionType.WITHDRAWAL) {
             this.targetAccountId = account;
         }
         this.category = category == null ? TransactionCategory.of(type) : category;
@@ -46,7 +31,7 @@ public class Transaction {
         this.timestamp = timestamp;
     }
 
-    public Transaction(Type type, double amount, UUID from, UUID to, Date timestamp, TransactionCategory category, String customCategory, String comment) {
+    public Transaction(TransactionType type, double amount, UUID from, UUID to, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment) {
         this.type = type;
         this.amount = amount;
         this.sourceAccountId = from;
@@ -58,7 +43,7 @@ public class Transaction {
         this.timestamp = timestamp;
     }
 
-    private Transaction.Type type;
+    private TransactionType type;
     private double amount;
     private UUID sourceAccountId;
     private UUID targetAccountId;
@@ -66,10 +51,10 @@ public class Transaction {
     private String customCategory;
     private String comment;
 
-    private Date timestamp;
+    private LocalDateTime timestamp;
     private final UUID id;
 
-    public Type getType() {
+    public TransactionType getType() {
         return type;
     }
 
@@ -89,7 +74,7 @@ public class Transaction {
         return id;
     }
 
-    public Date getTimestamp() {
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
@@ -109,7 +94,7 @@ public class Transaction {
         this.comment = comment;
     }
 
-    public void setType(Type type) {
+    public void setType(TransactionType type) {
         this.type = type;
     }
 
@@ -125,7 +110,7 @@ public class Transaction {
         this.targetAccountId = targetAccountId;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -134,13 +119,9 @@ public class Transaction {
     }
 
     public boolean isRelated(UUID accountId) {
-        if (sourceAccountId != null) {
-            return this.sourceAccountId.equals(accountId);
-        } else if (targetAccountId != null) {
-            return this.targetAccountId.equals(accountId);
-        } else {
-            return false;
-        }
+        if (sourceAccountId != null && this.sourceAccountId.equals(accountId)) {
+            return true;
+        } else return targetAccountId != null && this.targetAccountId.equals(accountId);
     }
 
     public String formatAmount(DataManager dataManager) {

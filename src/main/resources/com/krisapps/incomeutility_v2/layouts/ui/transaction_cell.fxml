@@ -12,9 +12,9 @@
 
 <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" styleClass="transaction-cell" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <FontIcon fx:id="typeIcon" iconColor="#3b42ff" iconLiteral="fltfal-arrow-left-20" iconSize="25" HBox.hgrow="NEVER">
+      <FontIcon fx:id="typeIcon" iconColor="#3b42ff" iconLiteral="fltfal-arrow-swap-20" iconSize="25">
          <HBox.margin>
-            <Insets left="10.0" right="5.0" />
+            <Insets left="10.0" />
          </HBox.margin>
       </FontIcon>
       <VBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">

@@ -191,7 +191,6 @@ public class DataManager {
     public void addTransaction(Transaction transaction) {
         Data d = getData();
         d.transactions.putIfAbsent(transaction.getId(), transaction);
-        System.out.print(d.transactions);
         saveData(d);
     }
 
@@ -268,6 +267,16 @@ public class DataManager {
             } else {
                 return dateOnly.format(LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
             }
+        }
+
+        public static String formatLocalDate(LocalDate date) {
+
+            if (date == null) {
+                return "N/A";
+            }
+
+            DateTimeFormatter dateOnly = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            return dateOnly.format(date);
         }
 
         public static String formatMoney(double money, String symbol, boolean symbolIsPrefix) {
