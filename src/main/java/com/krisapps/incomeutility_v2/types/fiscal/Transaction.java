@@ -1,10 +1,12 @@
 package com.krisapps.incomeutility_v2.types.fiscal;
 
+import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,6 +45,18 @@ public class Transaction {
         this.timestamp = timestamp;
     }
 
+    public Transaction() {
+        this.type = null;
+        this.amount = 0;
+        this.sourceAccountId = null;
+        this.targetAccountId = null;
+        this.category = TransactionCategory.UNKNOWN;
+        this.customCategory = "";
+        this.comment = "";
+        this.id = UUID.randomUUID();
+        this.timestamp = null;
+    }
+
     private TransactionType type;
     private double amount;
     private UUID sourceAccountId;
@@ -62,10 +76,20 @@ public class Transaction {
         return amount;
     }
 
+    /**
+     * Returns the source of the outgoing transfer of the transaction.
+     * If the transaction is not a transfer, use {@link Transaction#getTargetAccountId()} to retrieve the affected account ID.
+     * @return The account ID.
+     */
     public UUID getSourceAccountId() {
         return sourceAccountId;
     }
 
+    /**
+     * Returns the target of the incoming transfer of the transaction.
+     * If the transaction is not a transfer, returns the ID of the affected account.
+     * @return The account ID.
+     */
     public UUID getTargetAccountId() {
         return targetAccountId;
     }
@@ -124,12 +148,29 @@ public class Transaction {
         } else return targetAccountId != null && this.targetAccountId.equals(accountId);
     }
 
-    public String formatAmount(DataManager dataManager) {
+    public String formatAmount(DataManager dataManager, boolean absolute) {
         Optional<Account> source = dataManager.getAccount(this.sourceAccountId);
         if (source.isPresent()) {
-            return DataManager.Formatting.formatMoney(this.amount, source.get().getCurrencyConfig().getCurrencySymbol(), source.get().getCurrencyConfig().isCurrencySymbolPrefix());
+            return DataManager.Formatting.formatMoney(absolute ? Math.abs(this.amount) : this.amount, source.get().getCurrencyConfig().getCurrencySymbol(), source.get().getCurrencyConfig().isCurrencySymbolPrefix());
         } else {
-            return DataManager.Formatting.formatMoney(this.amount, CurrencyConfig.DEFAULT.getCurrencySymbol(), CurrencyConfig.DEFAULT.isCurrencySymbolPrefix());
+            return DataManager.Formatting.formatMoney(absolute ? Math.abs(this.amount) : this.amount, CurrencyConfig.DEFAULT.getCurrencySymbol(), CurrencyConfig.DEFAULT.isCurrencySymbolPrefix());
         }
+    }
+
+    public Transaction copy() {
+        return new Transaction(
+                this.type,
+                this.amount,
+                this.sourceAccountId,
+                this.targetAccountId,
+                this.timestamp,
+                this.category,
+                this.customCategory,
+                this.comment
+        );
+    }
+
+    public static boolean isImported(Transaction t) {
+        return t instanceof CashewTransaction;
     }
 }

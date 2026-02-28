@@ -8,6 +8,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 public class PopupManager {
@@ -49,6 +50,21 @@ public class PopupManager {
         a.setContentText(message);
         a.getButtonTypes().clear();
         a.getButtonTypes().addAll(optionA, optionB);
+        return a.showAndWait();
+    }
+
+    public static Optional<ButtonType> showChoicePopup(String title, String message, ButtonType... options) {
+        if (Arrays.stream(options).noneMatch(type -> type.getButtonData().isCancelButton())) {
+            throw new IllegalArgumentException("Cannot show a confirmation dialog without a cancel option - please ensure that either optionA or optionB is a cancellation ButtonType");
+        }
+
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+        a.getDialogPane().getStylesheets().add(IncomeUtilityController.class.getResource("stylesheets/core-ui.css").toExternalForm());
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(message);
+        a.getButtonTypes().clear();
+        a.getButtonTypes().addAll(options);
         return a.showAndWait();
     }
 

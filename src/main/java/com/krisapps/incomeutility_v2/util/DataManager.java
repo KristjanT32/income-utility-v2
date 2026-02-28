@@ -5,9 +5,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.ToNumberPolicy;
 import com.google.gson.stream.JsonReader;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
+import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTimeTypeAdapter;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTypeAdapter;
+import com.krisapps.incomeutility_v2.util.misc.TransactionDeserializer;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -27,9 +29,13 @@ public class DataManager {
             .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
             .registerTypeAdapter(LocalDate.class, new LocalDateTypeAdapter())
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeTypeAdapter())
+            .registerTypeAdapter(Transaction.class, new TransactionDeserializer())
             .create();
     private static DataManager instance;
     private final File dataFile = new File(System.getProperty("user.home") + File.separator + "IncomeUtility v2" + File.separator + "data.json");
+
+    private Data currentData;
+
     private DataManager() {
     }
 
@@ -38,6 +44,10 @@ public class DataManager {
             instance = new DataManager();
         }
         return instance;
+    }
+
+    public void initialize() {
+        loadData();
     }
 
     public static void log(String msg) {
@@ -101,6 +111,11 @@ public class DataManager {
         }
     }
 
+    public void saveCurrentData() {
+        if (currentData == null) { return; }
+        saveData(currentData);
+    }
+
     /**
      * Loads the saved data from disk.
      *
@@ -108,23 +123,33 @@ public class DataManager {
      */
     private Data getData() {
 
-        if (!dataFile.exists()) {
-            firstTimeFileSetup();
-        }
-
-        InputStreamReader inputStreamReader;
-        try {
-            inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_16);
-            JsonReader reader = new JsonReader(inputStreamReader);
-            Data output = gson.fromJson(reader, Data.class);
-            if (output == null) {
-                output = new Data();
+        if (currentData != null) {
+            return currentData;
+        } else {
+            if (!dataFile.exists()) {
+                firstTimeFileSetup();
             }
-            return output;
-        } catch (IOException e) {
-            log("Failed to retrieve data from data file: " + e.getMessage());
-            return new Data();
+
+            InputStreamReader inputStreamReader;
+            try {
+                inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_16);
+                JsonReader reader = new JsonReader(inputStreamReader);
+                Data output = gson.fromJson(reader, Data.class);
+                if (output == null) {
+                    output = new Data();
+                }
+                return output;
+            } catch (IOException e) {
+                log("Failed to retrieve data from data file: " + e.getMessage());
+                return new Data();
+            }
         }
+    }
+
+    private void loadData() {
+        log("Caching current data...");
+        currentData = getData();
+        log("Done.");
     }
 
     //<editor-fold desc="Data access">
@@ -145,7 +170,6 @@ public class DataManager {
 
     public List<Transaction> getTransactions(UUID accountId) {
         Data d = getData();
-
         return d.transactions.values().stream().filter(t -> t.isRelated(accountId)).toList();
     }
 
@@ -159,8 +183,6 @@ public class DataManager {
         return d.customTransactionCategories;
     }
 
-
-
     public Optional<UUID> getLastActiveAccount() {
         Data d = getData();
         return d.getLastActiveAccountId();
@@ -170,40 +192,28 @@ public class DataManager {
 
     //<editor-fold desc="Data modification">
     public void addAccount(Account account) {
-        Data d = getData();
-        d.accounts.putIfAbsent(account.getId(), account);
-        saveData(d);
+        currentData.accounts.putIfAbsent(account.getId(), account);
     }
 
     public void updateAccount(UUID accountId, Account data) {
-        Data d = getData();
-        d.accounts.replace(accountId, data);
-        saveData(d);
+        currentData.accounts.replace(accountId, data);
     }
 
     public void deleteAccount(UUID accountId) {
-        Data d = getData();
-        d.accounts.remove(accountId);
-        saveData(d);
+        currentData.accounts.remove(accountId);
     }
 
 
     public void addTransaction(Transaction transaction) {
-        Data d = getData();
-        d.transactions.putIfAbsent(transaction.getId(), transaction);
-        saveData(d);
+        currentData.transactions.putIfAbsent(transaction.getId(), transaction);
     }
 
     public void updateTransaction(UUID transactionId, Transaction data) {
-        Data d = getData();
-        d.transactions.replace(transactionId, data);
-        saveData(d);
+        currentData.transactions.replace(transactionId, data);
     }
 
     public void deleteTransaction(UUID transactionId) {
-        Data d = getData();
-        d.transactions.remove(transactionId);
-        saveData(d);
+        currentData.transactions.remove(transactionId);
     }
 
 
@@ -213,10 +223,7 @@ public class DataManager {
      */
     public void updateLastOpenAccount(Account account) {
         if (account == null) return;
-
-        Data d = getData();
-        d.lastActiveAccountId = account.getId().toString();
-        saveData(d);
+        currentData.lastActiveAccountId = account.getId().toString();
     }
     //</editor-fold>
 
@@ -288,6 +295,16 @@ public class DataManager {
             }
         }
 
+        public static String formatMoney(double money, CurrencyConfig config) {
+            DecimalFormat decimalFormat = new DecimalFormat("0.00");
+            if (config.isCurrencySymbolPrefix()) {
+                return config.getCurrencySymbol() + decimalFormat.format(money);
+            } else {
+                return decimalFormat.format(money) + config.getCurrencySymbol();
+            }
+        }
+
+
         public static String formatTimeUnit(int unit) {
             return unit <= 9
                     ? "0" + unit
@@ -299,6 +316,15 @@ public class DataManager {
                 return "N/A";
             }
             return DateTimeFormatter.ofPattern("HH:mm:ss").format(LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
+        }
+
+        public static String formatLocalTime(LocalTime time) {
+
+            if (time == null) {
+                return "N/A";
+            }
+
+            return DateTimeFormatter.ofPattern("HH:mm:ss").format(time);
         }
 
         public static String capitalize(String str) {

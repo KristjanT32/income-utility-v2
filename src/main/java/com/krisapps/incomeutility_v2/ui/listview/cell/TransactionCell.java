@@ -1,6 +1,7 @@
 package com.krisapps.incomeutility_v2.ui.listview.cell;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
+import com.krisapps.incomeutility_v2.dialogs.TransactionDetailsDialog;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
@@ -69,6 +70,11 @@ public class TransactionCell extends ListCell<Transaction> {
         categoryLabel.setStyle("-fx-text-fill: black");
         commentLabel.setStyle("-fx-text-fill: black");
 
+        detailsButton.setOnAction((ev) -> {
+            TransactionDetailsDialog detailsDialog = new TransactionDetailsDialog(transaction, parent);
+            detailsDialog.showAndWait();
+        });
+
         commentLabel.visibleProperty().addListener((obs, _, now) -> {
             commentLabel.setManaged(now);
             rootPane.requestLayout();
@@ -86,7 +92,7 @@ public class TransactionCell extends ListCell<Transaction> {
         });
 
         detailsButton.setVisible(isSelected());
-        amountLabel.setText(transaction.formatAmount(DataManager.getInstance()));
+        amountLabel.setText(transaction.formatAmount(DataManager.getInstance(), true));
 
         rootPane.getStyleClass().removeAll("outflow", "inflow", "transfer");
         if (transaction.getType().equals(TransactionType.TRANSFER)) {

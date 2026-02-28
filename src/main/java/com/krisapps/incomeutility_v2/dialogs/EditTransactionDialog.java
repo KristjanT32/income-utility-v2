@@ -9,22 +9,24 @@ import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;
-import com.krisapps.incomeutility_v2.util.misc.Formats;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import javafx.util.StringConverter;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.UnaryOperator;
 
-public class AddSingleTransactionDialog extends Dialog<Transaction> {
+public class EditTransactionDialog extends Dialog<Transaction> {
 
     @FXML
     private VBox rootPane;
@@ -70,7 +72,7 @@ public class AddSingleTransactionDialog extends Dialog<Transaction> {
 
 
     private final DataManager data = DataManager.getInstance();
-    private final Transaction outputTransaction = new Transaction(null, 0.0d, null, null, null, null, null);
+    private final Transaction outputTransaction;
     private Account selectedAccount;
 
     private final UnaryOperator<TextFormatter.Change> numbersOnlyFormatter = (change) -> {
@@ -87,23 +89,26 @@ public class AddSingleTransactionDialog extends Dialog<Transaction> {
         return null;
     };
 
-    public AddSingleTransactionDialog(Account selectedAccount) {
+    // TODO: Add/verify editing logic
+
+    public EditTransactionDialog(Transaction t, Account selectedAccount) {
         try {
-            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/add-transaction.fxml"));
+            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/edit-transaction.fxml"));
             loader.setController(this);
             rootPane = loader.load();
+            outputTransaction = t.copy();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        ButtonType createButton = new ButtonType("Add", ButtonBar.ButtonData.APPLY);
+        ButtonType createButton = new ButtonType("Apply changes", ButtonBar.ButtonData.APPLY);
         ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
 
         getDialogPane().getButtonTypes().setAll(createButton, cancelButton);
 
         getDialogPane().setContent(rootPane);
         initModality(Modality.APPLICATION_MODAL);
-        setTitle("Register transaction");
+        setTitle("Edit transaction");
 
         this.selectedAccount = selectedAccount;
 
@@ -117,7 +122,28 @@ public class AddSingleTransactionDialog extends Dialog<Transaction> {
             outputTransaction.setTimestamp(assembleDate(dateSelector.getValue(), timeField.getText()));
         });
 
-        dateSelector.setConverter(Formats.DATE_FORMAT);
+        dateSelector.setConverter(new StringConverter<>() {
+            DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            @Override
+            public String toString(LocalDate localDate) {
+                if (localDate != null) {
+                    return format.format(localDate);
+                } else {
+                    return "";
+                }
+            }
+
+            @Override
+            public LocalDate fromString(String s) {
+                SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+                try {
+                    return LocalDate.ofInstant(format.parse(s).toInstant(), ZoneId.systemDefault());
+                } catch (ParseException e) {
+                    return null;
+                }
+            }
+        });
 
         ObservableList<TransactionType> items = transactionTypeSelector.getItems();
         items.setAll(TransactionType.values());

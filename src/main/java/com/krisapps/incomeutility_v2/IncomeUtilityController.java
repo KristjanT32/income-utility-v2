@@ -20,7 +20,7 @@ public class IncomeUtilityController {
 
     public final UtilityManager utilities = UtilityManager.create();
     public final DataManager data = DataManager.getInstance();
-    public final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(4);
+    public final static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(4);
 
     @FXML
     private VBox root;
@@ -63,7 +63,7 @@ public class IncomeUtilityController {
     public void loadAccounts() {
         HashSet<Account> accounts = data.getAccounts();
 
-        accounts.stream().sorted(Comparator.comparingDouble(Account::getBalance).reversed()).forEach(account -> {
+        accounts.stream().sorted(Comparator.comparingDouble(Account::getInitialBalance).reversed()).forEach(account -> {
             VBox container = new VBox();
             container.setFillWidth(true);
             container.setAlignment(Pos.CENTER);

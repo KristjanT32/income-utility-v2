@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
+   <children>
+      <Label text="Map external wallet to local wallet">
+         <styleClass>
+            <String fx:value="large-label" />
+            <String fx:value="bold" />
+         </styleClass>
+      </Label>
+      <Label maxHeight="1.7976931348623157E308" minHeight="-Infinity" styleClass="medium-label" text="Which local wallet would you like to associate with the following wallet?" textOverrun="WORD_ELLIPSIS" wrapText="true">
+         <VBox.margin>
+            <Insets top="5.0" />
+         </VBox.margin>
+      </Label>
+      <VBox styleClass="rounded-container">
+         <children>
+            <Label fx:id="walletLabel" maxWidth="1.7976931348623157E308" text="External Wallet Name">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <styleClass>
+                  <String fx:value="medium-label" />
+                  <String fx:value="bold" />
+               </styleClass>
+            </Label>
+         </children>
+         <VBox.margin>
+            <Insets top="10.0" />
+         </VBox.margin>
+      </VBox>
+      <HBox alignment="CENTER">
+         <children>
+            <FontIcon iconLiteral="fltral-arrow-down-20" iconSize="20" textAlignment="CENTER" wrappingWidth="40.0" />
+         </children>
+         <VBox.margin>
+            <Insets bottom="10.0" top="10.0" />
+         </VBox.margin>
+      </HBox>
+      <ComboBox fx:id="accountSelector" maxWidth="1.7976931348623157E308" prefHeight="30.0" prefWidth="150.0" promptText="Select local account">
+         <VBox.margin>
+            <Insets />
+         </VBox.margin>
+      </ComboBox>
+   </children>
+   <stylesheets>
+      <URL value="@../../stylesheets/core-ui.css" />
+      <URL value="@../../stylesheets/main.css" />
+   </stylesheets>
+</VBox>

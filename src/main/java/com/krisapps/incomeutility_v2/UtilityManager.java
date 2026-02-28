@@ -66,6 +66,10 @@ public class UtilityManager {
         }
     }
 
+    public boolean hasOpenUtilities() {
+        return !activeUtilities.isEmpty();
+    }
+
     public void openUtility(SubUtilityType utility) {
         if (checkAlreadyOpen(utility)) {
             PopupManager.showConfirmation("Confirm open new instance",

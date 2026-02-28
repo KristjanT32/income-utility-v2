@@ -89,3 +89,56 @@
 .transaction-cell.transfer {
     -fx-background-color: #93d3ea;
 }
+
+.leftmost-container {
+    -fx-background-color: #cacaca;
+    -fx-background-radius: 10px 0 0 10px;
+}
+
+.rightmost-container {
+    -fx-background-radius: 0 10px 10px 0;
+}
+
+.hoverable-container:hover {
+    -fx-background-color: #cacaca;
+}
+
+/** Flairs for transaction info **/
+.flair-account {
+    -fx-background-color: #b699ef;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-padding: 5px;
+    -fx-font-size: 16px;
+}
+
+.flair-deposit {
+    -fx-background-color: #99ef99;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-padding: 5px;
+    -fx-font-size: 16px;
+}
+
+.flair-withdrawal {
+    -fx-background-color: #ec9696;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-padding: 5px;
+    -fx-font-size: 16px;
+}
+
+.flair-transfer {
+    -fx-background-color: #99b7ef;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-padding: 5px;
+    -fx-font-size: 16px;
+}
+
+.flair-generic {
+    -fx-background-color: #e1e1e1;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-font-size: 16px;
+}

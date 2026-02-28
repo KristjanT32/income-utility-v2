@@ -1,4 +1,4 @@
-package com.krisapps.incomeutility_v2.util;
+package com.krisapps.incomeutility_v2.util.services;
 
 import com.krisapps.incomeutility_v2.exceptions.InvalidTransactionException;
 import com.krisapps.incomeutility_v2.exceptions.OperationNotPermittedException;
@@ -6,14 +6,19 @@ import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException
 import com.krisapps.incomeutility_v2.types.OperationType;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
+import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewAccount;
+import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
 import com.krisapps.incomeutility_v2.types.transaction.RejectionReason;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
+import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.misc.Formats;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,6 +26,7 @@ public class TransactionService {
 
     private static TransactionService instance;
     private static final DataManager data = DataManager.getInstance();
+    private static final FiscalService fiscal = FiscalService.getInstance();
 
     private TransactionService() {
 
@@ -61,9 +67,6 @@ public class TransactionService {
         }
 
         Account account = a.get();
-
-        double before = account.getBalance();
-        account.setBalance(before + amount);
         data.addTransaction(new Transaction(TransactionType.DEPOSIT, amount, accountId, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment));
         data.updateAccount(accountId, account);
         log("New transaction registered: DEPOSIT of %s to %s".formatted(amount, account.getName()));
@@ -88,13 +91,12 @@ public class TransactionService {
             throw new TransactionNotPermittedException(TransactionType.WITHDRAWAL, RejectionReason.INVALID_AMOUNT, null, String.format("Cannot withdraw from %s - transacted amount has to be greater than 0.", accountId));
         }
 
-        if (amount > a.get().getBalance()) {
+        if (amount > fiscal.getCurrentBalance(a.get())) {
             throw new TransactionNotPermittedException(TransactionType.WITHDRAWAL, RejectionReason.INSUFFICIENT_BALANCE, a.get(), String.format("Cannot withdraw from %s - insufficient balance to complete transaction.", accountId));
         }
 
         Account account = a.get();
 
-        account.setBalance(account.getBalance() - amount);
         data.addTransaction(new Transaction(TransactionType.WITHDRAWAL, amount, accountId, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment));
         data.updateAccount(accountId, account);
         log("New transaction registered: WITHDRAWAL of %s from %s".formatted(amount, account.getName()));
@@ -125,15 +127,13 @@ public class TransactionService {
             throw new TransactionNotPermittedException(TransactionType.TRANSFER, RejectionReason.INVALID_AMOUNT, null, "Cannot complete transfer - transacted amount has to be greater than 0.");
         }
 
-        if (amount > acc1.get().getBalance()) {
+        if (amount > fiscal.getCurrentBalance(acc1.get())) {
             throw new TransactionNotPermittedException(TransactionType.TRANSFER, RejectionReason.INSUFFICIENT_BALANCE, acc1.get(), String.format("Cannot transfer from %s - insufficient balance to complete transaction.", acc1.get().getId()));
         }
 
         Account fromAccount = acc1.get();
         Account toAccount = acc2.get();
 
-        fromAccount.setBalance(fromAccount.getBalance() - amount);
-        toAccount.setBalance(toAccount.getBalance() + amount);
         data.updateAccount(fromAccount.getId(), fromAccount);
         data.updateAccount(toAccount.getId(), toAccount);
         data.addTransaction(new Transaction(TransactionType.TRANSFER, amount, from, to, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment));
@@ -158,60 +158,46 @@ public class TransactionService {
         }
     }
 
-    public void rollback(UUID transactionId) {
-        Optional<Transaction> transaction = data.getTransaction(transactionId);
+    public void pushTransactionsTo(Account account, Transaction... transactions) {
+        for (Transaction t: transactions) {
+            if (Transaction.isImported(t)) {
+                CashewTransaction importedTransaction = (CashewTransaction) t;
+                if (importedTransactionExists(account, importedTransaction)) {
+                    continue;
+                }
 
-        if (transaction.isEmpty()) {
-            throw new OperationNotPermittedException(OperationType.ROLLBACK, "Cannot rollback %s - transaction does not exist.".formatted(transactionId));
+                data.addTransaction(t);
+            }
         }
+    }
 
-        Transaction transactionObject = transaction.get();
-        switch (transactionObject.getType()) {
-            case DEPOSIT -> {
-                Optional<Account> a = getAccountById(transactionObject.getTargetAccountId());
-                if (a.isPresent()) {
-                    Account account = a.get();
-                    account.setBalance(account.getBalance() - transactionObject.getAmount());
-                    data.updateAccount(account.getId(), account);
-                    data.deleteTransaction(transactionId);
-                } else {
-                    throw new InvalidTransactionException("Cannot rollback %s - transaction target account does not exist.".formatted(transactionId));
+    public void pushTransactionsTo(Account account, List<? extends Transaction> transactions) {
+        for (Transaction t: transactions) {
+            if (Transaction.isImported(t)) {
+                CashewTransaction importedTransaction = (CashewTransaction) t;
+                if (importedTransactionExists(account, importedTransaction)) {
+                    System.out.println("Skipping existing Cashew transaction #" + importedTransaction.getCashewTransactionId());
+                    continue;
                 }
-            }
-            case WITHDRAWAL -> {
-                Optional<Account> a = getAccountById(transactionObject.getTargetAccountId());
-                if (a.isPresent()) {
-                    Account account = a.get();
-                    account.setBalance(account.getBalance() + transactionObject.getAmount());
-                    data.updateAccount(account.getId(), account);
-                    data.deleteTransaction(transactionId);
-                } else {
-                    throw new OperationNotPermittedException(OperationType.ROLLBACK, "Cannot rollback %s - transaction target account does not exist.".formatted(transactionId));
-                }
-            }
-            case TRANSFER -> {
-                Optional<Account> a = getAccountById(transactionObject.getSourceAccountId());
-                Optional<Account> b = getAccountById(transactionObject.getTargetAccountId());
-                if (a.isPresent() && b.isPresent()) {
-                    Account from = a.get();
-                    Account to = b.get();
 
-                    // From receives back, to loses the transaction amount.
-                    from.setBalance(from.getBalance() + transactionObject.getAmount());
-                    to.setBalance(to.getBalance() - transactionObject.getAmount());
-
-                    data.updateAccount(from.getId(), from);
-                    data.updateAccount(to.getId(), to);
-                    data.deleteTransaction(transactionId);
-                } else {
-                    throw new InvalidTransactionException("Cannot rollback %s - transaction %s account does not exist.".formatted(transactionId, (a.isEmpty() ? "source" : "target")));
+                data.addTransaction(t);
+            } else {
+                if (!transactionExists(account, t)) {
+                    data.addTransaction(t);
                 }
             }
         }
-        log("Rolled back transaction %s of type %s".formatted(transactionId, transactionObject.getType().getDisplayName()));
+    }
+
+    public boolean transactionExists(Account account, Transaction transaction) {
+        return data.getTransactions(account).stream().anyMatch(t -> t.getId().equals(transaction.getId()));
+    }
+
+    public boolean importedTransactionExists(Account account, CashewTransaction transaction) {
+        return data.getTransactions(account).stream().filter(Transaction::isImported).anyMatch(imported -> ((CashewTransaction)imported).getCashewTransactionId().equals(transaction.getCashewTransactionId()));
     }
 
     private void log(String msg) {
-        DataManager.log(msg);
+        DataManager.log("[Transactions] " + msg);
     }
 }

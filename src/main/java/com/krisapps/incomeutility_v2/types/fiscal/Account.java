@@ -33,7 +33,7 @@ public class Account {
     }
 
     private String name = "";
-    private double balance = 0.0d;
+    private double initialBalance = 0.0d;
     private CurrencyConfig currencyConfig;
     private final UUID id;
     private Account.Type type;
@@ -54,8 +54,8 @@ public class Account {
         return name;
     }
 
-    public double getBalance() {
-        return balance;
+    public double getInitialBalance() {
+        return initialBalance;
     }
 
     public UUID getId() {
@@ -70,8 +70,8 @@ public class Account {
         this.name = name;
     }
 
-    public void setBalance(double balance) {
-        this.balance = balance;
+    public void setInitialBalance(double initialBalance) {
+        this.initialBalance = initialBalance;
     }
 
     public void setDefault(boolean isDefault) {
@@ -94,10 +94,6 @@ public class Account {
         return isDefault;
     }
 
-    public String formatBalance() {
-        return DataManager.Formatting.formatMoney(balance, currencyConfig.getCurrencySymbol(), currencyConfig.isCurrencySymbolPrefix());
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Account)) {
@@ -109,6 +105,6 @@ public class Account {
 
     @Override
     public String toString() {
-        return String.format("Account(name = %s, balance = %s, type = %s, uuid = %s)", this.name, this.balance, this.type.name(), this.id.toString());
+        return String.format("Account(name = %s, balance = %s, type = %s, uuid = %s)", this.name, this.initialBalance, this.type.name(), this.id.toString());
     }
 }

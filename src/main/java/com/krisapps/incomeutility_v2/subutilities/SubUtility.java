@@ -44,6 +44,7 @@ public abstract class SubUtility {
         window.setMinWidth(minWidth);
         window.setMinHeight(minHeight);
         window.setResizable(allowResize);
+        window.setTitle(type.getDisplayName());
         window.setOnCloseRequest((_) -> {
             stop();
         });

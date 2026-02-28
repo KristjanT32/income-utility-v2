@@ -1,8 +1,15 @@
 package com.krisapps.incomeutility_v2;
 
+import com.krisapps.incomeutility_v2.dialogs.LoadingDialog;
+import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
+import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -21,6 +28,42 @@ public class IncomeUtilityApplication extends Application {
         stage.setScene(scene);
 
         window = stage;
+        window.setOnCloseRequest((r) -> {
+            if (UtilityManager.getInstance().hasOpenUtilities()) {
+                PopupManager.showConfirmation(
+                        "Shutdown application",
+                        "Are you sure you wish to close the application?\nAll open sub-utilities will also be closed.",
+                        new ButtonType("Yes, close everything", ButtonBar.ButtonData.APPLY),
+                        new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                ).ifPresent(response -> {
+                    if (response.getButtonData() == ButtonBar.ButtonData.APPLY) {
+                        LoadingDialog dialog = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
+                        dialog.setPrimaryLabel("Cleaning up");
+                        dialog.setSecondaryLabel("Saving data...");
+                        dialog.show("Shutting down...", new Runnable() {
+                            @Override
+                            public void run() {
+                                DataManager.getInstance().saveCurrentData();
+                                try {
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                dialog.setSecondaryLabel("Closing, bye!");
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                UtilityManager.getInstance().stopAll(SubUtilityType.ALL);
+                                Platform.exit();
+                                System.exit(0);
+                            }
+                        });
+                    }
+                });
+            }
+        });
         stage.show();
     }
 

@@ -73,7 +73,7 @@ public class AddAccountWizard extends Dialog<Account> {
 
         balanceField.setTextFormatter(new TextFormatter<>(numbersOnlyFormatter));
         balanceField.textProperty().addListener((o, oldVal, newVal) -> {
-            outputAccount.setBalance(Double.parseDouble(balanceField.getText()));
+            outputAccount.setInitialBalance(Double.parseDouble(balanceField.getText()));
         });
 
         setResultConverter((action) -> {

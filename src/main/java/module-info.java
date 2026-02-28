@@ -9,6 +9,7 @@ module com.krisapps.incomeutility_v2 {
     requires javafx.graphics;
     requires java.desktop;
     requires javafx.base;
+    requires java.sql;
 
     opens com.krisapps.incomeutility_v2 to javafx.fxml;
     opens com.krisapps.incomeutility_v2.subutilities.money_flow to javafx.fxml;
@@ -19,4 +20,6 @@ module com.krisapps.incomeutility_v2 {
 
     exports com.krisapps.incomeutility_v2;
     exports com.krisapps.incomeutility_v2.types.transaction;
+    opens com.krisapps.incomeutility_v2.util.services to com.google.gson;
+    opens com.krisapps.incomeutility_v2.types.fiscal.cashew to com.google.gson;
 }
