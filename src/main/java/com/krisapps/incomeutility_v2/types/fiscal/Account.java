@@ -1,7 +1,5 @@
 package com.krisapps.incomeutility_v2.types.fiscal;
 
-import com.krisapps.incomeutility_v2.util.DataManager;
-
 import java.util.Arrays;
 import java.util.UUID;
 

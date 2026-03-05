@@ -1,9 +1,9 @@
 package com.krisapps.incomeutility_v2;
 
-import com.krisapps.incomeutility_v2.util.DataManager;
 import javafx.application.Application;
 
-public class Launcher {
+public class
+Launcher {
     public static void main(String[] args) {
         Application.launch(IncomeUtilityApplication.class, args);
     }

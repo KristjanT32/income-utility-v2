@@ -1,8 +1,6 @@
 package com.krisapps.incomeutility_v2.util.services;
 
-import com.krisapps.incomeutility_v2.dialogs.AccountMappingDialog;
 import com.krisapps.incomeutility_v2.dialogs.LoadingDialog;
-import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewAccount;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
@@ -15,12 +13,15 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URI;
-import java.nio.charset.UnmappableCharacterException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.*;
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Optional;
 
 public class CashewService {
 
@@ -182,6 +183,8 @@ public class CashewService {
         }
     }
 
+    // TODO: Ensure future transactions aren't imported - right now, some seem to slip through
+
     /**
      * Retrieves transactions from the currently loaded database file from the supplied account.
      * <p>
@@ -242,11 +245,10 @@ public class CashewService {
                         while (results.next()) {
                             if (results.getString("transaction_pk").contains("::predict::1")) {
                                 dialog.setSecondaryLabel("Skipping future #" + transactionCount);
-                                continue;
                             } else {
                                 dialog.setSecondaryLabel("Importing transaction #" + transactionCount++);
+                                transactions.add(mapToTransaction(results));
                             }
-                            transactions.add(mapToTransaction(results));
                         }
                     } catch (SQLException e) {
                         Platform.runLater(() -> {

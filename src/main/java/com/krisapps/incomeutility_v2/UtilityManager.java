@@ -24,7 +24,6 @@ public class UtilityManager {
 
     public static UtilityManager create() {
         if (instance == null) {
-
             instance = new UtilityManager();
         }
         return instance;

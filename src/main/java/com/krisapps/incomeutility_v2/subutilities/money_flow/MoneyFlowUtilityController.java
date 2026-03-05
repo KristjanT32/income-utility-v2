@@ -10,8 +10,8 @@ import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
-import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import com.krisapps.incomeutility_v2.util.PopupManager;
+import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import com.krisapps.incomeutility_v2.util.services.TransactionService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -20,8 +20,6 @@ import javafx.scene.control.*;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
 
-import javax.swing.*;
-import javax.swing.text.html.Option;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -69,15 +67,15 @@ public class MoneyFlowUtilityController {
     private ListView<Transaction> transactionList;
     //</editor-fold>
 
-
     private Account selectedAccount;
     private LocalDate selectedDate;
+
+    // TODO: Ensure no actions can be taken if there is no account selected.
 
 
     private static void log(String message) {
         DataManager.log("[Money In Money Out] " + message);
     }
-
 
     @FXML
     public void initialize() {

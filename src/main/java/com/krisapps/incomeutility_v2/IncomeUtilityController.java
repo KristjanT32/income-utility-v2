@@ -46,6 +46,7 @@ public class IncomeUtilityController {
 
         registerHandlers();
         loadAccounts();
+        data.initialize();
 
         IncomeUtilityApplication.updateTitle("Dashboard", false);
     }

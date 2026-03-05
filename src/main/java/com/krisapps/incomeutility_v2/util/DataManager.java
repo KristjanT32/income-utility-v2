@@ -192,27 +192,45 @@ public class DataManager {
 
     //<editor-fold desc="Data modification">
     public void addAccount(Account account) {
+        if (currentData == null) {
+            initialize();
+        }
         currentData.accounts.putIfAbsent(account.getId(), account);
     }
 
     public void updateAccount(UUID accountId, Account data) {
+        if (currentData == null) {
+            initialize();
+        }
         currentData.accounts.replace(accountId, data);
     }
 
     public void deleteAccount(UUID accountId) {
+        if (currentData == null) {
+            initialize();
+        }
         currentData.accounts.remove(accountId);
     }
 
 
     public void addTransaction(Transaction transaction) {
+        if (currentData == null) {
+            initialize();
+        }
         currentData.transactions.putIfAbsent(transaction.getId(), transaction);
     }
 
     public void updateTransaction(UUID transactionId, Transaction data) {
+        if (currentData == null) {
+            initialize();
+        }
         currentData.transactions.replace(transactionId, data);
     }
 
     public void deleteTransaction(UUID transactionId) {
+        if (currentData == null) {
+            initialize();
+        }
         currentData.transactions.remove(transactionId);
     }
 
@@ -223,6 +241,9 @@ public class DataManager {
      */
     public void updateLastOpenAccount(Account account) {
         if (account == null) return;
+        if (currentData == null) {
+            initialize();
+        }
         currentData.lastActiveAccountId = account.getId().toString();
     }
     //</editor-fold>
