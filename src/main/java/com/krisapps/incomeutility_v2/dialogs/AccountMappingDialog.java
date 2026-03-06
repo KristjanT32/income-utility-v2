@@ -6,9 +6,11 @@ import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
 import com.krisapps.incomeutility_v2.util.services.CashewService;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -39,10 +41,12 @@ public class AccountMappingDialog extends Dialog<UUID> {
             throw new RuntimeException(e);
         }
 
-        ButtonType mapButton = new ButtonType("Map", ButtonBar.ButtonData.APPLY);
-        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-
+        ButtonType mapButton = new ButtonType("Apply and import", ButtonBar.ButtonData.APPLY);
+        ButtonType cancelButton = new ButtonType("Skip", ButtonBar.ButtonData.CANCEL_CLOSE);
         getDialogPane().getButtonTypes().setAll(mapButton, cancelButton);
+
+        Node b = getDialogPane().lookupButton(mapButton);
+        b.setDisable(accountSelector.getValue() == null);
 
         getDialogPane().setContent(rootPane);
         initModality(Modality.APPLICATION_MODAL);
@@ -51,6 +55,9 @@ public class AccountMappingDialog extends Dialog<UUID> {
         accountSelector.setCellFactory(new AccountComboboxCellFactory());
         accountSelector.setButtonCell(new AccountComboboxButtonCell());
         accountSelector.getItems().setAll(fiscal.getAccounts());
+        accountSelector.valueProperty().addListener((obs, old, val) -> {
+            b.setDisable(accountSelector.getValue() == null);
+        });
 
         setResultConverter((response) -> {
             if (response.getButtonData() == ButtonBar.ButtonData.APPLY) {

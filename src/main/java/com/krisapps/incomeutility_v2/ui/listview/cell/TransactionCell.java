@@ -18,6 +18,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class TransactionCell extends ListCell<Transaction> {
 
@@ -40,13 +41,15 @@ public class TransactionCell extends ListCell<Transaction> {
     private FontIcon typeIcon;
 
     private final Account parent;
+    private final Consumer<Transaction> onItemDataChange;
 
-    public TransactionCell(Account parent) {
+    public TransactionCell(Account parent, Consumer<Transaction> onItemDataChange) {
         try {
             FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/ui/transaction_cell.fxml"));
             loader.setController(this);
             rootPane = loader.load();
             this.parent = parent;
+            this.onItemDataChange = onItemDataChange;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -73,6 +76,7 @@ public class TransactionCell extends ListCell<Transaction> {
         detailsButton.setOnAction((ev) -> {
             TransactionDetailsDialog detailsDialog = new TransactionDetailsDialog(transaction, parent);
             detailsDialog.showAndWait();
+            onItemDataChange.accept(transaction);
         });
 
         commentLabel.visibleProperty().addListener((obs, _, now) -> {

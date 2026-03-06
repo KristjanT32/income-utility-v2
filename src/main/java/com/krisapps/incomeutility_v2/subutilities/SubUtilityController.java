@@ -1,0 +1,8 @@
+package com.krisapps.incomeutility_v2.subutilities;
+
+public abstract class SubUtilityController {
+
+    public abstract void onStartup(SubUtility utility);
+
+    public abstract void onShutdown();
+}

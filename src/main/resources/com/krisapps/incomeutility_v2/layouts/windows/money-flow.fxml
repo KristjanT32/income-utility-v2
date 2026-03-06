@@ -22,11 +22,20 @@
          <children>
             <HBox maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" spacing="10.0">
                <children>
-                  <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="title" text="Money In, Money Out" HBox.hgrow="ALWAYS">
-                     <font>
-                        <Font name="System Bold" size="22.0" />
-                     </font>
-                  </Label>
+                  <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="10.0" HBox.hgrow="ALWAYS">
+                     <children>
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="title" text="Money In, Money Out">
+                           <font>
+                              <Font name="System Bold" size="22.0" />
+                           </font>
+                        </Label>
+                        <Button fx:id="backButton" mnemonicParsing="false" text="Back">
+                           <graphic>
+                              <FontIcon iconLiteral="fltfal-arrow-hook-up-left-20" iconSize="12" />
+                           </graphic>
+                        </Button>
+                     </children>
+                  </HBox>
                   <ComboBox fx:id="accountSelector" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="250.0" HBox.hgrow="SOMETIMES" />
                </children>
                <VBox.margin>
@@ -199,7 +208,7 @@
                            </graphic>
                         </Button>
                         <Separator prefWidth="200.0" visible="false" HBox.hgrow="ALWAYS" />
-                        <MenuButton maxHeight="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" text="New transaction" HBox.hgrow="ALWAYS">
+                        <MenuButton fx:id="addTransactionButton" maxHeight="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" text="New transaction" HBox.hgrow="ALWAYS">
                           <items>
                             <MenuItem mnemonicParsing="false" onAction="#promptAddSingleTransaction" text="Add single" />
                             <MenuItem mnemonicParsing="false" text="Add multiple" />

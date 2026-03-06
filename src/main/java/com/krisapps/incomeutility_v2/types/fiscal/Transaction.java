@@ -4,6 +4,7 @@ import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -18,7 +19,7 @@ public class Transaction {
         this.customCategory = customCategory;
     }
 
-    public Transaction(TransactionType type, double amount, UUID account, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment) {
+    public Transaction(TransactionType type, double amount, UUID account, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, @Nullable UUID id) {
         this.type = type;
         this.amount = amount;
         if (type == TransactionType.DEPOSIT || type == TransactionType.WITHDRAWAL) {
@@ -28,11 +29,11 @@ public class Transaction {
         this.customCategory = customCategory == null ? "" : customCategory;
         this.comment = comment == null ? "" : comment;
 
-        this.id = UUID.randomUUID();
+        this.id = id == null ? UUID.randomUUID() : id;
         this.timestamp = timestamp;
     }
 
-    public Transaction(TransactionType type, double amount, UUID from, UUID to, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment) {
+    public Transaction(TransactionType type, double amount, UUID from, UUID to, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, @Nullable UUID id) {
         this.type = type;
         this.amount = amount;
         this.sourceAccountId = from;
@@ -40,7 +41,7 @@ public class Transaction {
         this.category = category == null ? TransactionCategory.of(type) : category;
         this.customCategory = customCategory == null ? "" : customCategory;
         this.comment = comment == null ? "" : comment;
-        this.id = UUID.randomUUID();
+        this.id = id == null ? UUID.randomUUID() : id;
         this.timestamp = timestamp;
     }
 
@@ -73,6 +74,10 @@ public class Transaction {
 
     public double getAmount() {
         return amount;
+    }
+
+    public double getAbsoluteAmount() {
+        return Math.abs(amount);
     }
 
     /**
@@ -165,7 +170,8 @@ public class Transaction {
                 this.timestamp,
                 this.category,
                 this.customCategory,
-                this.comment
+                this.comment,
+                this.id
         );
     }
 

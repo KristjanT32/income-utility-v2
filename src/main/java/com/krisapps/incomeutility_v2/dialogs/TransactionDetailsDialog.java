@@ -8,10 +8,7 @@ import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -58,6 +55,9 @@ public class TransactionDetailsDialog extends Dialog<Void> {
     @FXML
     private FontIcon typeIcon;
 
+    @FXML
+    private Button editButton;
+
 
 
     private final String WITHDRAWAL_ICON = "fltrmz-presence-dnd-10";
@@ -78,21 +78,19 @@ public class TransactionDetailsDialog extends Dialog<Void> {
         }
 
         ButtonType cancelButton = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
-        ButtonType editButton = new ButtonType("Edit transaction", ButtonBar.ButtonData.APPLY);
-
-        getDialogPane().getButtonTypes().setAll(cancelButton, editButton);
+        getDialogPane().getButtonTypes().setAll(cancelButton);
 
         getDialogPane().setContent(rootPane);
         initModality(Modality.APPLICATION_MODAL);
         setTitle("Transaction details");
 
-        setResultConverter((action) -> {
-            if (action.getButtonData() == ButtonBar.ButtonData.APPLY) {
-                EditTransactionDialog editDialog = new EditTransactionDialog(transaction, selectedAccount);
-                Optional<Transaction> updated = editDialog.showAndWait();
-                updated.ifPresent(value -> DataManager.getInstance().updateTransaction(value.getId(), value));
-            }
-            return null;
+        editButton.setOnAction((ev) -> {
+            EditTransactionDialog editDialog = new EditTransactionDialog(transaction.copy(), selectedAccount);
+            Optional<Transaction> updated = editDialog.showAndWait();
+            updated.ifPresent(value -> {
+                DataManager.getInstance().updateTransaction(value.getId(), value);
+                close();
+            });
         });
 
         transferPanel.managedProperty().bindBidirectional(transferPanel.visibleProperty());
@@ -103,10 +101,20 @@ public class TransactionDetailsDialog extends Dialog<Void> {
 
     private void updateUI() {
         typeLabel.setText(transaction.getType().getDisplayName());
+        typeLabel.getStyleClass().removeAll("flair-withdrawal", "flair-deposit", "flair-transfer");
         switch (transaction.getType()) {
-            case DEPOSIT -> typeIcon.setIconLiteral(DEPOSIT_ICON);
-            case WITHDRAWAL -> typeIcon.setIconLiteral(WITHDRAWAL_ICON);
-            case TRANSFER -> typeIcon.setIconLiteral(TRANSFER_ICON);
+            case DEPOSIT -> {
+                typeIcon.setIconLiteral(DEPOSIT_ICON);
+                typeLabel.getStyleClass().add("flair-deposit");
+            }
+            case WITHDRAWAL -> {
+                typeIcon.setIconLiteral(WITHDRAWAL_ICON);
+                typeLabel.getStyleClass().add("flair-withdrawal");
+            }
+            case TRANSFER -> {
+                typeIcon.setIconLiteral(TRANSFER_ICON);
+                typeLabel.getStyleClass().add("flair-transfer");
+            }
         }
 
         if (transaction.getType().equals(TransactionType.TRANSFER)) {
@@ -117,23 +125,26 @@ public class TransactionDetailsDialog extends Dialog<Void> {
             transferToLabel.setText(to.isPresent() ? to.get().getName() : "Unknown account");
 
             amountLabel.setText(DataManager.Formatting.formatMoney(
-                    transaction.getAmount(),
+                    transaction.getAbsoluteAmount(),
                     to.isPresent() ? to.get().getCurrencyConfig() : CurrencyConfig.DEFAULT
             ));
 
             transferPanel.setVisible(true);
-            amountLabel.setVisible(false);
+            accountLabel.setVisible(false);
+            accountLabel.setManaged(false);
         } else {
             Optional<Account> acc = dataManager.getAccount(transaction.getTargetAccountId());
             accountLabel.setText(acc.isPresent() ? acc.get().getName() : "Unknown account");
 
-            amountLabel.setText(DataManager.Formatting.formatMoney(
-                    transaction.getAmount(),
+            amountLabel.setText(
+                    DataManager.Formatting.formatMoney(
+                    transaction.getAbsoluteAmount(),
                     acc.isPresent() ? acc.get().getCurrencyConfig() : CurrencyConfig.DEFAULT
             ));
 
             transferPanel.setVisible(false);
-            amountLabel.setVisible(true);
+            accountLabel.setVisible(true);
+            accountLabel.setManaged(true);
         }
 
         dateLabel.setText(DataManager.Formatting.formatLocalDate(transaction.getTimestamp().toLocalDate()));

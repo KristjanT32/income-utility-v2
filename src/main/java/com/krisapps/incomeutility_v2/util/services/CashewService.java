@@ -76,7 +76,6 @@ public class CashewService {
     }
 
     public Optional<CashewAccount> getWalletById(String id) {
-        System.out.println("Looking for wallet with ID: " + id);
         try {
             Connection connection = DriverManager.getConnection("jdbc:sqlite:" + file.getPath());
             PreparedStatement statement = connection.prepareStatement("SELECT name, wallet_pk FROM wallets WHERE wallet_pk = ?");
@@ -183,10 +182,9 @@ public class CashewService {
         }
     }
 
-    // TODO: Ensure future transactions aren't imported - right now, some seem to slip through
-
     /**
      * Retrieves transactions from the currently loaded database file from the supplied account.
+     * If the imported transactions contain already imported transactions, they will be skipped.
      * <p>
      * - If both <code>startDateInclusive</code> and <code>endDateInclusive</code> are non-null,
      * only transactions falling into the resulting inclusive range will be returned.
@@ -245,6 +243,7 @@ public class CashewService {
                         while (results.next()) {
                             if (results.getString("transaction_pk").contains("::predict::1")) {
                                 dialog.setSecondaryLabel("Skipping future #" + transactionCount);
+                                System.out.println("Found future transaction. Skipping!");
                             } else {
                                 dialog.setSecondaryLabel("Importing transaction #" + transactionCount++);
                                 transactions.add(mapToTransaction(results));

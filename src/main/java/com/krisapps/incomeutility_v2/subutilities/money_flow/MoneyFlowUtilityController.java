@@ -3,6 +3,8 @@ package com.krisapps.incomeutility_v2.subutilities.money_flow;
 import com.krisapps.incomeutility_v2.dialogs.AddSingleTransactionDialog;
 import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
 import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException;
+import com.krisapps.incomeutility_v2.subutilities.SubUtility;
+import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
@@ -11,28 +13,27 @@ import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;
+import com.krisapps.incomeutility_v2.util.misc.Formats;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import com.krisapps.incomeutility_v2.util.services.TransactionService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.util.Callback;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Optional;
 
 /* Controller class for the Money In Money Out utility */
-public class MoneyFlowUtilityController {
+public class MoneyFlowUtilityController extends SubUtilityController {
 
     private static final DataManager data = DataManager.getInstance();
     private static final TransactionService transactor = TransactionService.getInstance();
@@ -65,26 +66,31 @@ public class MoneyFlowUtilityController {
 
     @FXML
     private ListView<Transaction> transactionList;
+
+    @FXML
+    private MenuButton addTransactionButton;
+
+    @FXML
+    private Button backButton;
     //</editor-fold>
 
     private Account selectedAccount;
     private LocalDate selectedDate;
 
-    // TODO: Ensure no actions can be taken if there is no account selected.
-
-
-    private static void log(String message) {
-        DataManager.log("[Money In Money Out] " + message);
-    }
+    private SubUtility utility;
 
     @FXML
     public void initialize() {
         data.initialize();
-        log("Initializing fiscal data...");
         initUI();
     }
 
-    public void stop() {
+    public void onStartup(SubUtility utility) {
+        this.utility = utility;
+        utility.log("Initializing fiscal data...");
+    }
+
+    public void onShutdown() {
         data.updateLastOpenAccount(selectedAccount);
         data.saveCurrentData();
     }
@@ -114,34 +120,16 @@ public class MoneyFlowUtilityController {
             }
         });
 
-        datePicker.setConverter(new StringConverter<LocalDate>() {
-            DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-            @Override
-            public String toString(LocalDate localDate) {
-                if (localDate != null) {
-                    return format.format(localDate);
-                } else {
-                    return "";
-                }
-            }
-
-            @Override
-            public LocalDate fromString(String s) {
-                SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-                try {
-                    return LocalDate.ofInstant(format.parse(s).toInstant(), ZoneId.systemDefault());
-                } catch (ParseException e) {
-                    return null;
-                }
-            }
-        });
+        datePicker.setConverter(Formats.DATE_FORMAT);
 
         accountSelector.setCellFactory(new AccountComboboxCellFactory());
         accountSelector.setButtonCell(new AccountComboboxButtonCell());
         accountSelector.valueProperty().addListener(((_, _, newValue) -> {
             selectedAccount = newValue;
-            transactionList.setCellFactory(new TransactionCellFactory(selectedAccount));
+            transactionList.setCellFactory(new TransactionCellFactory(selectedAccount, (item) -> {
+                refreshUI();
+                refreshTransactionList();
+            }));
             refreshTransactionList();
             refreshUI();
         }));
@@ -163,6 +151,12 @@ public class MoneyFlowUtilityController {
         }, () -> {
             accountSelector.setValue(data.getAccounts().stream().findFirst().orElse(null));
         });
+
+        backButton.setOnAction((ev) -> {
+            this.utility.stop();
+        });
+
+        refreshUI();
     }
 
     public void refreshAccountSelector() {
@@ -226,6 +220,8 @@ public class MoneyFlowUtilityController {
             outflowLabel.setText("N/A");
             changeLabel.setText("N/A");
         }
+
+        addTransactionButton.setDisable(selectedAccount == null);
     }
 
     @FXML
@@ -271,6 +267,7 @@ public class MoneyFlowUtilityController {
             refreshTransactionList();
             refreshUI();
             refreshAccountSelector();
+            PopupManager.showPopup("Import completed!", "Successfully imported %s transactions from Cashew.".formatted(importedTransactions.getValue().size()), Alert.AlertType.INFORMATION);
         });
     }
 }

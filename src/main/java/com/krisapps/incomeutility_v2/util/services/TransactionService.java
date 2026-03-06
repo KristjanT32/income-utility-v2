@@ -67,7 +67,7 @@ public class TransactionService {
         }
 
         Account account = a.get();
-        data.addTransaction(new Transaction(TransactionType.DEPOSIT, amount, accountId, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment));
+        data.addTransaction(new Transaction(TransactionType.DEPOSIT, amount, accountId, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment, null));
         data.updateAccount(accountId, account);
         log("New transaction registered: DEPOSIT of %s to %s".formatted(amount, account.getName()));
     }
@@ -97,7 +97,7 @@ public class TransactionService {
 
         Account account = a.get();
 
-        data.addTransaction(new Transaction(TransactionType.WITHDRAWAL, amount, accountId, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment));
+        data.addTransaction(new Transaction(TransactionType.WITHDRAWAL, amount, accountId, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment, null));
         data.updateAccount(accountId, account);
         log("New transaction registered: WITHDRAWAL of %s from %s".formatted(amount, account.getName()));
     }
@@ -136,7 +136,7 @@ public class TransactionService {
 
         data.updateAccount(fromAccount.getId(), fromAccount);
         data.updateAccount(toAccount.getId(), toAccount);
-        data.addTransaction(new Transaction(TransactionType.TRANSFER, amount, from, to, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment));
+        data.addTransaction(new Transaction(TransactionType.TRANSFER, amount, from, to, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment, null));
         log("New transaction registered: TRANSFER of %s from %s to %s".formatted(amount, fromAccount.getName(), toAccount.getName()));
     }
 
@@ -176,7 +176,7 @@ public class TransactionService {
             if (Transaction.isImported(t)) {
                 CashewTransaction importedTransaction = (CashewTransaction) t;
                 if (importedTransactionExists(account, importedTransaction)) {
-                    System.out.println("Skipping existing Cashew transaction #" + importedTransaction.getCashewTransactionId());
+                    log("Skipping already imported transaction: #%s (%s)".formatted(importedTransaction.getCashewTransactionId(), importedTransaction.getId()));
                     continue;
                 }
 

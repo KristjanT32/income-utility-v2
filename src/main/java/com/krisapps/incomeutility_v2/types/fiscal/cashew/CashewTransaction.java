@@ -17,12 +17,12 @@ public class CashewTransaction extends Transaction {
     private String cashewTargetAccount = null;
 
     public CashewTransaction(TransactionType type, double amount, UUID account, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, String cashewTransactionId) {
-        super(type, amount, account, timestamp, category, customCategory, comment);
+        super(type, amount, account, timestamp, category, customCategory, comment, null);
         this.cashewTransactionId = cashewTransactionId;
     }
 
     public CashewTransaction(TransactionType type, double amount, UUID from, UUID to, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, String cashewTransactionId) {
-        super(type, amount, from, to, timestamp, category, customCategory, comment);
+        super(type, amount, from, to, timestamp, category, customCategory, comment, null);
         this.cashewTransactionId = cashewTransactionId;
     }
 

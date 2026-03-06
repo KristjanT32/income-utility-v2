@@ -62,6 +62,9 @@ public class IncomeUtilityApplication extends Application {
                         });
                     }
                 });
+            } else {
+                Platform.exit();
+                System.exit(0);
             }
         });
         stage.show();

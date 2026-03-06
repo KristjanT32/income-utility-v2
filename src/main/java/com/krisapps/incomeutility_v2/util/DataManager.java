@@ -225,6 +225,7 @@ public class DataManager {
             initialize();
         }
         currentData.transactions.replace(transactionId, data);
+        log("Updated transaction #" + transactionId);
     }
 
     public void deleteTransaction(UUID transactionId) {
@@ -323,6 +324,11 @@ public class DataManager {
             } else {
                 return decimalFormat.format(money) + config.getCurrencySymbol();
             }
+        }
+
+        public static String formatMoney(double money) {
+            DecimalFormat decimalFormat = new DecimalFormat("0.00");
+            return decimalFormat.format(money);
         }
 
 

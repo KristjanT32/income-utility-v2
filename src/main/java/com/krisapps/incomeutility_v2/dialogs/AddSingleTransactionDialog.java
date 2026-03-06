@@ -70,7 +70,7 @@ public class AddSingleTransactionDialog extends Dialog<Transaction> {
 
 
     private final DataManager data = DataManager.getInstance();
-    private final Transaction outputTransaction = new Transaction(null, 0.0d, null, null, null, null, null);
+    private final Transaction outputTransaction = new Transaction(null, 0.0d, null, null, null, null, null, null);
     private Account selectedAccount;
 
     private final UnaryOperator<TextFormatter.Change> numbersOnlyFormatter = (change) -> {

@@ -49,13 +49,16 @@ public class UtilityManager {
     private void startUtility(SubUtilityType subutility) {
         switch (subutility) {
             case PRICER -> {
-                // TODO: Logic
+                // TODO: Implement
             }
             case MONEY_IN_MONEY_OUT -> {
+                String processId = getProcessIdFor(SubUtilityType.MONEY_IN_MONEY_OUT);
                 MoneyFlowUtility utility = new MoneyFlowUtility();
+
+                utility.setProcessId(processId);
                 utility.setOnCloseCallback(this::unregister);
                 try {
-                    register(utility);
+                    register(utility, processId);
                 } catch (IOException e) {
                     log(String.format("Failed to start %s: ", utility.getName()) + e.getMessage(), Level.SEVERE);
                     e.printStackTrace();
@@ -113,19 +116,22 @@ public class UtilityManager {
         }
     }
 
-    private void stopUtility(String processId) {
+    public void stopUtility(String processId) {
         Optional<SubUtility> util = Optional.ofNullable(activeUtilities.get(processId));
         util.ifPresentOrElse(SubUtility::stop, () -> {
             log(String.format("Attempted to stop non-existent utility with process id: %s", processId), Level.WARNING);
         });
     }
 
-    private void register(SubUtility process) throws IOException {
-        String processId = generateId(process.getType());
+    private String getProcessIdFor(SubUtilityType processType) {
+        String processId = generateId(processType);
         while (activeUtilities.containsKey(processId)) {
-            processId = generateId(process.getType());
+            processId = generateId(processType);
         }
+        return processId;
+    }
 
+    private void register(SubUtility process, String processId) throws IOException {
         activeUtilities.put(
                 processId, process.start(processId)
         );

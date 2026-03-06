@@ -15,23 +15,38 @@ public abstract class SubUtility {
     private String id;
     private SubUtilityType type;
     private String layoutPath;
-    private Object controller;
+    private SubUtilityController controller;
 
     private int minWidth;
     private int minHeight;
     private boolean allowResize;
 
+
+    private String processId;
+    private String utilityName;
     private Consumer<String> onCloseCallback = (id) -> {};
 
     private Stage instance;
 
-    public SubUtility(SubUtilityType type, String layoutPath, Object controller, int minWidth, int minHeight, boolean allowResize) {
+    public SubUtility(SubUtilityType type, String layoutPath, SubUtilityController controller, int minWidth, int minHeight, boolean allowResize) {
         this.type = type;
         this.layoutPath = layoutPath;
         this.controller = controller;
         this.minWidth = minWidth;
         this.minHeight = minHeight;
         this.allowResize = allowResize;
+        this.utilityName = type.getDisplayName();
+    }
+
+    public SubUtility(SubUtilityType type, String layoutPath, SubUtilityController controller, int minWidth, int minHeight, boolean allowResize, String processId) {
+        this.type = type;
+        this.layoutPath = layoutPath;
+        this.controller = controller;
+        this.minWidth = minWidth;
+        this.minHeight = minHeight;
+        this.allowResize = allowResize;
+        this.processId = processId;
+        this.utilityName = type.getDisplayName();
     }
 
     public SubUtility start(String processId) throws IOException {
@@ -49,7 +64,7 @@ public abstract class SubUtility {
             stop();
         });
 
-        initialize();
+        this.controller.onStartup(this);
 
         try {
             this.id = processId;
@@ -65,7 +80,7 @@ public abstract class SubUtility {
     public void stop() {
         if (this.instance != null) {
             Platform.runLater(() -> {
-                shutdown(this.controller);
+                this.controller.onShutdown();
                 this.instance.close();
                 onCloseCallback.accept(this.id);
             });
@@ -80,6 +95,10 @@ public abstract class SubUtility {
         this.onCloseCallback = onCloseCallback;
     }
 
+    public void setProcessId(String processId) {
+        this.processId = processId;
+    }
+
     public String getName() {
         return type.getDisplayName();
     }
@@ -92,13 +111,7 @@ public abstract class SubUtility {
         return id;
     }
 
-    /**
-     * Runs when this sub-utility is initializing.
-     */
-    public abstract void initialize();
-
-    /**
-     * Runs when this sub-utility is shut down (closed).
-     */
-    public abstract void shutdown(Object controller);
+    public void log(String msg) {
+        DataManager.log(String.format("[%s/%s] %s", utilityName, processId, msg));
+    }
 }

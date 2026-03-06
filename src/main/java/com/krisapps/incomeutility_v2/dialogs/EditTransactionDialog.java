@@ -9,6 +9,7 @@ import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;
+import com.krisapps.incomeutility_v2.util.misc.Formats;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -89,8 +90,6 @@ public class EditTransactionDialog extends Dialog<Transaction> {
         return null;
     };
 
-    // TODO: Add/verify editing logic
-
     public EditTransactionDialog(Transaction t, Account selectedAccount) {
         try {
             FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/edit-transaction.fxml"));
@@ -122,28 +121,7 @@ public class EditTransactionDialog extends Dialog<Transaction> {
             outputTransaction.setTimestamp(assembleDate(dateSelector.getValue(), timeField.getText()));
         });
 
-        dateSelector.setConverter(new StringConverter<>() {
-            DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-            @Override
-            public String toString(LocalDate localDate) {
-                if (localDate != null) {
-                    return format.format(localDate);
-                } else {
-                    return "";
-                }
-            }
-
-            @Override
-            public LocalDate fromString(String s) {
-                SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-                try {
-                    return LocalDate.ofInstant(format.parse(s).toInstant(), ZoneId.systemDefault());
-                } catch (ParseException e) {
-                    return null;
-                }
-            }
-        });
+        dateSelector.setConverter(Formats.DATE_FORMAT);
 
         ObservableList<TransactionType> items = transactionTypeSelector.getItems();
         items.setAll(TransactionType.values());
@@ -156,13 +134,22 @@ public class EditTransactionDialog extends Dialog<Transaction> {
         refreshTargetAccountSelector(accounts);
         refreshCategorySelector();
 
-        transactionTypeSelector.setValue(TransactionType.WITHDRAWAL);
-        categorySelector.setValue(TransactionCategory.WITHDRAWAL.name());
-        dateSelector.setValue(LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault()));
-        timeField.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        transactionTypeSelector.setValue(outputTransaction.getType());
+        categorySelector.setValue(outputTransaction.getType().getDisplayName());
+        dateSelector.setValue(outputTransaction.getTimestamp().toLocalDate());
+        timeField.setText(outputTransaction.getTimestamp().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        commentField.setText(outputTransaction.getComment());
+        customCategoryField.setText(outputTransaction.getCustomCategory());
+        amountField.setText(DataManager.Formatting.formatMoney(outputTransaction.getAmount()));
 
-        outputTransaction.setType(TransactionType.WITHDRAWAL);
-        outputTransaction.setCategory(TransactionCategory.WITHDRAWAL);
+        switch (outputTransaction.getType()) {
+            case DEPOSIT, WITHDRAWAL -> singleTargetSelector.setValue(data.getAccount(outputTransaction.getTargetAccountId()).get());
+            case TRANSFER -> {
+                fromSelector.setValue(data.getAccount(outputTransaction.getSourceAccountId()).get());
+                toSelector.setValue(data.getAccount(outputTransaction.getTargetAccountId()).get());
+            }
+        }
+
 
         setResultConverter((action) -> {
             if (action.getButtonData() == ButtonBar.ButtonData.APPLY) {

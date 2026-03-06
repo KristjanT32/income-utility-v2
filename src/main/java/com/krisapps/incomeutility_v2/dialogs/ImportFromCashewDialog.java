@@ -12,6 +12,7 @@ import com.krisapps.incomeutility_v2.util.PopupManager;
 import com.krisapps.incomeutility_v2.util.misc.Formats;
 import com.krisapps.incomeutility_v2.util.services.CashewService;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -30,7 +31,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
 
-public class ImportFromCashewDialog extends Dialog<Pair<Account, ArrayList<CashewTransaction>>> {
+public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, ArrayList<CashewTransaction>>> {
 
     @FXML
     private VBox rootPane;
@@ -95,23 +96,7 @@ public class ImportFromCashewDialog extends Dialog<Pair<Account, ArrayList<Cashe
     }
 
     public ImportFromCashewDialog(Account selectedAccount) {
-        try {
-            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/import-transactions.fxml"));
-            loader.setController(this);
-            rootPane = loader.load();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Trickery to be able to close the dialog manually
-        getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-        Node b = getDialogPane().lookupButton(ButtonType.CANCEL);
-        b.setVisible(false);
-        b.setManaged(false);
-
-        getDialogPane().setContent(rootPane);
-        initModality(Modality.APPLICATION_MODAL);
-        setTitle("Import transactions");
+        super("import-transactions.fxml", "Import transactions");
 
         FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("Database files", "*.sql", "*.sqlite");
         filePicker.getExtensionFilters().add(filter);
@@ -184,10 +169,12 @@ public class ImportFromCashewDialog extends Dialog<Pair<Account, ArrayList<Cashe
                     if (response.getButtonData() == ButtonBar.ButtonData.APPLY) {
                         importedTransactions = new ArrayList<>();
                         importedTransactions = cashew.getTransactions(cashew.getWalletByName(sourceAccountPicker.getValue()).get(), startPicker.getValue(), endPicker.getValue());
+                        refreshUI();
                     }
                 });
             } else {
                 importedTransactions = cashew.getTransactions(cashew.getWalletByName(sourceAccountPicker.getValue()).get(), startPicker.getValue(), endPicker.getValue());
+                refreshUI();
             }
 
             if (importedTransactions.isEmpty()) {
@@ -204,66 +191,11 @@ public class ImportFromCashewDialog extends Dialog<Pair<Account, ArrayList<Cashe
             ).ifPresent(response -> {
                 switch (response.getButtonData()) {
                     case APPLY -> {
-
-                        HashMap<String, UUID> accountMappings = new HashMap<>();
-                        AccountMappingDialog dlg = new AccountMappingDialog();
-
-                        for (CashewTransaction t: importedTransactions) {
-                            if (t.getType().equals(TransactionType.TRANSFER)) {
-                                if (accountMappings.containsKey(t.getCashewSourceAccount())) {
-                                    t.setSourceAccountId(accountMappings.get(t.getCashewSourceAccount()));
-                                } else {
-                                    Optional<CashewAccount> wallet = cashew.getWalletById(t.getCashewSourceAccount());
-                                    if (wallet.isEmpty()) {
-                                        PopupManager.showPopup("Invalid wallet entry!", "Wallet ID '" + t.getCashewSourceAccount() + "' does not reference a valid wallet.\nMaybe the wallet was deleted?", Alert.AlertType.ERROR);
-                                        continue;
-                                    }
-                                    dlg.setExternalAccountName(wallet.get().displayName());
-                                    Optional<UUID> mapping = dlg.showAndWait();
-                                    mapping.ifPresent(uuid -> {
-                                        accountMappings.put(t.getCashewSourceAccount(), uuid);
-                                        t.setSourceAccountId(uuid);
-                                    });
-                                }
-                                if (accountMappings.containsKey(t.getCashewTargetAccount())) {
-                                    t.setTargetAccountId(accountMappings.get(t.getCashewTargetAccount()));
-                                } else {
-                                    Optional<CashewAccount> wallet = cashew.getWalletById(t.getCashewTargetAccount());
-                                    if (wallet.isEmpty()) {
-                                        PopupManager.showPopup("Invalid wallet entry!", "Wallet ID '" + t.getCashewTargetAccount() + "' does not reference a valid wallet.\nMaybe the wallet was deleted?", Alert.AlertType.ERROR);
-                                        continue;
-                                    }
-                                    dlg.setExternalAccountName(wallet.get().displayName());
-                                    Optional<UUID> mapping = dlg.showAndWait();
-                                    mapping.ifPresent(uuid -> {
-                                        accountMappings.put(t.getCashewTargetAccount(), uuid);
-                                        t.setTargetAccountId(uuid);
-                                    });
-                                }
-                            } else {
-                                if (accountMappings.containsKey(t.getCashewTargetAccount())) {
-                                    t.setTargetAccountId(accountMappings.get(t.getCashewTargetAccount()));
-                                } else {
-                                    Optional<CashewAccount> wallet = cashew.getWalletById(t.getCashewTargetAccount());
-                                    if (wallet.isEmpty()) {
-                                        PopupManager.showPopup("Invalid wallet entry!", "Wallet ID '" + t.getCashewTargetAccount() + "' does not reference a valid wallet.\nMaybe the wallet was deleted?", Alert.AlertType.ERROR);
-                                        continue;
-                                    }
-                                    dlg.setExternalAccountName(wallet.get().displayName());
-                                    Optional<UUID> mapping = dlg.showAndWait();
-                                    mapping.ifPresent(uuid -> {
-                                        accountMappings.put(t.getCashewTargetAccount(), uuid);
-                                        t.setTargetAccountId(uuid);
-                                    });
-                                }
-                            }
-                        }
-
-                        setResult(new Pair<>(fiscal.getAccountByName(targetAccountPicker.getValue()).get(), importedTransactions));
+                        importTransactions();
                         close();
                     }
                     case OTHER -> {
-                        System.out.println("Transaction review");
+                        reviewTransactions();
                     }
                     default -> {
 
@@ -272,7 +204,92 @@ public class ImportFromCashewDialog extends Dialog<Pair<Account, ArrayList<Cashe
             });
         });
 
+        reviewButton.setOnAction((ev) -> {
+            reviewTransactions();
+        });
+
+        setResultConverter((buttonType -> {
+            if (buttonType.getButtonData() == ButtonBar.ButtonData.CANCEL_CLOSE) {
+                return null;
+            } else {
+                return getResult();
+            }
+        }));
+
         refreshUI();
+    }
+
+    private void importTransactions() {
+        HashMap<String, UUID> accountMappings = new HashMap<>();
+        AccountMappingDialog dlg = new AccountMappingDialog();
+
+        DataManager.log("Beginning to import transactions");
+        for (CashewTransaction t: importedTransactions) {
+            if (t.getType().equals(TransactionType.TRANSFER)) {
+                if (accountMappings.containsKey(t.getCashewSourceAccount())) {
+                    t.setSourceAccountId(accountMappings.get(t.getCashewSourceAccount()));
+                } else {
+                    Optional<CashewAccount> wallet = cashew.getWalletById(t.getCashewSourceAccount());
+                    if (wallet.isEmpty()) {
+                        PopupManager.showPopup("Invalid wallet entry!", "Wallet ID '" + t.getCashewSourceAccount() + "' does not reference a valid wallet.\nMaybe the wallet was deleted?", Alert.AlertType.ERROR);
+                        continue;
+                    }
+                    dlg.setExternalAccountName(wallet.get().displayName());
+                    dlg.setTitle("Transaction account mapping required: " + t.getCashewTransactionId());
+                    Optional<UUID> mapping = dlg.showAndWait();
+                    mapping.ifPresent(uuid -> {
+                        accountMappings.put(t.getCashewSourceAccount(), uuid);
+                        t.setSourceAccountId(uuid);
+                    });
+                }
+                if (accountMappings.containsKey(t.getCashewTargetAccount())) {
+                    t.setTargetAccountId(accountMappings.get(t.getCashewTargetAccount()));
+                } else {
+                    Optional<CashewAccount> wallet = cashew.getWalletById(t.getCashewTargetAccount());
+                    if (wallet.isEmpty()) {
+                        PopupManager.showPopup("Invalid wallet entry!", "Wallet ID '" + t.getCashewTargetAccount() + "' does not reference a valid wallet.\nMaybe the wallet was deleted?", Alert.AlertType.ERROR);
+                        continue;
+                    }
+                    dlg.setExternalAccountName(wallet.get().displayName());
+                    dlg.setTitle("Transaction account mapping required: " + t.getCashewTransactionId());
+                    Optional<UUID> mapping = dlg.showAndWait();
+                    mapping.ifPresent(uuid -> {
+                        accountMappings.put(t.getCashewTargetAccount(), uuid);
+                        t.setTargetAccountId(uuid);
+                    });
+                }
+            } else {
+                if (accountMappings.containsKey(t.getCashewTargetAccount())) {
+                    t.setTargetAccountId(accountMappings.get(t.getCashewTargetAccount()));
+                } else {
+                    Optional<CashewAccount> wallet = cashew.getWalletById(t.getCashewTargetAccount());
+                    if (wallet.isEmpty()) {
+                        PopupManager.showPopup("Invalid wallet entry!", "Wallet ID '" + t.getCashewTargetAccount() + "' does not reference a valid wallet.\nMaybe the wallet was deleted?", Alert.AlertType.ERROR);
+                        continue;
+                    }
+                    dlg.setExternalAccountName(wallet.get().displayName());
+                    dlg.setTitle("Transaction account mapping required: " + t.getCashewTransactionId());
+                    Optional<UUID> mapping = dlg.showAndWait();
+                    mapping.ifPresent(uuid -> {
+                        accountMappings.put(t.getCashewTargetAccount(), uuid);
+                        t.setTargetAccountId(uuid);
+                    });
+                }
+            }
+        }
+        DataManager.log("Import completed.");
+
+        setResult(new Pair<>(fiscal.getAccountByName(targetAccountPicker.getValue()).get(), importedTransactions));
+    }
+
+    private void reviewTransactions() {
+        PreImportTransactionReviewDialog dlg = new PreImportTransactionReviewDialog(importedTransactions);
+        Optional<ArrayList<CashewTransaction>> filteredTransactions = dlg.showAndWait();
+
+        filteredTransactions.ifPresent(cashewTransactions -> {
+            importedTransactions.removeIf(element -> !cashewTransactions.contains(element));
+            importTransactions();
+        });
     }
 
     public void refreshUI() {
@@ -281,23 +298,33 @@ public class ImportFromCashewDialog extends Dialog<Pair<Account, ArrayList<Cashe
         startPicker.setDisable(!cashew.isReady());
         endPicker.setDisable(!cashew.isReady());
         importButton.setDisable(!cashew.isReady());
-        reviewButton.setDisable(!cashew.isReady());
+        reviewButton.setDisable(importedTransactions.isEmpty());
+        filterTypeSelector.setDisable(!cashew.isReady());
     }
 
     public void pickSourceDatabaseFile() {
         File f = filePicker.showOpenDialog(this.getOwner());
         if (f == null) return;
 
-        try {
-            cashew.initialize(f.toURI());
-            filePickerButton.setText(f.getName());
-            refreshUI();
+        LoadingDialog dlg = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_SPINNER);
+        dlg.setPrimaryLabel("Preparing for import");
+        dlg.setSecondaryLabel("Reading database file...");
+        dlg.show("Just a second", new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    cashew.initialize(f.toURI());
+                } catch (FileNotFoundException e) {
+                    Platform.runLater(() -> {
+                        PopupManager.showPopup("No file selected", "Please select a file to import transactions.", Alert.AlertType.WARNING);
+                    });
+                }
+            }
+        });
+        filePickerButton.setText(f.getName());
+        refreshUI();
 
-            sourceAccountPicker.getItems().setAll(cashew.getWallets().stream().map(CashewAccount::displayName).toList());
-            targetAccountPicker.getItems().setAll(DataManager.getInstance().getAccounts().stream().map(Account::getName).toList());
-        } catch (FileNotFoundException e) {
-            PopupManager.showPopup("No file selected", "Please select a file to import transactions.", Alert.AlertType.WARNING);
-            return;
-        }
+        sourceAccountPicker.getItems().setAll(cashew.getWallets().stream().map(CashewAccount::displayName).toList());
+        targetAccountPicker.getItems().setAll(DataManager.getInstance().getAccounts().stream().map(Account::getName).toList());
     }
 }
