@@ -7,6 +7,6 @@ import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
 public class MoneyFlowUtility extends SubUtility {
 
     public MoneyFlowUtility() {
-        super(SubUtilityType.MONEY_IN_MONEY_OUT, "layouts/windows/money-flow.fxml", new MoneyFlowUtilityController(), 860, 510, true);
+        super(SubUtilityType.MONEY_IN_MONEY_OUT, "layouts/windows/money-flow.fxml", null, new MoneyFlowUtilityController(), 860, 510, true);
     }
 }

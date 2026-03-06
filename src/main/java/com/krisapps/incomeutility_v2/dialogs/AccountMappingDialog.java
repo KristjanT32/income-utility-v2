@@ -18,7 +18,7 @@ import javafx.stage.Modality;
 import java.io.IOException;
 import java.util.UUID;
 
-public class AccountMappingDialog extends Dialog<UUID> {
+public class AccountMappingDialog extends IncomeUtilityDialog<UUID> {
 
     @FXML
     private VBox rootPane;
@@ -33,13 +33,7 @@ public class AccountMappingDialog extends Dialog<UUID> {
     private final FiscalService fiscal = FiscalService.getInstance();
 
     public AccountMappingDialog() {
-        try {
-            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/map-external-wallet.fxml"));
-            loader.setController(this);
-            rootPane = loader.load();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        super("map-external-wallet.fxml", "Create external wallet mapping");
 
         ButtonType mapButton = new ButtonType("Apply and import", ButtonBar.ButtonData.APPLY);
         ButtonType cancelButton = new ButtonType("Skip", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -47,10 +41,6 @@ public class AccountMappingDialog extends Dialog<UUID> {
 
         Node b = getDialogPane().lookupButton(mapButton);
         b.setDisable(accountSelector.getValue() == null);
-
-        getDialogPane().setContent(rootPane);
-        initModality(Modality.APPLICATION_MODAL);
-        setTitle("Create external wallet mapping");
 
         accountSelector.setCellFactory(new AccountComboboxCellFactory());
         accountSelector.setButtonCell(new AccountComboboxButtonCell());

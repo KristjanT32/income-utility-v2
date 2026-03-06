@@ -10,6 +10,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ public class IncomeUtilityApplication extends Application {
         stage.setMinHeight(500);
         stage.setTitle("KrisApps Income Utility v2.0");
         stage.setScene(scene);
+        stage.getIcons().add(new Image(IncomeUtilityApplication.class.getResource("icons/income_utility.png").toExternalForm()));
 
         window = stage;
         window.setOnCloseRequest((r) -> {

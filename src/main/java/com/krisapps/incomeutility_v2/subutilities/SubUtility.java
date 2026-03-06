@@ -5,7 +5,9 @@ import com.krisapps.incomeutility_v2.util.DataManager;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -24,11 +26,12 @@ public abstract class SubUtility {
 
     private String processId;
     private String utilityName;
+    private String iconFilePath = "income_utility.png";
     private Consumer<String> onCloseCallback = (id) -> {};
 
     private Stage instance;
 
-    public SubUtility(SubUtilityType type, String layoutPath, SubUtilityController controller, int minWidth, int minHeight, boolean allowResize) {
+    public SubUtility(SubUtilityType type, String layoutPath, @Nullable String iconFilePath, SubUtilityController controller, int minWidth, int minHeight, boolean allowResize) {
         this.type = type;
         this.layoutPath = layoutPath;
         this.controller = controller;
@@ -36,9 +39,10 @@ public abstract class SubUtility {
         this.minHeight = minHeight;
         this.allowResize = allowResize;
         this.utilityName = type.getDisplayName();
+        this.iconFilePath = iconFilePath == null ? this.iconFilePath : iconFilePath;
     }
 
-    public SubUtility(SubUtilityType type, String layoutPath, SubUtilityController controller, int minWidth, int minHeight, boolean allowResize, String processId) {
+    public SubUtility(SubUtilityType type, String layoutPath, @Nullable String iconFilePath, SubUtilityController controller, int minWidth, int minHeight, boolean allowResize, String processId) {
         this.type = type;
         this.layoutPath = layoutPath;
         this.controller = controller;
@@ -47,6 +51,7 @@ public abstract class SubUtility {
         this.allowResize = allowResize;
         this.processId = processId;
         this.utilityName = type.getDisplayName();
+        this.iconFilePath = iconFilePath == null ? this.iconFilePath : iconFilePath;
     }
 
     public SubUtility start(String processId) throws IOException {
@@ -60,6 +65,7 @@ public abstract class SubUtility {
         window.setMinHeight(minHeight);
         window.setResizable(allowResize);
         window.setTitle(type.getDisplayName());
+        window.getIcons().add(new Image(IncomeUtilityApplication.class.getResource("icons/" + iconFilePath).toExternalForm()));
         window.setOnCloseRequest((_) -> {
             stop();
         });

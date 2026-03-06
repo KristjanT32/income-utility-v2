@@ -27,7 +27,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.UnaryOperator;
 
-public class EditTransactionDialog extends Dialog<Transaction> {
+public class EditTransactionDialog extends IncomeUtilityDialog<Transaction> {
 
     @FXML
     private VBox rootPane;
@@ -91,25 +91,13 @@ public class EditTransactionDialog extends Dialog<Transaction> {
     };
 
     public EditTransactionDialog(Transaction t, Account selectedAccount) {
-        try {
-            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/edit-transaction.fxml"));
-            loader.setController(this);
-            rootPane = loader.load();
-            outputTransaction = t.copy();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        super("edit-transaction.fxml", "Edit transaction", "edit_96.png");
+        this.outputTransaction = t.copy();
+        this.selectedAccount = selectedAccount;
 
         ButtonType createButton = new ButtonType("Apply changes", ButtonBar.ButtonData.APPLY);
         ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-
         getDialogPane().getButtonTypes().setAll(createButton, cancelButton);
-
-        getDialogPane().setContent(rootPane);
-        initModality(Modality.APPLICATION_MODAL);
-        setTitle("Edit transaction");
-
-        this.selectedAccount = selectedAccount;
 
         amountField.setTextFormatter(new TextFormatter<>(numbersOnlyFormatter));
         timeField.textProperty().addListener((obs, _, val) -> {
@@ -140,7 +128,7 @@ public class EditTransactionDialog extends Dialog<Transaction> {
         timeField.setText(outputTransaction.getTimestamp().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         commentField.setText(outputTransaction.getComment());
         customCategoryField.setText(outputTransaction.getCustomCategory());
-        amountField.setText(DataManager.Formatting.formatMoney(outputTransaction.getAmount()));
+        amountField.setText(DataManager.Formatting.formatMoney(outputTransaction.getAbsoluteAmount()));
 
         switch (outputTransaction.getType()) {
             case DEPOSIT, WITHDRAWAL -> singleTargetSelector.setValue(data.getAccount(outputTransaction.getTargetAccountId()).get());
@@ -149,7 +137,6 @@ public class EditTransactionDialog extends Dialog<Transaction> {
                 toSelector.setValue(data.getAccount(outputTransaction.getTargetAccountId()).get());
             }
         }
-
 
         setResultConverter((action) -> {
             if (action.getButtonData() == ButtonBar.ButtonData.APPLY) {
@@ -237,18 +224,6 @@ public class EditTransactionDialog extends Dialog<Transaction> {
 
         toSelector.valueProperty().addListener((_, prevValue, newValue) -> {
             outputTransaction.setTargetAccountId(newValue != null ? newValue.getId() : null);
-            if (fromSelector.getValue().equals(newValue)) {
-                PopupManager.showConfirmation("Convert to withdrawal?",
-                        "You have set the target of the transaction to the same account as the source.\n\nWould you like to convert this transaction to a withdrawal?",
-                        new ButtonType("Convert to withdrawal", ButtonBar.ButtonData.APPLY),
-                        new ButtonType("No, leave as is", ButtonBar.ButtonData.CANCEL_CLOSE)
-                ).ifPresent(response -> {
-                    if (response.getButtonData() == ButtonBar.ButtonData.APPLY) {
-                        singleTargetSelector.setValue(fromSelector.getValue());
-                        transactionTypeSelector.setValue(TransactionType.WITHDRAWAL);
-                    }
-                });
-            }
         });
 
         transactionTypeSelector.valueProperty().addListener((obs, _, newVal) -> {

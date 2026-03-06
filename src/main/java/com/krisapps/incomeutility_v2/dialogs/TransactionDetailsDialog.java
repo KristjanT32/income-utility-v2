@@ -17,7 +17,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.io.IOException;
 import java.util.Optional;
 
-public class TransactionDetailsDialog extends Dialog<Void> {
+public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
 
     @FXML
     private VBox rootPane;
@@ -68,21 +68,11 @@ public class TransactionDetailsDialog extends Dialog<Void> {
     private final DataManager dataManager = DataManager.getInstance();
 
     public TransactionDetailsDialog(Transaction t, Account selectedAccount) {
-        try {
-            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/transaction-details.fxml"));
-            loader.setController(this);
-            rootPane = loader.load();
-            transaction = t;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        super("transaction-details.fxml", "Transaction details", "transaction_96.png");
+        this.transaction = t;
 
         ButtonType cancelButton = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
         getDialogPane().getButtonTypes().setAll(cancelButton);
-
-        getDialogPane().setContent(rootPane);
-        initModality(Modality.APPLICATION_MODAL);
-        setTitle("Transaction details");
 
         editButton.setOnAction((ev) -> {
             EditTransactionDialog editDialog = new EditTransactionDialog(transaction.copy(), selectedAccount);

@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.UnaryOperator;
 
-public class AddSingleTransactionDialog extends Dialog<Transaction> {
+public class AddSingleTransactionDialog extends IncomeUtilityDialog<Transaction> {
 
     @FXML
     private VBox rootPane;
@@ -88,24 +88,12 @@ public class AddSingleTransactionDialog extends Dialog<Transaction> {
     };
 
     public AddSingleTransactionDialog(Account selectedAccount) {
-        try {
-            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/add-transaction.fxml"));
-            loader.setController(this);
-            rootPane = loader.load();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        super("add-transaction.fxml", "Register transaction");
+        this.selectedAccount = selectedAccount;
 
         ButtonType createButton = new ButtonType("Add", ButtonBar.ButtonData.APPLY);
         ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-
         getDialogPane().getButtonTypes().setAll(createButton, cancelButton);
-
-        getDialogPane().setContent(rootPane);
-        initModality(Modality.APPLICATION_MODAL);
-        setTitle("Register transaction");
-
-        this.selectedAccount = selectedAccount;
 
         amountField.setTextFormatter(new TextFormatter<>(numbersOnlyFormatter));
         timeField.textProperty().addListener((obs, _, val) -> {

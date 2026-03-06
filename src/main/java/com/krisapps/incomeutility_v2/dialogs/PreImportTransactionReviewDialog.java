@@ -18,7 +18,7 @@ public class PreImportTransactionReviewDialog extends IncomeUtilityDialog<ArrayL
     private ArrayList<CashewTransaction> output = new ArrayList<>();
 
     public PreImportTransactionReviewDialog(ArrayList<CashewTransaction> transactions) {
-        super("review-imported-transactions.fxml", "Converted transactions");
+        super("review-imported-transactions.fxml", "Converted transactions", "overview_96.png");
 
         getDialogPane().getButtonTypes().add(new ButtonType("Import", ButtonBar.ButtonData.APPLY));
 

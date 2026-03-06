@@ -12,7 +12,7 @@ import javafx.stage.Modality;
 import java.io.IOException;
 import java.util.function.UnaryOperator;
 
-public class AddAccountWizard extends Dialog<Account> {
+public class AddAccountWizard extends IncomeUtilityDialog<Account> {
 
     @FXML
     private VBox rootPane;
@@ -43,22 +43,11 @@ public class AddAccountWizard extends Dialog<Account> {
     };
 
     public AddAccountWizard() {
-        try {
-            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/add-account.fxml"));
-            loader.setController(this);
-            rootPane = loader.load();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        super("add-account.fxml", "Create new account", "account_96.png");
 
         ButtonType createButton = new ButtonType("Create", ButtonBar.ButtonData.APPLY);
         ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-
         getDialogPane().getButtonTypes().setAll(createButton, cancelButton);
-
-        getDialogPane().setContent(rootPane);
-        initModality(Modality.APPLICATION_MODAL);
-        setTitle("Create new account");
 
         ObservableList<Account.Type> items = typeSelector.getItems();
         items.setAll(Account.Type.values());

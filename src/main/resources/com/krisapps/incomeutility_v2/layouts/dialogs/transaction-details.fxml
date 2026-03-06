@@ -9,31 +9,57 @@
 <?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="525.0" prefWidth="403.0" spacing="10.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="460.0" minWidth="440.0" spacing="10.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
    <padding>
       <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
    </padding>
    <children>
       <HBox maxWidth="1.7976931348623157E308" spacing="10.0">
-         <VBox.margin>
-            <Insets />
-         </VBox.margin>
          <children>
-            <Label maxWidth="1.7976931348623157E308" styleClass="title" text="Transaction information" HBox.hgrow="ALWAYS" />
-            <Button fx:id="editButton" alignment="BASELINE_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Edit" textAlignment="CENTER" HBox.hgrow="SOMETIMES">
-               <graphic>
-                  <FontIcon iconLiteral="fltfal-edit-20" iconSize="12" textAlignment="CENTER" wrappingWidth="12.0" />
-               </graphic>
-            </Button>
-         </children>
-      </HBox>
-      <VBox spacing="5.0">
-         <children>
-            <Label fx:id="typeLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minWidth="-Infinity" styleClass="flair-deposit" text="Deposit">
+            <Label fx:id="typeLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minWidth="140.0" styleClass="flair-deposit" text="Deposit" HBox.hgrow="SOMETIMES">
                <graphic>
                   <FontIcon fx:id="typeIcon" iconLiteral="fltral-add-circle-24" iconSize="16" wrappingWidth="20.0" />
                </graphic>
             </Label>
+            <Label fx:id="amountLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="flair-generic" text="50.00" HBox.hgrow="ALWAYS">
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+               <graphic>
+                  <FontIcon iconLiteral="fltfmz-money-20" iconSize="20" />
+               </graphic>
+            </Label>
+         </children>
+      </HBox>
+      <VBox spacing="5.0">
+         <children>
+            <Label fx:id="accountLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minWidth="-Infinity" styleClass="flair-account" text="Account A">
+               <graphic>
+                  <FontIcon iconLiteral="fltral-building-bank-24" iconSize="12" />
+               </graphic>
+            </Label>
+            <HBox fx:id="transferPanel" alignment="CENTER" maxWidth="1.7976931348623157E308" spacing="5.0">
+               <children>
+                  <Label fx:id="transferFromLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="flair-account" text="Account A" HBox.hgrow="ALWAYS">
+                     <graphic>
+                        <FontIcon iconLiteral="fltral-building-bank-24" iconSize="12" />
+                     </graphic>
+                  </Label>
+                  <FontIcon iconLiteral="fltfal-arrow-right-20" iconSize="20" HBox.hgrow="ALWAYS" />
+                  <Label fx:id="transferToLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="flair-account" text="Account B" HBox.hgrow="ALWAYS">
+                     <graphic>
+                        <FontIcon iconLiteral="fltral-building-bank-24" iconSize="12" />
+                     </graphic>
+                  </Label>
+               </children>
+            </HBox>
+         </children>
+         <VBox.margin>
+            <Insets />
+         </VBox.margin>
+      </VBox>
+      <VBox spacing="5.0" VBox.vgrow="ALWAYS">
+         <children>
             <HBox spacing="5.0">
                <children>
                   <Label fx:id="dateLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="flair-generic" text="22/12/2026" HBox.hgrow="ALWAYS">
@@ -54,33 +80,6 @@
                   </Label>
                </children>
             </HBox>
-         </children>
-      </VBox>
-      <VBox spacing="5.0">
-         <children>
-            <Label fx:id="accountLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minWidth="-Infinity" styleClass="flair-account" text="Account A" />
-            <HBox fx:id="transferPanel" alignment="CENTER" maxWidth="1.7976931348623157E308" spacing="5.0">
-               <children>
-                  <Label fx:id="transferFromLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="175.0" styleClass="flair-account" text="Account A" HBox.hgrow="ALWAYS" />
-                  <FontIcon iconLiteral="fltfal-arrow-right-20" iconSize="20" HBox.hgrow="ALWAYS" />
-                  <Label fx:id="transferToLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="175.0" styleClass="flair-account" text="Account B" HBox.hgrow="ALWAYS" />
-               </children>
-            </HBox>
-            <Label fx:id="amountLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="flair-generic" text="50.00">
-               <padding>
-                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-               </padding>
-               <graphic>
-                  <FontIcon iconLiteral="fltfmz-money-20" iconSize="20" />
-               </graphic>
-            </Label>
-         </children>
-         <VBox.margin>
-            <Insets top="15.0" />
-         </VBox.margin>
-      </VBox>
-      <VBox spacing="5.0" VBox.vgrow="ALWAYS">
-         <children>
             <Label fx:id="categoryLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="flair-generic" text="Food">
                <padding>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
@@ -105,9 +104,26 @@
             </VBox>
          </children>
          <VBox.margin>
-            <Insets top="15.0" />
+            <Insets top="40.0" />
          </VBox.margin>
       </VBox>
+      <HBox maxWidth="1.7976931348623157E308" spacing="10.0">
+         <VBox.margin>
+            <Insets top="10.0" />
+         </VBox.margin>
+         <children>
+            <Button fx:id="editButton" alignment="BASELINE_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Edit" textAlignment="CENTER" HBox.hgrow="SOMETIMES">
+               <graphic>
+                  <FontIcon iconLiteral="fltfal-edit-20" iconSize="12" textAlignment="CENTER" wrappingWidth="12.0" />
+               </graphic>
+            </Button>
+            <Button fx:id="editButton1" alignment="BASELINE_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="destructive" text="Delete" textAlignment="CENTER">
+               <graphic>
+                  <FontIcon iconLiteral="fltfal-delete-20" iconSize="12" textAlignment="CENTER" wrappingWidth="12.0" />
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
    </children>
    <stylesheets>
       <URL value="@../../stylesheets/core-ui.css" />

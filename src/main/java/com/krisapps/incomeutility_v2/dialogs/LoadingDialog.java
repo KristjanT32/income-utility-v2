@@ -12,7 +12,7 @@ import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 
-public class LoadingDialog extends Dialog<Void> {
+public class LoadingDialog extends IncomeUtilityDialog<Void> {
 
     @FXML
     private VBox rootPane;
@@ -39,22 +39,8 @@ public class LoadingDialog extends Dialog<Void> {
     private Task<Void> operation;
 
     public LoadingDialog(LoadingOperationType type) {
-        FXMLLoader fxmlLoader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/loading.fxml"));
-        fxmlLoader.setController(this);
-        try {
-            rootPane = fxmlLoader.load();
-            this.type = type;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        getDialogPane().setContent(rootPane);
-
-        // Trickery to be able to close the dialog manually
-        getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-        Node b = getDialogPane().lookupButton(ButtonType.CANCEL);
-        b.setVisible(false);
-        b.setManaged(false);
+        super("loading.fxml", "");
+        this.type = type;
     }
 
     public void setProgress(double progress) {

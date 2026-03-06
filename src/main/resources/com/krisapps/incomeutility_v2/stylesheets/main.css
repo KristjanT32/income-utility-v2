@@ -105,7 +105,7 @@
 
 /** Flairs for transaction info **/
 .flair-account {
-    -fx-background-color: #b699ef;
+    -fx-background-color: #99dbef;
     -fx-background-radius: 10px;
     -fx-border-radius: 10px;
     -fx-padding: 5px;
