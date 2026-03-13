@@ -1,11 +1,9 @@
-package com.krisapps.incomeutility_v2;
+package com.krisapps.incomeutility_v2.util;
 
 import com.krisapps.incomeutility_v2.exceptions.NotInitializedException;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
 import com.krisapps.incomeutility_v2.subutilities.money_flow.MoneyFlowUtility;
-import com.krisapps.incomeutility_v2.util.DataManager;
-import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 
@@ -15,8 +13,8 @@ import java.util.Optional;
 import java.util.logging.Level;
 
 public class UtilityManager {
-    public static UtilityManager instance;
     private static final HashMap<String, SubUtility> activeUtilities = new HashMap<>();
+    public static UtilityManager instance;
 
     private UtilityManager() {
 
@@ -35,6 +33,10 @@ public class UtilityManager {
         }
 
         return instance;
+    }
+
+    private static void log(String msg, Level level) {
+        DataManager.log("[Process Registry] " + msg, level);
     }
 
     private String generateId(SubUtilityType type) {
@@ -90,11 +92,11 @@ public class UtilityManager {
 
     public void stopAll(SubUtilityType type) {
         if (type == SubUtilityType.ALL) {
-            for (SubUtility util: activeUtilities.values()) {
+            for (SubUtility util : activeUtilities.values()) {
                 util.stop();
             }
         } else {
-            for (SubUtility util: activeUtilities.values()) {
+            for (SubUtility util : activeUtilities.values()) {
                 if (util.getType() == type) {
                     util.stop();
                 }
@@ -104,11 +106,11 @@ public class UtilityManager {
 
     public void focusAll(SubUtilityType type) {
         if (type == SubUtilityType.ALL) {
-            for (SubUtility util: activeUtilities.values()) {
+            for (SubUtility util : activeUtilities.values()) {
                 util.focusWindow();
             }
         } else {
-            for (SubUtility util: activeUtilities.values()) {
+            for (SubUtility util : activeUtilities.values()) {
                 if (util.getType() == type) {
                     util.focusWindow();
                 }
@@ -149,10 +151,6 @@ public class UtilityManager {
         } else {
             log(String.format("Failed to unregister '%s' - process not found in registry.", processId), Level.WARNING);
         }
-    }
-
-    private static void log(String msg, Level level) {
-        DataManager.log("[Process Registry] " + msg, level);
     }
 
 }

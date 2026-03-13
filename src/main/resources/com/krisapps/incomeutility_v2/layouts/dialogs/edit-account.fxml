@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="400.0" spacing="10.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
+   <children>
+      <Label styleClass="title" text="Edit account details">
+         <VBox.margin>
+            <Insets />
+         </VBox.margin>
+      </Label>
+      <VBox spacing="5.0">
+         <children>
+            <Label styleClass="header" text="Account name" />
+            <TextField fx:id="nameField" minHeight="35.0" promptText="Name..." styleClass="large">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </TextField>
+         </children>
+         <padding>
+            <Insets bottom="10.0" top="10.0" />
+         </padding>
+      </VBox>
+      <VBox spacing="5.0">
+         <children>
+            <Label styleClass="header" text="Type" />
+            <ComboBox fx:id="typeSelector" maxWidth="1.7976931348623157E308" minHeight="35.0" minWidth="-Infinity" promptText="Bank account, cash..." styleClass="large" />
+         </children>
+         <padding>
+            <Insets bottom="10.0" top="10.0" />
+         </padding>
+      </VBox>
+      <VBox spacing="5.0">
+         <children>
+            <Label styleClass="header" text="Initial balance" />
+            <TextField fx:id="balanceField" minHeight="35.0" promptText="0.00" styleClass="large">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </TextField>
+         </children>
+         <padding>
+            <Insets bottom="10.0" top="10.0" />
+         </padding>
+      </VBox>
+   </children>
+   <stylesheets>
+      <URL value="@../../stylesheets/core-ui.css" />
+      <URL value="@../../stylesheets/main.css" />
+   </stylesheets>
+</VBox>

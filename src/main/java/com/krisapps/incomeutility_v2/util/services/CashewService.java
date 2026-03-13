@@ -1,10 +1,13 @@
 package com.krisapps.incomeutility_v2.util.services;
 
+import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
 import com.krisapps.incomeutility_v2.dialogs.LoadingDialog;
+import com.krisapps.incomeutility_v2.types.DateFilteringMode;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewAccount;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
+import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -20,6 +23,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -38,9 +42,14 @@ public class CashewService {
         }
         return instance;
     }
+    
+    private void log(String msg) {
+        DataManager.log("[Cashew] " + msg);
+    }
 
     /**
      * Loads the specified database file, preparing the utility for data access.
+     *
      * @param pathToDatabaseFile The path to the database file (.sql / .sqlite)
      * @throws FileNotFoundException If the specified path does not lead to a valid file.
      */
@@ -52,9 +61,14 @@ public class CashewService {
         file = new File(pathToDatabaseFile.getPath());
     }
 
+    public void reset() {
+        file = null;
+    }
+
     /**
      * Returns <code>true</code> if the service has been initialized with a valid database file and is thus ready for data querying.
      * Returns <code>false</code> otherwise.
+     *
      * @return <code>true</code> if the service is ready, <code>false</code> otherwise
      */
     public boolean isReady() {
@@ -91,6 +105,7 @@ public class CashewService {
 
     /**
      * Gets the wallet ID associated with the transaction with the supplied ID.
+     *
      * @param transactionId The ID of the transaction
      * @return The wallet ID
      */
@@ -101,15 +116,20 @@ public class CashewService {
         return statement.executeQuery().getString("wallet_fk");
     }
 
+    private LocalDateTime getDateFromSQL(Long epochSeconds) {
+        return LocalDateTime.ofInstant(Instant.ofEpochSecond(epochSeconds), ZoneId.systemDefault());
+    }
+
     /**
      * Maps a Cashew transaction entry to a {@link CashewTransaction} object.
+     *
      * @param row The resultset from which to access the row data.
      * @return A CashewTransaction object for the supplied transaction row.
      * @throws SQLException
      */
     public CashewTransaction mapToTransaction(ResultSet row) throws SQLException {
         CashewTransaction transaction = new CashewTransaction(row.getString("transaction_pk"));
-        transaction.setTimestamp(LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(row.getString("date_created"))), ZoneId.systemDefault()));
+        transaction.setTimestamp(getDateFromSQL(row.getLong("date_created")));
         transaction.setAmount(row.getDouble("amount"));
         transaction.setComment(row.getString("name"));
         transaction.setCategory(TransactionCategory.CUSTOM);
@@ -200,60 +220,73 @@ public class CashewService {
      * <p>
      * - If both date arguments are null, all transactions of the supplied account will be returned.
      * </p>
-     * @param account The Cashew account whose transactions to return.
+     *
+     * @param account            The Cashew account whose transactions to return.
+     * @param filteringMode      The filtering mode to apply to the supplied dates.
      * @param startDateInclusive The start date of the inclusive range of transactions. May be null.
-     * @param endDateInclusive The end of the inclusive range of transactions. May be null.
+     * @param endDateInclusive   The end of the inclusive range of transactions. May be null.
+     * @param importFutureTransactions Whether to include future transactions in the results.
      * @return A list of transactions matching the supplied criteria.
      */
-    public ArrayList<CashewTransaction> getTransactions(CashewAccount account, @Nullable LocalDate startDateInclusive, @Nullable LocalDate endDateInclusive) {
+    public ArrayList<CashewTransaction> getTransactions(CashewAccount account, DateFilteringMode filteringMode, @Nullable LocalDate startDateInclusive, @Nullable LocalDate endDateInclusive, boolean importFutureTransactions) {
         ArrayList<CashewTransaction> transactions = new ArrayList<>();
         try {
             Connection connection = DriverManager.getConnection("jdbc:sqlite:" + file.getPath());
             LoadingDialog dialog = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
             dialog.setPrimaryLabel("Importing transactions for " + account.displayName());
             dialog.setSecondaryLabel("Reading database file");
-            dialog.show("Importing transactions", new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        PreparedStatement statement;
-                        if (startDateInclusive != null && endDateInclusive != null) {
-                            System.out.println("Retrieving transactions between supplied dates");
-                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND (DATETIME(date_created, 'unixepoch') BETWEEN DATETIME(? / 1000, 'unixepoch') AND DATETIME(? / 1000, 'unixepoch'))");
-                            statement.setString(1, account.id());
-                            statement.setLong(2, startDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
-                            statement.setLong(3, endDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
-                        } else if (startDateInclusive != null && endDateInclusive == null) {
-                            System.out.println("Retrieving transactions after supplied date");
-                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND DATETIME(date_created, 'unixepoch') >= DATETIME(? / 1000, 'unixepoch')");
-                            statement.setString(1, account.id());
-                            statement.setLong(2, startDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
-                        } else if (startDateInclusive == null && endDateInclusive != null) {
-                            System.out.println("Retrieving transactions before supplied date");
-                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND DATETIME(date_created, 'unixepoch') <= DATETIME(? / 1000, 'unixepoch')");
-                            statement.setString(1, account.id());
-                            statement.setLong(2, endDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
-                        } else {
+            dialog.show("Importing transactions", () -> {
+                try {
+                    PreparedStatement statement = null;
+                    switch (filteringMode) {
+                        case NONE -> {
                             statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ?");
                             statement.setString(1, account.id());
                         }
-                        ResultSet results = statement.executeQuery();
-                        int transactionCount = 1;
-
-                        while (results.next()) {
-                            if (results.getString("transaction_pk").contains("::predict::1")) {
-                                dialog.setSecondaryLabel("Skipping future #" + transactionCount);
-                                System.out.println("Found future transaction. Skipping!");
-                            } else {
-                                dialog.setSecondaryLabel("Importing transaction #" + transactionCount++);
-                                transactions.add(mapToTransaction(results));
-                            }
+                        case RANGE -> {
+                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND (DATETIME(date_created, 'unixepoch') BETWEEN DATETIME(? / 1000, 'unixepoch', 'localtime') AND DATETIME(? / 1000, 'unixepoch'))");
+                            statement.setString(1, account.id());
+                            statement.setLong(2, startDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                            statement.setLong(3, endDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
                         }
-                    } catch (SQLException e) {
-                        Platform.runLater(() -> {
-                            PopupManager.showPopup("Error whilst importing transactions", e.getMessage(), Alert.AlertType.ERROR);
-                        });
+                        case ALL_BEFORE -> {
+                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND DATETIME(date_created, 'unixepoch') <= DATETIME(? / 1000, 'unixepoch', 'localtime')");
+                            statement.setString(1, account.id());
+                            statement.setLong(2, endDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                        }
+                        case ALL_AFTER -> {
+                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND DATETIME(date_created, 'unixepoch') >= DATETIME(? / 1000, 'unixepoch', 'localtime')");
+                            statement.setString(1, account.id());
+                            statement.setLong(2, startDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                        }
+                        case ALL_ON -> {
+                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND DATE(date_created, 'unixepoch') = DATE(? / 1000, 'unixepoch', 'localtime')");
+                            statement.setString(1, account.id());
+                            statement.setLong(2, startDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                        }
                     }
+
+                    ResultSet results = statement.executeQuery();
+                    int transactionCount = 1;
+
+                    while (results.next()) {
+                        LocalDateTime timestamp = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(results.getString("date_created"))), ZoneId.systemDefault());
+                        boolean shouldImport = (!results.getString("transaction_pk").contains("::predict") && !timestamp.isAfter(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault())));
+                        if (!shouldImport && importFutureTransactions) {
+                            shouldImport = true;
+                            log("Future transaction %s will be imported".formatted(results.getString("transaction_pk")));
+                        }
+
+                        if (shouldImport) {
+                            dialog.setSecondaryLabel("Importing transaction #" + transactionCount++);
+                            transactions.add(mapToTransaction(results));
+                        } else {
+                            dialog.setSecondaryLabel("Skipping future #" + transactionCount);
+                            log("Skipping transaction: " + results.getString("transaction_pk") + " (future transaction)");
+                        }
+                    }
+                } catch (SQLException e) {
+                    Platform.runLater(() -> PopupManager.showPopup("Error whilst importing transactions", e.getMessage(), Alert.AlertType.ERROR));
                 }
             });
         } catch (SQLException e) {

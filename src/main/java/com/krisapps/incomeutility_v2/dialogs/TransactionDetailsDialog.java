@@ -1,71 +1,59 @@
 package com.krisapps.incomeutility_v2.dialogs;
 
-import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.io.IOException;
 import java.util.Optional;
 
 public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
 
+    private final String WITHDRAWAL_ICON = "fltrmz-presence-dnd-10";
+    private final String DEPOSIT_ICON = "fltral-add-circle-24";
+    private final String TRANSFER_ICON = "fltral-arrow-swap-24";
+    private final DataManager dataManager = DataManager.getInstance();
     @FXML
     private VBox rootPane;
-
     @FXML
     private Label typeLabel;
-
     @FXML
     private Label dateLabel;
-
     @FXML
     private Label timeLabel;
-
     @FXML
     private Label amountLabel;
-
     @FXML
     private Label accountLabel;
-
     @FXML
     private Label categoryLabel;
-
     @FXML
     private Label commentLabel;
-
     @FXML
     private Label transferFromLabel;
-
     @FXML
     private Label transferToLabel;
-
     @FXML
     private HBox transferPanel;
-
     @FXML
     private FontIcon typeIcon;
 
     @FXML
     private Button editButton;
 
-
-
-    private final String WITHDRAWAL_ICON = "fltrmz-presence-dnd-10";
-    private final String DEPOSIT_ICON = "fltral-add-circle-24";
-    private final String TRANSFER_ICON = "fltral-arrow-swap-24";
-    private Transaction transaction;
-
-    private final DataManager dataManager = DataManager.getInstance();
+    @FXML
+    private Button deleteButton;
+    private final Transaction transaction;
 
     public TransactionDetailsDialog(Transaction t, Account selectedAccount) {
         super("transaction-details.fxml", "Transaction details", "transaction_96.png");
@@ -75,11 +63,24 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
         getDialogPane().getButtonTypes().setAll(cancelButton);
 
         editButton.setOnAction((ev) -> {
-            EditTransactionDialog editDialog = new EditTransactionDialog(transaction.copy(), selectedAccount);
+            EditTransactionDialog editDialog = new EditTransactionDialog(transaction, selectedAccount);
             Optional<Transaction> updated = editDialog.showAndWait();
             updated.ifPresent(value -> {
                 DataManager.getInstance().updateTransaction(value.getId(), value);
                 close();
+            });
+        });
+
+        deleteButton.setOnAction((ev) -> {
+            PopupManager.showConfirmation("Delete transaction?",
+                    "Are you sure you wish to delete this transaction? This cannot be reverted later.",
+                    new ButtonType("Yes, delete", ButtonBar.ButtonData.APPLY),
+                    new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+            ).ifPresent(response -> {
+                if (response.getButtonData() == ButtonBar.ButtonData.APPLY) {
+                    dataManager.deleteTransaction(transaction.getId());
+                    close();
+                }
             });
         });
 
@@ -128,9 +129,9 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
 
             amountLabel.setText(
                     DataManager.Formatting.formatMoney(
-                    transaction.getAbsoluteAmount(),
-                    acc.isPresent() ? acc.get().getCurrencyConfig() : CurrencyConfig.DEFAULT
-            ));
+                            transaction.getAbsoluteAmount(),
+                            acc.isPresent() ? acc.get().getCurrencyConfig() : CurrencyConfig.DEFAULT
+                    ));
 
             transferPanel.setVisible(false);
             accountLabel.setVisible(true);

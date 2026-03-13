@@ -5,9 +5,9 @@ import com.krisapps.incomeutility_v2.types.transaction.RejectionReason;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 
 public class TransactionNotPermittedException extends RuntimeException {
-    private TransactionType type;
-    private RejectionReason reason;
-    private Account affectedAccount;
+    private final TransactionType type;
+    private final RejectionReason reason;
+    private final Account affectedAccount;
 
     public TransactionNotPermittedException(TransactionType type, RejectionReason reason, Account account, String message) {
         this.type = type;

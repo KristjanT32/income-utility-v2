@@ -1,13 +1,10 @@
 package com.krisapps.incomeutility_v2.types.fiscal.cashew;
 
-import com.krisapps.incomeutility_v2.exceptions.OperationNotPermittedException;
-import com.krisapps.incomeutility_v2.types.OperationType;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 public class CashewTransaction extends Transaction {
@@ -24,6 +21,13 @@ public class CashewTransaction extends Transaction {
     public CashewTransaction(TransactionType type, double amount, UUID from, UUID to, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, String cashewTransactionId) {
         super(type, amount, from, to, timestamp, category, customCategory, comment, null);
         this.cashewTransactionId = cashewTransactionId;
+    }
+
+    public CashewTransaction(TransactionType type, double amount, UUID from, UUID to, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, UUID id, String cashewTransactionId, String cashewSourceAccount, String cashewTargetAccount) {
+        super(type, amount, from, to, timestamp, category, customCategory, comment, id);
+        this.cashewTransactionId = cashewTransactionId;
+        this.cashewSourceAccount = cashewSourceAccount;
+        this.cashewTargetAccount = cashewTargetAccount;
     }
 
     public CashewTransaction(String cashewTransactionId) {
@@ -57,5 +61,23 @@ public class CashewTransaction extends Transaction {
 
     public void setCashewTargetAccount(String cashewTargetAccount) {
         this.cashewTargetAccount = cashewTargetAccount;
+    }
+
+    @Override
+    public CashewTransaction copy() {
+        return new CashewTransaction(
+            this.getType(),
+            this.getAmount(),
+            this.getSourceAccountId(),
+            this.getTargetAccountId(),
+            this.getTimestamp(),
+            this.getCategory(),
+            this.getCustomCategory(),
+            this.getComment(),
+            this.getId(),
+            this.cashewTransactionId,
+            this.cashewSourceAccount,
+            this.cashewTargetAccount
+        );
     }
 }

@@ -33,6 +33,7 @@ public class DataManager {
             .create();
     private static DataManager instance;
     private final File dataFile = new File(System.getProperty("user.home") + File.separator + "IncomeUtility v2" + File.separator + "data.json");
+    private boolean isSaving = false;
 
     private Data currentData;
 
@@ -46,10 +47,6 @@ public class DataManager {
         return instance;
     }
 
-    public void initialize() {
-        loadData();
-    }
-
     public static void log(String msg) {
         if (msg.toLowerCase().contains("failed") || msg.toLowerCase().contains("error") || msg.toLowerCase().contains("fail") || msg.toLowerCase().contains("couldn't") || msg.toLowerCase().contains("could not")) {
             System.out.println(String.format("[%s IncomeUtility/ERROR]: ", Formatting.formatDate(Date.from(Instant.now()), true)) + msg);
@@ -60,6 +57,10 @@ public class DataManager {
 
     public static void log(String msg, Level level) {
         System.out.println(String.format("[%s IncomeUtility/%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), level.getName()) + msg);
+    }
+
+    public void initialize() {
+        loadData();
     }
 
     private void firstTimeFileSetup() {
@@ -96,6 +97,7 @@ public class DataManager {
 
 
     public void saveData(Data data) {
+        isSaving = true;
 
         if (!dataFile.exists()) {
             createDataFile();
@@ -109,10 +111,17 @@ public class DataManager {
         } catch (IOException e) {
             log("Data saving failed - " + e.getMessage());
         }
+        isSaving = false;
+    }
+
+    public boolean isSaving() {
+        return isSaving;
     }
 
     public void saveCurrentData() {
-        if (currentData == null) { return; }
+        if (currentData == null) {
+            return;
+        }
         saveData(currentData);
     }
 
@@ -162,6 +171,11 @@ public class DataManager {
     public Optional<Account> getAccount(UUID accountId) {
         Data d = getData();
         return Optional.ofNullable(d.accounts.get(accountId));
+    }
+
+    public HashMap<UUID, Transaction> getAllTransactions() {
+        Data d = getData();
+        return d.getTransactions();
     }
 
     public List<Transaction> getTransactions(Account account) {
@@ -238,6 +252,7 @@ public class DataManager {
 
     /**
      * Updates the saved ID of the last open account.
+     *
      * @param account The account whose ID to set as the new last open account ID.
      */
     public void updateLastOpenAccount(Account account) {
@@ -385,8 +400,8 @@ public class DataManager {
     private static class Data {
         private final HashMap<UUID, Transaction> transactions;
         private final HashMap<UUID, Account> accounts;
-        private String lastActiveAccountId;
         private final ArrayList<String> customTransactionCategories;
+        private String lastActiveAccountId;
 
         public Data() {
             this.transactions = new HashMap<>();

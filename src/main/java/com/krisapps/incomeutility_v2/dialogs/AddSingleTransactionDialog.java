@@ -1,6 +1,5 @@
 package com.krisapps.incomeutility_v2.dialogs;
 
-import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
@@ -12,12 +11,9 @@ import com.krisapps.incomeutility_v2.util.PopupManager;
 import com.krisapps.incomeutility_v2.util.misc.Formats;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
 
-import java.io.IOException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -26,53 +22,8 @@ import java.util.function.UnaryOperator;
 
 public class AddSingleTransactionDialog extends IncomeUtilityDialog<Transaction> {
 
-    @FXML
-    private VBox rootPane;
-
-    @FXML
-    private VBox singleTargetTransactionPanel;
-
-    @FXML
-    private VBox dualTargetTransactionPanel;
-
-    @FXML
-    private ComboBox<TransactionType> transactionTypeSelector;
-
-    @FXML
-    private ComboBox<String> categorySelector;
-
-    @FXML
-    private ComboBox<Account> singleTargetSelector;
-
-    @FXML
-    private ComboBox<Account> fromSelector;
-
-    @FXML
-    private ComboBox<Account> toSelector;
-
-    @FXML
-    private DatePicker dateSelector;
-
-    @FXML
-    private TextField timeField;
-
-    @FXML
-    private TextField amountField;
-
-    @FXML
-    private TextArea commentField;
-
-    @FXML
-    private TextField customCategoryField;
-
-    @FXML
-    private Label singleTargetLabel;
-
-
     private final DataManager data = DataManager.getInstance();
     private final Transaction outputTransaction = new Transaction(null, 0.0d, null, null, null, null, null, null);
-    private Account selectedAccount;
-
     private final UnaryOperator<TextFormatter.Change> numbersOnlyFormatter = (change) -> {
         if (change.getControlNewText().isEmpty()) {
             return change;
@@ -86,6 +37,35 @@ public class AddSingleTransactionDialog extends IncomeUtilityDialog<Transaction>
 
         return null;
     };
+    @FXML
+    private VBox rootPane;
+    @FXML
+    private VBox singleTargetTransactionPanel;
+    @FXML
+    private VBox dualTargetTransactionPanel;
+    @FXML
+    private ComboBox<TransactionType> transactionTypeSelector;
+    @FXML
+    private ComboBox<String> categorySelector;
+    @FXML
+    private ComboBox<Account> singleTargetSelector;
+    @FXML
+    private ComboBox<Account> fromSelector;
+    @FXML
+    private ComboBox<Account> toSelector;
+    @FXML
+    private DatePicker dateSelector;
+    @FXML
+    private TextField timeField;
+    @FXML
+    private TextField amountField;
+    @FXML
+    private TextArea commentField;
+    @FXML
+    private TextField customCategoryField;
+    @FXML
+    private Label singleTargetLabel;
+    private final Account selectedAccount;
 
     public AddSingleTransactionDialog(Account selectedAccount) {
         super("add-transaction.fxml", "Register transaction");

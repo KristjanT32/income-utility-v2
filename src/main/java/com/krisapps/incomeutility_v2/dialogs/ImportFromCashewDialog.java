@@ -1,9 +1,7 @@
 package com.krisapps.incomeutility_v2.dialogs;
 
-import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
-import com.krisapps.incomeutility_v2.subutilities.money_flow.MoneyFlowUtilityController;
+import com.krisapps.incomeutility_v2.types.DateFilteringMode;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
-import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewAccount;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
@@ -14,22 +12,19 @@ import com.krisapps.incomeutility_v2.util.services.CashewService;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.UUID;
 
 public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, ArrayList<CashewTransaction>>> {
 
@@ -63,37 +58,15 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
     @FXML
     private Button reviewButton;
 
-    private FileChooser filePicker = new FileChooser();
-    private CashewService cashew = CashewService.getInstance();
-    private FiscalService fiscal = FiscalService.getInstance();
+    @FXML
+    private CheckBox importFutureToggle;
+
+    private final FileChooser filePicker = new FileChooser();
+    private final CashewService cashew = CashewService.getInstance();
+    private final FiscalService fiscal = FiscalService.getInstance();
 
     private ArrayList<CashewTransaction> importedTransactions = new ArrayList<>();
-
-    private enum DateFilteringMode {
-        NONE("All transactions (no filtering)"),
-        RANGE("All transactions between (inclusive)"),
-        ALL_BEFORE("All transactions before (inclusive)"),
-        ALL_AFTER("All transactions after (inclusive)")
-        ;
-        private String displayName;
-
-        DateFilteringMode(String displayName) {
-            this.displayName = displayName;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
-
-        public static DateFilteringMode ofDisplayName(String displayName) {
-            for (DateFilteringMode mode: values()) {
-                if (mode.getDisplayName().equals(displayName)) {
-                    return mode;
-                }
-            }
-            return NONE;
-        }
-    }
+    private boolean shouldImportFutureTransactions = false;
 
     public ImportFromCashewDialog(Account selectedAccount) {
         super("import-transactions.fxml", "Import transactions");
@@ -144,7 +117,7 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                     endPicker.setValue(LocalDate.now());
                     endPicker.setVisible(true);
                 }
-                case ALL_AFTER -> {
+                case ALL_AFTER, ALL_ON -> {
                     startPicker.setValue(LocalDate.now());
                     startPicker.setVisible(true);
 
@@ -152,6 +125,10 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                     endPicker.setVisible(false);
                 }
             }
+        });
+
+        importFutureToggle.selectedProperty().addListener((obs, old, val) -> {
+            shouldImportFutureTransactions = val;
         });
 
         // Set defaults
@@ -163,17 +140,17 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                 PopupManager.showChoicePopup(
                         "Reimport transactions?",
                         "Some transactions have already been imported.\nWould you like to import them again? This can be useful if you've made changes to the database file externally.",
-                    new ButtonType("Reimport", ButtonBar.ButtonData.APPLY),
-                    new ButtonType("Don't reimport", ButtonBar.ButtonData.CANCEL_CLOSE)
+                        new ButtonType("Reimport", ButtonBar.ButtonData.APPLY),
+                        new ButtonType("Don't reimport", ButtonBar.ButtonData.CANCEL_CLOSE)
                 ).ifPresent(response -> {
                     if (response.getButtonData() == ButtonBar.ButtonData.APPLY) {
                         importedTransactions = new ArrayList<>();
-                        importedTransactions = cashew.getTransactions(cashew.getWalletByName(sourceAccountPicker.getValue()).get(), startPicker.getValue(), endPicker.getValue());
+                        importedTransactions = cashew.getTransactions(cashew.getWalletByName(sourceAccountPicker.getValue()).get(), filterTypeSelector.getValue(), startPicker.getValue(), endPicker.getValue(), shouldImportFutureTransactions);
                         refreshUI();
                     }
                 });
             } else {
-                importedTransactions = cashew.getTransactions(cashew.getWalletByName(sourceAccountPicker.getValue()).get(), startPicker.getValue(), endPicker.getValue());
+                importedTransactions = cashew.getTransactions(cashew.getWalletByName(sourceAccountPicker.getValue()).get(), filterTypeSelector.getValue(), startPicker.getValue(), endPicker.getValue(), shouldImportFutureTransactions);
                 refreshUI();
             }
 
@@ -191,11 +168,11 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
             ).ifPresent(response -> {
                 switch (response.getButtonData()) {
                     case APPLY -> {
-                        importTransactions();
+                        importTransactions(false);
                         close();
                     }
                     case OTHER -> {
-                        reviewTransactions();
+                        importTransactions(true);
                     }
                     default -> {
 
@@ -205,7 +182,7 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
         });
 
         reviewButton.setOnAction((ev) -> {
-            reviewTransactions();
+            importTransactions(true);
         });
 
         setResultConverter((buttonType -> {
@@ -216,15 +193,42 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
             }
         }));
 
+        setOnCloseRequest((request) -> {
+            cashew.reset();
+        });
+
         refreshUI();
     }
 
-    private void importTransactions() {
+    private void importTransactions(boolean thenReview) {
+        DataManager.log("Beginning to import transactions");
+        performImport();
+        DataManager.log("Import completed.");
+
+        if (thenReview) {
+            reviewTransactions();
+        } else {
+            setResult(new Pair<>(fiscal.getAccountByName(targetAccountPicker.getValue()).get(), importedTransactions));
+        }
+    }
+
+    private void reviewTransactions() {
+        TransactionReviewDialog dlg = new TransactionReviewDialog(fiscal.getAccountByName(targetAccountPicker.getValue()).get(), importedTransactions);
+        Optional<ArrayList<CashewTransaction>> filteredTransactions = dlg.showAndWait();
+
+        filteredTransactions.ifPresent(cashewTransactions -> {
+            importedTransactions.removeIf(element -> !cashewTransactions.contains(element));
+
+            setResult(new Pair<>(fiscal.getAccountByName(targetAccountPicker.getValue()).get(), importedTransactions));
+            close();
+        });
+    }
+
+    private void performImport() {
         HashMap<String, UUID> accountMappings = new HashMap<>();
         AccountMappingDialog dlg = new AccountMappingDialog();
 
-        DataManager.log("Beginning to import transactions");
-        for (CashewTransaction t: importedTransactions) {
+        for (CashewTransaction t : importedTransactions) {
             if (t.getType().equals(TransactionType.TRANSFER)) {
                 if (accountMappings.containsKey(t.getCashewSourceAccount())) {
                     t.setSourceAccountId(accountMappings.get(t.getCashewSourceAccount()));
@@ -277,19 +281,6 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                 }
             }
         }
-        DataManager.log("Import completed.");
-
-        setResult(new Pair<>(fiscal.getAccountByName(targetAccountPicker.getValue()).get(), importedTransactions));
-    }
-
-    private void reviewTransactions() {
-        PreImportTransactionReviewDialog dlg = new PreImportTransactionReviewDialog(importedTransactions);
-        Optional<ArrayList<CashewTransaction>> filteredTransactions = dlg.showAndWait();
-
-        filteredTransactions.ifPresent(cashewTransactions -> {
-            importedTransactions.removeIf(element -> !cashewTransactions.contains(element));
-            importTransactions();
-        });
     }
 
     public void refreshUI() {

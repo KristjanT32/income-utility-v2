@@ -2,9 +2,11 @@ package com.krisapps.incomeutility_v2.util;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.IncomeUtilityController;
-import com.krisapps.incomeutility_v2.dialogs.IncomeUtilityDialog;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -14,14 +16,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.Stack;
 
+@SuppressWarnings("ConstantConditions")
 public class PopupManager {
-
-    public enum PopupType {
-        NOT_IMPLEMENTED,
-        INSUFFICIENT_BALANCE,
-    }
 
     static Image INFO_ICON = new Image(IncomeUtilityApplication.class.getResource("icons/info_96.png").toExternalForm());
     static Image CONFIRMATION_ICON = new Image(IncomeUtilityApplication.class.getResource("icons/confirm_96.png").toExternalForm());
@@ -81,7 +78,7 @@ public class PopupManager {
         return a.showAndWait();
     }
 
-    public static Optional<ButtonType> showPopup(String title, String message, Alert.AlertType type) {
+    public static void showPopup(String title, String message, Alert.AlertType type) {
         Alert alert = new Alert(null);
         alert.getDialogPane().getStylesheets().add(IncomeUtilityController.class.getResource("stylesheets/core-ui.css").toExternalForm());
         alert.setTitle(title);
@@ -92,21 +89,13 @@ public class PopupManager {
         switch (type) {
             case NONE -> {
             }
-            case INFORMATION -> {
-                ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(INFO_ICON);
-            }
-            case WARNING -> {
-                ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(WARNING_ICON);
-            }
-            case CONFIRMATION -> {
-                ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(CONFIRMATION_ICON);
-            }
-            case ERROR -> {
-                ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ERROR_ICON);
-            }
+            case INFORMATION -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(INFO_ICON);
+            case WARNING -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(WARNING_ICON);
+            case CONFIRMATION -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(CONFIRMATION_ICON);
+            case ERROR -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ERROR_ICON);
         }
 
-        return alert.showAndWait();
+        alert.showAndWait();
     }
 
     public static String showInputDialog(String title, String message, String inputLabel, @Nullable String inputValue) {
@@ -150,6 +139,11 @@ public class PopupManager {
             }
         }
         return null;
+    }
+
+    public enum PopupType {
+        NOT_IMPLEMENTED,
+        INSUFFICIENT_BALANCE,
     }
 
 

@@ -1,5 +1,6 @@
 package com.krisapps.incomeutility_v2.subutilities.money_flow;
 
+import com.krisapps.incomeutility_v2.dialogs.AddMultipleTransactionsDialog;
 import com.krisapps.incomeutility_v2.dialogs.AddSingleTransactionDialog;
 import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
 import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException;
@@ -20,7 +21,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.util.Callback;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
 
@@ -87,7 +87,6 @@ public class MoneyFlowUtilityController extends SubUtilityController {
 
     public void onStartup(SubUtility utility) {
         this.utility = utility;
-        utility.log("Initializing fiscal data...");
     }
 
     public void onShutdown() {
@@ -128,6 +127,7 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             selectedAccount = newValue;
             transactionList.setCellFactory(new TransactionCellFactory(selectedAccount, (item) -> {
                 refreshUI();
+                refreshAccountSelector();
                 refreshTransactionList();
             }));
             refreshTransactionList();
@@ -147,7 +147,11 @@ public class MoneyFlowUtilityController extends SubUtilityController {
         datePicker.setValue(LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault()));
 
         data.getLastActiveAccount().ifPresentOrElse(account -> {
-            accountSelector.setValue(data.getAccount(account).get());
+            if (data.getAccount(account).isPresent()) {
+                accountSelector.setValue(data.getAccount(account).get());
+            } else {
+                accountSelector.setValue(data.getAccounts().stream().findFirst().orElse(null));
+            }
         }, () -> {
             accountSelector.setValue(data.getAccounts().stream().findFirst().orElse(null));
         });
@@ -240,7 +244,6 @@ public class MoneyFlowUtilityController extends SubUtilityController {
     }
 
 
-
     @FXML
     public void promptAddSingleTransaction() {
         AddSingleTransactionDialog dlg = new AddSingleTransactionDialog(selectedAccount);
@@ -258,16 +261,33 @@ public class MoneyFlowUtilityController extends SubUtilityController {
     }
 
     @FXML
+    public void promptAddMultipleTransactions() {
+        AddMultipleTransactionsDialog dlg = new AddMultipleTransactionsDialog(selectedAccount);
+        Optional<ArrayList<Transaction>> t = dlg.showAndWait();
+        t.ifPresent((transaction -> {
+            try {
+                transactor.pushTransactionsTo(selectedAccount, transaction);
+                refreshAccountSelector();
+                refreshTransactionList();
+                refreshUI();
+            } catch (TransactionNotPermittedException exception) {
+                PopupManager.showPopup(exception.getType().getDisplayName() + " not permitted", exception.getReason().getDescription(), Alert.AlertType.ERROR);
+            }
+        }));
+    }
+
+    @FXML
     public void promptImportTransactions() {
         ImportFromCashewDialog dlg = new ImportFromCashewDialog(selectedAccount);
         Optional<Pair<Account, ArrayList<CashewTransaction>>> response = dlg.showAndWait();
 
         response.ifPresent(importedTransactions -> {
-            transactor.pushTransactionsTo(importedTransactions.getKey(), importedTransactions.getValue());
+            int imported = transactor.pushTransactionsTo(importedTransactions.getKey(), importedTransactions.getValue());
+
             refreshTransactionList();
             refreshUI();
             refreshAccountSelector();
-            PopupManager.showPopup("Import completed!", "Successfully imported %s transactions from Cashew.".formatted(importedTransactions.getValue().size()), Alert.AlertType.INFORMATION);
+            PopupManager.showPopup("Import completed!", "Successfully imported %s new transactions of %s selected from Cashew.".formatted(imported, importedTransactions.getValue().size()), Alert.AlertType.INFORMATION);
         });
     }
 }

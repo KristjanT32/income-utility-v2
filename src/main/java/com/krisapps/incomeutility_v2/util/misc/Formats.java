@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 public class Formats {
 
     public static final StringConverter<LocalDate> DATE_FORMAT = new StringConverter<>() {
-        DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        final DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         @Override
         public String toString(LocalDate localDate) {

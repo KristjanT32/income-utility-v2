@@ -27,6 +27,10 @@
     -fx-font-weight: bold;
 }
 
+.title-regular {
+    -fx-font-size: 22px;
+}
+
 .normal-label.bold, .medium-label.bold, .large-label.bold, .xl-label.bold {
     -fx-font-weight: bold;
 }

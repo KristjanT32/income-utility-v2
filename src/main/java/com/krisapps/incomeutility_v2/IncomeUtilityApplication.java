@@ -4,6 +4,7 @@ import com.krisapps.incomeutility_v2.dialogs.LoadingDialog;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;
+import com.krisapps.incomeutility_v2.util.UtilityManager;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -18,6 +19,17 @@ import java.io.IOException;
 public class IncomeUtilityApplication extends Application {
 
     static Stage window;
+
+    /**
+     * Updates the window title.
+     *
+     * @param title        The text to set the window title to.
+     * @param removePrefix If <code>true</code>, 'KrisApps Income Utility: ' will not be appended to the beginning of the title.
+     */
+    public static void updateTitle(String title, boolean removePrefix) {
+        if (window == null) return;
+        window.setTitle(removePrefix ? title : "KrisApps Income Utility: " + title);
+    }
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -41,7 +53,6 @@ public class IncomeUtilityApplication extends Application {
                     if (response.getButtonData() == ButtonBar.ButtonData.APPLY) {
                         LoadingDialog dialog = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
                         dialog.setPrimaryLabel("Cleaning up");
-                        dialog.setSecondaryLabel("Saving data...");
                         dialog.show("Shutting down...", new Runnable() {
                             @Override
                             public void run() {
@@ -51,13 +62,21 @@ public class IncomeUtilityApplication extends Application {
                                 } catch (InterruptedException e) {
                                     throw new RuntimeException(e);
                                 }
+
+                                UtilityManager.getInstance().stopAll(SubUtilityType.ALL);
+                                while (DataManager.getInstance().isSaving()) {
+                                    dialog.setPrimaryLabel("Saving data");
+                                    dialog.setSecondaryLabel("Waiting for I/O operations to finish...");
+                                }
+
+                                dialog.setPrimaryLabel("Resolving tension");
                                 dialog.setSecondaryLabel("Closing, bye!");
                                 try {
                                     Thread.sleep(500);
                                 } catch (InterruptedException e) {
                                     throw new RuntimeException(e);
                                 }
-                                UtilityManager.getInstance().stopAll(SubUtilityType.ALL);
+
                                 Platform.exit();
                                 System.exit(0);
                             }
@@ -70,15 +89,5 @@ public class IncomeUtilityApplication extends Application {
             }
         });
         stage.show();
-    }
-
-    /**
-     * Updates the window title.
-     * @param title The text to set the window title to.
-     * @param removePrefix If <code>true</code>, 'KrisApps Income Utility: ' will not be appended to the beginning of the title.
-     */
-    public static void updateTitle(String title, boolean removePrefix){
-        if (window == null) return;
-        window.setTitle(removePrefix ? title : "KrisApps Income Utility: " + title);
     }
 }

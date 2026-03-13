@@ -6,7 +6,10 @@ import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class FiscalService {
 
@@ -26,7 +29,8 @@ public class FiscalService {
 
     /**
      * Returns the adjustment to the supplied account based on the transaction
-     * @param account The account whose balance adjustment will be returned.
+     *
+     * @param account     The account whose balance adjustment will be returned.
      * @param transaction The transaction the adjustment will be derived from.
      * @return The adjustment value to be added to the balance of the account.
      */
@@ -55,15 +59,20 @@ public class FiscalService {
         return dataManager.getTransactions(account).stream().filter(transaction -> transaction.getTimestamp().toLocalDate().isEqual(date)).toList();
     }
 
+    public List<Transaction> getTransactions(Account account) {
+        return dataManager.getTransactions(account);
+    }
+
     /**
      * Gets the starting balance of the supplied account for the supplied date.
+     *
      * @param account The account whose starting balance to calculate.
-     * @param date The date for which the starting balance will be calculated.
+     * @param date    The date for which the starting balance will be calculated.
      * @return The starting balance.
      */
     public double getStartingBalance(Account account, LocalDate date) {
         double adjustment = 0.0d;
-        for (Transaction t: getTransactionsBefore(account, date)) {
+        for (Transaction t : getTransactionsBefore(account, date)) {
             adjustment += getBalanceAdjustment(account, t);
         }
         return account.getInitialBalance() + adjustment;
@@ -71,7 +80,7 @@ public class FiscalService {
 
     public double getCurrentBalance(Account account) {
         double adjustment = 0.0d;
-        for (Transaction t: dataManager.getTransactions(account)) {
+        for (Transaction t : dataManager.getTransactions(account)) {
             adjustment += getBalanceAdjustment(account, t);
         }
         return account.getInitialBalance() + adjustment;

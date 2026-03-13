@@ -8,7 +8,7 @@ public enum TransactionType {
 
     private final String displayName;
 
-    private TransactionType(String displayName) {
+    TransactionType(String displayName) {
         this.displayName = displayName;
     }
 

@@ -16,8 +16,7 @@ public enum TransactionCategory {
     TRANSFER,
     MISCELLANEOUS,
     CUSTOM,
-    UNKNOWN
-    ;
+    UNKNOWN;
 
     public static TransactionCategory of(TransactionType type) {
         return switch (type) {

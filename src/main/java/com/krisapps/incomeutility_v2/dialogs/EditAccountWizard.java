@@ -8,9 +8,9 @@ import javafx.scene.layout.VBox;
 
 import java.util.function.UnaryOperator;
 
-public class AddAccountWizard extends IncomeUtilityDialog<Account> {
+public class EditAccountWizard extends IncomeUtilityDialog<Account> {
 
-    private final Account outputAccount = new Account();
+    private Account outputAccount = null;
     private final UnaryOperator<TextFormatter.Change> numbersOnlyFormatter = (change) -> {
         if (change.getControlNewText().isEmpty()) {
             return change;
@@ -33,25 +33,29 @@ public class AddAccountWizard extends IncomeUtilityDialog<Account> {
     @FXML
     private ComboBox<Account.Type> typeSelector;
 
-    public AddAccountWizard() {
-        super("add-account.fxml", "Create new account", "account_96.png");
+    public EditAccountWizard(Account account) {
+        super("edit-account.fxml", "Edit account details", "account_96.png");
+        this.outputAccount = account;
 
-        ButtonType createButton = new ButtonType("Create", ButtonBar.ButtonData.APPLY);
+        ButtonType createButton = new ButtonType("Apply", ButtonBar.ButtonData.APPLY);
         ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
         getDialogPane().getButtonTypes().setAll(createButton, cancelButton);
 
         ObservableList<Account.Type> items = typeSelector.getItems();
         items.setAll(Account.Type.values());
         typeSelector.setItems(items);
+        typeSelector.setValue(outputAccount.getType());
         typeSelector.valueProperty().addListener((o, oldVal, newVal) -> {
             outputAccount.setType(newVal);
         });
 
+        nameField.setText(account.getName());
         nameField.textProperty().addListener((o, oldVal, newVal) -> {
             outputAccount.setName(nameField.getText());
         });
 
         balanceField.setTextFormatter(new TextFormatter<>(numbersOnlyFormatter));
+        balanceField.setText(String.valueOf(account.getInitialBalance()));
         balanceField.textProperty().addListener((o, oldVal, newVal) -> {
             outputAccount.setInitialBalance(Double.parseDouble(balanceField.getText()));
         });

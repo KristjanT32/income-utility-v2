@@ -22,26 +22,20 @@ import java.util.function.Consumer;
 
 public class TransactionCell extends ListCell<Transaction> {
 
-    @FXML
-    private HBox rootPane;
-
-    @FXML
-    private Button detailsButton;
-
-    @FXML
-    private Label amountLabel;
-
-    @FXML
-    private Label categoryLabel;
-
-    @FXML
-    private Label commentLabel;
-
-    @FXML
-    private FontIcon typeIcon;
-
     private final Account parent;
     private final Consumer<Transaction> onItemDataChange;
+    @FXML
+    private final HBox rootPane;
+    @FXML
+    private Button detailsButton;
+    @FXML
+    private Label amountLabel;
+    @FXML
+    private Label categoryLabel;
+    @FXML
+    private Label commentLabel;
+    @FXML
+    private FontIcon typeIcon;
 
     public TransactionCell(Account parent, Consumer<Transaction> onItemDataChange) {
         try {
@@ -87,11 +81,7 @@ public class TransactionCell extends ListCell<Transaction> {
             if (now == null) {
                 commentLabel.setVisible(false);
             } else {
-                if (!now.isEmpty()) {
-                    commentLabel.setVisible(true);
-                } else {
-                    commentLabel.setVisible(false);
-                }
+                commentLabel.setVisible(!now.isEmpty());
             }
         });
 

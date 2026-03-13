@@ -1,10 +1,9 @@
 package com.krisapps.incomeutility_v2.types.fiscal;
 
 public class CurrencyConfig {
+    public static CurrencyConfig DEFAULT = new CurrencyConfig("€", false);
     private String currencySymbol;
     private boolean currencySymbolPrefix = false;
-
-    public static CurrencyConfig DEFAULT = new CurrencyConfig("€", false);
 
     public CurrencyConfig(String currencySymbol, boolean currencySymbolPrefix) {
         this.currencySymbol = currencySymbol;

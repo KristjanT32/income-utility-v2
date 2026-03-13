@@ -1,16 +1,13 @@
 package com.krisapps.incomeutility_v2.dialogs;
 
-import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.IncomeUtilityController;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.VBox;
-
-import java.io.IOException;
 
 public class LoadingDialog extends IncomeUtilityDialog<Void> {
 
@@ -28,16 +25,8 @@ public class LoadingDialog extends IncomeUtilityDialog<Void> {
 
     @FXML
     private ProgressBar progressbar;
-
-    public enum LoadingOperationType {
-        INDETERMINATE_SPINNER,
-        INDETERMINATE_PROGRESSBAR,
-        DETERMINATE
-    }
-
-    private LoadingOperationType type;
+    private final LoadingOperationType type;
     private Task<Void> operation;
-
     public LoadingDialog(LoadingOperationType type) {
         super("loading.fxml", "");
         this.type = type;
@@ -76,7 +65,6 @@ public class LoadingDialog extends IncomeUtilityDialog<Void> {
         };
 
         this.operation.setOnSucceeded(event -> this.close());
-
         this.operation.setOnFailed((event -> this.close()));
 
         setTitle(title);
@@ -106,6 +94,12 @@ public class LoadingDialog extends IncomeUtilityDialog<Void> {
 
         IncomeUtilityController.scheduler.submit(this.operation);
         showAndWait();
+    }
+
+    public enum LoadingOperationType {
+        INDETERMINATE_SPINNER,
+        INDETERMINATE_PROGRESSBAR,
+        DETERMINATE
     }
 
 }

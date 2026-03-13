@@ -16,7 +16,7 @@ import java.io.IOException;
 public class AccountComboboxButtonCell extends ComboBoxListCell<Account> {
 
     @FXML
-    private HBox rootPane;
+    private final HBox rootPane;
 
     @FXML
     private Label balanceLabel;

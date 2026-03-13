@@ -4,38 +4,12 @@ import java.util.Arrays;
 import java.util.UUID;
 
 public class Account {
-    
-    public enum Type {
-        CASH("Cash"),
-        BANK_ACCOUNT("Bank account"),
-        SAVINGS("Savings"),
-        OTHER("Other"),
 
-
-        UNKNOWN("Unknown type")
-        ;
-
-        private String displayName;
-
-        Type(String displayName) {
-            this.displayName = displayName;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
-
-        public static Account.Type ofDisplayName(String displayName) {
-            return Arrays.stream(values()).filter(t -> t.displayName.equals(displayName)).findFirst().orElse(UNKNOWN);
-        }
-    }
-
+    private final UUID id;
     private String name = "";
     private double initialBalance = 0.0d;
     private CurrencyConfig currencyConfig;
-    private final UUID id;
     private Account.Type type;
-
     private boolean isDefault;
 
     public Account() {
@@ -52,8 +26,16 @@ public class Account {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public double getInitialBalance() {
         return initialBalance;
+    }
+
+    public void setInitialBalance(double initialBalance) {
+        this.initialBalance = initialBalance;
     }
 
     public UUID getId() {
@@ -62,18 +44,6 @@ public class Account {
 
     public Account.Type getType() {
         return type;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setInitialBalance(double initialBalance) {
-        this.initialBalance = initialBalance;
-    }
-
-    public void setDefault(boolean isDefault) {
-        this.isDefault = isDefault;
     }
 
     public void setType(Account.Type type) {
@@ -92,17 +62,45 @@ public class Account {
         return isDefault;
     }
 
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Account)) {
             return false;
         } else {
-            return ((Account)obj).getId().equals(this.id);
+            return ((Account) obj).getId().equals(this.id);
         }
     }
 
     @Override
     public String toString() {
         return String.format("Account(name = %s, balance = %s, type = %s, uuid = %s)", this.name, this.initialBalance, this.type.name(), this.id.toString());
+    }
+
+    public enum Type {
+        CASH("Cash"),
+        BANK_ACCOUNT("Bank account"),
+        SAVINGS("Savings"),
+        OTHER("Other"),
+
+
+        UNKNOWN("Unknown type");
+
+        private final String displayName;
+
+        Type(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public static Account.Type ofDisplayName(String displayName) {
+            return Arrays.stream(values()).filter(t -> t.displayName.equals(displayName)).findFirst().orElse(UNKNOWN);
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 }

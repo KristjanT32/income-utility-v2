@@ -11,23 +11,23 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
 
 public abstract class SubUtility {
     private String id;
-    private SubUtilityType type;
-    private String layoutPath;
-    private SubUtilityController controller;
+    private final SubUtilityType type;
+    private final String layoutPath;
+    private final SubUtilityController controller;
 
-    private int minWidth;
-    private int minHeight;
-    private boolean allowResize;
+    private final int minWidth;
+    private final int minHeight;
+    private final boolean allowResize;
 
 
     private String processId;
-    private String utilityName;
+    private final String utilityName;
     private String iconFilePath = "income_utility.png";
-    private Consumer<String> onCloseCallback = (id) -> {};
+    private Consumer<String> onCloseCallback = (id) -> {
+    };
 
     private Stage instance;
 
