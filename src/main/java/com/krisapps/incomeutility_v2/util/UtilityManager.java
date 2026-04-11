@@ -4,6 +4,7 @@ import com.krisapps.incomeutility_v2.exceptions.NotInitializedException;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
 import com.krisapps.incomeutility_v2.subutilities.money_flow.MoneyFlowUtility;
+import com.krisapps.incomeutility_v2.subutilities.pricer.PricerUtility;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 
@@ -49,12 +50,21 @@ public class UtilityManager {
     }
 
     private void startUtility(SubUtilityType subutility) {
+        String processId = getProcessIdFor(subutility);
         switch (subutility) {
             case PRICER -> {
-                // TODO: Implement
+                PricerUtility utility = new PricerUtility();
+
+                utility.setProcessId(processId);
+                utility.setOnCloseCallback(this::unregister);
+                try {
+                    register(utility, processId);
+                } catch (IOException e) {
+                    log(String.format("Failed to start %s: ", utility.getName()) + e.getMessage(), Level.SEVERE);
+                    e.printStackTrace();
+                }
             }
             case MONEY_IN_MONEY_OUT -> {
-                String processId = getProcessIdFor(SubUtilityType.MONEY_IN_MONEY_OUT);
                 MoneyFlowUtility utility = new MoneyFlowUtility();
 
                 utility.setProcessId(processId);

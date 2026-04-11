@@ -67,6 +67,14 @@ public class IncomeUtilityController {
                 utilities.focusAll(SubUtilityType.MONEY_IN_MONEY_OUT);
             }
         });
+
+        pricerCell.setOnMouseClicked((e) -> {
+            if (!e.isShiftDown()) {
+                utilities.openUtility(SubUtilityType.PRICER);
+            } else {
+                utilities.focusAll(SubUtilityType.PRICER);
+            }
+        });
     }
 
     public void refreshAccountView() {

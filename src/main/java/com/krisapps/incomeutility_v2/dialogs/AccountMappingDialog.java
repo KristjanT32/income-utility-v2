@@ -50,6 +50,34 @@ public class AccountMappingDialog extends IncomeUtilityDialog<UUID> {
                 return null;
             }
         });
+
+        setOnShown((e) -> {
+            selectAccountWithSimilarName();
+        });
+    }
+
+    private void selectAccountWithSimilarName() {
+        System.out.println("Attempting to automatically select local account");
+        for (String accountName: fiscal.getAccounts().stream().map(Account::getName).map(String::toLowerCase).toList()) {
+            if (accountName.equals(externalWalletName.toLowerCase())) {
+                selectAccountByName(accountName);
+                break;
+            }
+
+            if (accountName.contains(externalWalletName.toLowerCase())) {
+                selectAccountByName(accountName);
+                break;
+            }
+        }
+    }
+
+    private void selectAccountByName(String account) {
+        for (int i = 0; i < accountSelector.getItems().size(); i++) {
+            if (accountSelector.getItems().get(i).getName().toLowerCase().equals(account)) {
+                accountSelector.getSelectionModel().select(i);
+                break;
+            }
+        }
     }
 
     public void setExternalAccountName(String name) {

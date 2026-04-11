@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -30,6 +31,10 @@ public abstract class SubUtility {
     };
 
     private Stage instance;
+
+    public Stage getInstance() {
+        return instance;
+    }
 
     public SubUtility(SubUtilityType type, String layoutPath, @Nullable String iconFilePath, SubUtilityController controller, int minWidth, int minHeight, boolean allowResize) {
         this.type = type;
@@ -70,11 +75,10 @@ public abstract class SubUtility {
             stop();
         });
 
-        this.controller.onStartup(this);
-
         try {
             this.id = processId;
             this.instance = window;
+            this.controller.onStartup(this);
             this.instance.show();
         } catch (Throwable e) {
             e.printStackTrace();

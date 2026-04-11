@@ -1,6 +1,5 @@
 package com.krisapps.incomeutility_v2.util.services;
 
-import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
 import com.krisapps.incomeutility_v2.dialogs.LoadingDialog;
 import com.krisapps.incomeutility_v2.types.DateFilteringMode;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewAccount;
@@ -23,7 +22,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -271,10 +269,14 @@ public class CashewService {
 
                     while (results.next()) {
                         LocalDateTime timestamp = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(results.getString("date_created"))), ZoneId.systemDefault());
-                        boolean shouldImport = (!results.getString("transaction_pk").contains("::predict") && !timestamp.isAfter(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault())));
+                        boolean shouldImport = !timestamp.isAfter(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()));
                         if (!shouldImport && importFutureTransactions) {
                             shouldImport = true;
                             log("Future transaction %s will be imported".formatted(results.getString("transaction_pk")));
+                        }
+
+                        if (results.getString("transaction_pk").contains("::predict")) {
+                            log("Transaction is a recurrent charge (charge no. " + results.getString("transaction_pk").split("::")[2] + ")");
                         }
 
                         if (shouldImport) {

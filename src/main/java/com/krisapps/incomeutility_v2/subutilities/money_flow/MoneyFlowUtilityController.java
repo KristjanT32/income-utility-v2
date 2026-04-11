@@ -3,6 +3,7 @@ package com.krisapps.incomeutility_v2.subutilities.money_flow;
 import com.krisapps.incomeutility_v2.dialogs.AddMultipleTransactionsDialog;
 import com.krisapps.incomeutility_v2.dialogs.AddSingleTransactionDialog;
 import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
+import com.krisapps.incomeutility_v2.dialogs.TransactionReviewDialog;
 import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
@@ -21,16 +22,15 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Optional;
+import java.util.*;
 
 /* Controller class for the Money In Money Out utility */
 public class MoneyFlowUtilityController extends SubUtilityController {
@@ -72,6 +72,15 @@ public class MoneyFlowUtilityController extends SubUtilityController {
 
     @FXML
     private Button backButton;
+
+    @FXML
+    private HBox commandPrompt;
+
+    @FXML
+    private TextField commandPromptField;
+
+    @FXML
+    private Label commandPromptLabel;
     //</editor-fold>
 
     private Account selectedAccount;
@@ -87,6 +96,7 @@ public class MoneyFlowUtilityController extends SubUtilityController {
 
     public void onStartup(SubUtility utility) {
         this.utility = utility;
+        initializeCommandPrompt();
     }
 
     public void onShutdown() {
@@ -174,8 +184,7 @@ public class MoneyFlowUtilityController extends SubUtilityController {
         if (selectedAccount == null) {
             items.clear();
         } else {
-            items.setAll(data.getTransactions(selectedAccount));
-            items.removeIf(transaction -> !transaction.getTimestamp().toLocalDate().isEqual(selectedDate));
+            items.setAll(data.getTransactions(selectedAccount).stream().filter(transaction -> transaction.getTimestamp().toLocalDate().isEqual(selectedDate)).toList());
             items.sort(Comparator.comparing(Transaction::getTimestamp).reversed());
         }
         transactionList.setItems(items);
@@ -289,5 +298,67 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             refreshAccountSelector();
             PopupManager.showPopup("Import completed!", "Successfully imported %s new transactions of %s selected from Cashew.".formatted(imported, importedTransactions.getValue().size()), Alert.AlertType.INFORMATION);
         });
+    }
+
+    public void initializeCommandPrompt() {
+        commandPrompt.managedProperty().bind(commandPrompt.visibleProperty());
+        commandPromptLabel.setText("money-flow");
+        commandPromptField.setText("");
+        commandPromptField.setOnAction((action) -> {
+            String command = commandPromptField.getText();
+            handleParseCommand(command);
+            commandPrompt.setVisible(false);
+        });
+
+        utility.getInstance().getScene().setOnKeyPressed((keyEvent) -> {
+            if (keyEvent.getCode().equals(KeyCode.F1)) {
+                commandPrompt.setVisible(!commandPrompt.isVisible());
+                if (commandPrompt.isVisible()) {
+                    commandPromptField.requestFocus();
+                    commandPromptLabel.setText("money-flow");
+                    commandPromptField.setText("");
+                }
+            }
+            if (keyEvent.getCode().equals(KeyCode.ESCAPE)) {
+                if (commandPrompt.isVisible()) {
+                    commandPrompt.setVisible(false);
+                }
+            }
+        });
+
+        commandPrompt.setVisible(false);
+    }
+
+    public void handleParseCommand(String input) {
+        if (input.trim().isEmpty()) return;
+        String[] args = input.trim().split(" ");
+
+        switch (args[0]) {
+            case "prevday" -> previousDay();
+            case "nextday" -> nextDay();
+            case "today" -> resetToToday();
+            case "list" -> {
+                if (args.length < 2) {
+                    PopupManager.showPopup("Invalid syntax", "Missing argument: transactions/accounts for utility command date", Alert.AlertType.WARNING);
+                    return;
+                }
+
+                if (args[1].equals("transactions")) {
+                    PopupManager.showListDialog("Transactions", "Transactions", new ArrayList<>(data.getAllTransactions().values()), new TransactionCellFactory(selectedAccount, (transaction) -> {}));
+                }
+            }
+            case "date" -> {
+                if (args.length < 2) {
+                    String date = PopupManager.showInputDialog("Invalid syntax", "Missing argument: 'date (dd/MM/yyyy)' for utility command date", "Date: ", "");
+
+                    if (!date.isEmpty()) {
+                        datePicker.setValue(LocalDate.parse(date, Formats.DATE_FORMATTER));
+                    }
+                    return;
+                }
+                datePicker.setValue(LocalDate.parse(args[1], Formats.DATE_FORMATTER));
+            }
+            default -> PopupManager.showPopup("Unknown utility command", "'" + args[0] + "' is not a valid utility command.", Alert.AlertType.ERROR);
+        }
     }
 }

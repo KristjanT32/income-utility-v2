@@ -1,7 +1,6 @@
 package com.krisapps.incomeutility_v2.ui.listview.cell;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
-import com.krisapps.incomeutility_v2.dialogs.TransactionDetailsDialog;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
@@ -19,12 +18,10 @@ import javafx.util.StringConverter;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class EditableCashewTransactionCell extends ListCell<CashewTransaction> {
@@ -42,7 +39,7 @@ public class EditableCashewTransactionCell extends ListCell<CashewTransaction> {
     private ComboBox<TransactionType> typeSelector;
 
     @FXML
-    private ComboBox<TransactionCategory> categorySelector;
+    private ComboBox<String> categorySelector;
 
     @FXML
     private ComboBox<Account> fromSelector;
@@ -105,6 +102,18 @@ public class EditableCashewTransactionCell extends ListCell<CashewTransaction> {
             }
         });
 
+        categorySelector.setConverter(new StringConverter<String>() {
+            @Override
+            public String toString(String s) {
+                return DataManager.Formatting.humanize(s);
+            }
+
+            @Override
+            public String fromString(String s) {
+                return "";
+            }
+        });
+
         // Ensure the arrow icon is only visible if both account selectors are visible
         arrowIcon.visibleProperty().bind(fromSelector.visibleProperty().and(toSelector.visibleProperty()));
         arrowIcon.managedProperty().bind(arrowIcon.visibleProperty());
@@ -123,7 +132,9 @@ public class EditableCashewTransactionCell extends ListCell<CashewTransaction> {
         fromSelector.getItems().setAll(FiscalService.getInstance().getAccounts());
         toSelector.getItems().setAll(FiscalService.getInstance().getAccounts());
 
-        categorySelector.getItems().setAll(TransactionCategory.values());
+        categorySelector.getItems().clear();
+        categorySelector.getItems().addAll(Arrays.stream(TransactionCategory.values()).map(Enum::name).toList());
+        categorySelector.getItems().addAll(DataManager.getInstance().getCustomTransactionCategories());
 
         deleteButton.setOnAction((ev) -> {
             if (getItem() != null) {
@@ -161,7 +172,12 @@ public class EditableCashewTransactionCell extends ListCell<CashewTransaction> {
 
         categorySelector.valueProperty().addListener((obs, old, val) -> {
             if (updating || getItem() == null) return;
-            getItem().setCategory(val);
+            try {
+                getItem().setCategory(TransactionCategory.valueOf(val));
+            } catch (IllegalArgumentException e) {
+                getItem().setCategory(TransactionCategory.CUSTOM);
+                getItem().setCustomCategory(val);
+            }
         });
 
         commentField.textProperty().addListener((obs, old, val) -> {
@@ -209,7 +225,7 @@ public class EditableCashewTransactionCell extends ListCell<CashewTransaction> {
             ));
 
             typeSelector.setValue(transaction.getType());
-            categorySelector.setValue(transaction.getCategory());
+            categorySelector.setValue(transaction.getCategory().name());
 
             refreshType(transaction);
 

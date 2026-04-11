@@ -3,6 +3,7 @@ module com.krisapps.incomeutility_v2 {
     requires javafx.fxml;
 
     requires org.kordamp.ikonli.javafx;
+    requires org.kordamp.ikonli.fluentui;
     requires org.jetbrains.annotations;
     requires java.logging;
     requires com.google.gson;
@@ -17,6 +18,7 @@ module com.krisapps.incomeutility_v2 {
     opens com.krisapps.incomeutility_v2.dialogs to javafx.fxml;
     opens com.krisapps.incomeutility_v2.types.fiscal to com.google.gson;
     opens com.krisapps.incomeutility_v2.ui.listview.cell to javafx.fxml;
+    opens com.krisapps.incomeutility_v2.subutilities.pricer to javafx.fxml;
 
     exports com.krisapps.incomeutility_v2;
     exports com.krisapps.incomeutility_v2.types.transaction;

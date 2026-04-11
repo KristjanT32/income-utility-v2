@@ -4,6 +4,7 @@ import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.dialogs.TransactionDetailsDialog;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
+
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;

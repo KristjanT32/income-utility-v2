@@ -3,18 +3,17 @@ package com.krisapps.incomeutility_v2.util;
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.IncomeUtilityController;
 import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @SuppressWarnings("ConstantConditions")
@@ -139,6 +138,37 @@ public class PopupManager {
             }
         }
         return null;
+    }
+
+    public static <T> void showListDialog(String title, String message, List<T> listItems, @Nullable Callback<ListView<T>, ListCell<T>> cellFactory) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+
+        a.getDialogPane().getStylesheets().add(IncomeUtilityController.class.getResource("stylesheets/core-ui.css").toExternalForm());
+        a.setTitle(title);
+        a.setHeaderText(null);
+
+        VBox root = new VBox();
+        HBox.setHgrow(root, Priority.ALWAYS);
+
+        ListView<T> list = new ListView<T>();
+        list.getItems().setAll(listItems);
+
+        if (cellFactory != null) {
+            list.setCellFactory(cellFactory);
+        }
+
+
+        HBox.setHgrow(list, Priority.ALWAYS);
+        VBox.setVgrow(list, Priority.SOMETIMES);
+        list.setMaxHeight(Double.MAX_VALUE);
+
+        root.getChildren().add(list);
+        root.setSpacing(5);
+
+        a.getDialogPane().setContent(root);
+        a.getDialogPane().setMinWidth(1200);
+        a.getDialogPane().requestLayout();
+        a.showAndWait();
     }
 
     public enum PopupType {

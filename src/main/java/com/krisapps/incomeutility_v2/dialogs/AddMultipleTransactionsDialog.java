@@ -8,6 +8,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,10 +28,9 @@ public class AddMultipleTransactionsDialog extends IncomeUtilityDialog<ArrayList
         super("add-multiple-transactions.fxml", "Add multiple transactions", "overview_96.png");
 
         getDialogPane().getButtonTypes().add(new ButtonType("Import", ButtonBar.ButtonData.APPLY));
-        // getDialogPane().setMinWidth(1200);
         setResizable(true);
 
-        HBox box = new HBox();
+        VBox box = new VBox();
         HBox.setHgrow(box, Priority.ALWAYS);
 
         box.setAlignment(Pos.CENTER);
@@ -41,12 +41,18 @@ public class AddMultipleTransactionsDialog extends IncomeUtilityDialog<ArrayList
 
         Button add = new Button("Add transaction");
         add.setOnAction((ev) -> {
-            output.add(new Transaction());
+            Transaction t = new Transaction();
+            t.setSourceAccountId(parent.getId());
+            t.setTargetAccountId(parent.getId());
+            output.add(t);
             refreshItems(output);
         });
 
         addTransactionButton.setOnAction((ev) -> {
-            output.add(new Transaction());
+            Transaction t = new Transaction();
+            t.setSourceAccountId(parent.getId());
+            t.setTargetAccountId(parent.getId());
+            output.add(t);
             refreshItems(output);
         });
 

@@ -13,6 +13,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -106,6 +107,18 @@ public class AddSingleTransactionDialog extends IncomeUtilityDialog<Transaction>
         outputTransaction.setType(TransactionType.WITHDRAWAL);
         outputTransaction.setCategory(TransactionCategory.WITHDRAWAL);
 
+        categorySelector.setConverter(new StringConverter<String>() {
+            @Override
+            public String toString(String s) {
+                return DataManager.Formatting.humanize(s);
+            }
+
+            @Override
+            public String fromString(String s) {
+                return "";
+            }
+        });
+
         setResultConverter((action) -> {
             if (action.getButtonData() == ButtonBar.ButtonData.APPLY) {
                 return outputTransaction;
@@ -174,10 +187,9 @@ public class AddSingleTransactionDialog extends IncomeUtilityDialog<Transaction>
     }
 
     private void refreshCategorySelector() {
-        ObservableList<String> categories = categorySelector.getItems();
-        categories.setAll(Arrays.stream(TransactionCategory.values()).map(category -> DataManager.Formatting.capitalize(category.name().replace('_', ' '))).toList());
-        categories.addAll(data.getCustomTransactionCategories());
-        categorySelector.setItems(categories);
+        categorySelector.getItems().clear();
+        categorySelector.getItems().addAll(Arrays.stream(TransactionCategory.values()).map(Enum::name).toList());
+        categorySelector.getItems().addAll(DataManager.getInstance().getCustomTransactionCategories());
     }
 
     private void registerEventHandlers() {
@@ -230,14 +242,26 @@ public class AddSingleTransactionDialog extends IncomeUtilityDialog<Transaction>
         });
 
         categorySelector.valueProperty().addListener((o, oldVal, newVal) -> {
-            outputTransaction.setCategory(TransactionCategory.valueOf(newVal.toUpperCase().replace(' ', '_')));
-            if (TransactionCategory.valueOf(newVal.toUpperCase().replace(' ', '_')) == TransactionCategory.CUSTOM) {
+            try {
+                outputTransaction.setCategory(TransactionCategory.valueOf(newVal.toUpperCase().replace(' ', '_')));
+
+                if (outputTransaction.getCategory().equals(TransactionCategory.CUSTOM)) {
+                    customCategoryField.setVisible(true);
+                    customCategoryField.setManaged(true);
+                } else {
+                    customCategoryField.setVisible(false);
+                    customCategoryField.setManaged(false);
+                }
+
+            } catch (IllegalArgumentException e) {
+                categorySelector.setValue(TransactionCategory.CUSTOM.name());
+                outputTransaction.setCategory(TransactionCategory.CUSTOM);
+                outputTransaction.setCustomCategory(newVal);
+                customCategoryField.setText(newVal);
                 customCategoryField.setVisible(true);
                 customCategoryField.setManaged(true);
-            } else {
-                customCategoryField.setVisible(false);
-                customCategoryField.setManaged(false);
             }
+
             getDialogPane().requestLayout();
             getDialogPane().getScene().getWindow().sizeToScene();
         });

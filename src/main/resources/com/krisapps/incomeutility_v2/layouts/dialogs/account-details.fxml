@@ -21,8 +21,8 @@
    <children>
       <HBox>
          <children>
-            <Label fx:id="nameLabel" maxWidth="1.7976931348623157E308" styleClass="title" text="Account Name" HBox.hgrow="ALWAYS" />
-            <Label fx:id="typeLabel" maxWidth="1.7976931348623157E308" text="(Account Type)" HBox.hgrow="SOMETIMES">
+            <Label fx:id="nameLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="title" text="Account Name" HBox.hgrow="ALWAYS" />
+            <Label fx:id="typeLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="(Account Type)" HBox.hgrow="SOMETIMES">
                <styleClass>
                   <String fx:value="title-regular" />
                   <String fx:value="flair-account" />
@@ -37,7 +37,11 @@
          <children>
             <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="180.0" spacing="5.0" styleClass="rounded-container" HBox.hgrow="ALWAYS">
                <children>
-                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Current balance" />
+                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Current balance">
+                     <graphic>
+                        <FontIcon iconLiteral="fltrmz-money-24" iconSize="12" />
+                     </graphic>
+                  </Label>
                   <Label fx:id="currentBalanceLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="0.00">
                      <styleClass>
                         <String fx:value="flair-generic" />
@@ -48,7 +52,11 @@
             </VBox>
             <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="180.0" spacing="5.0" styleClass="rounded-container" HBox.hgrow="ALWAYS">
                <children>
-                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Initial balance" />
+                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Initial balance">
+                     <graphic>
+                        <FontIcon iconLiteral="fltrmz-money-24" iconSize="12" />
+                     </graphic>
+                  </Label>
                   <Label fx:id="initialBalanceLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="0.00">
                      <styleClass>
                         <String fx:value="flair-generic" />
@@ -61,7 +69,11 @@
       </HBox>
       <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="180.0" spacing="5.0" styleClass="rounded-container">
          <children>
-            <Label alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Total transactions" />
+            <Label alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Total transactions">
+               <graphic>
+                  <FontIcon iconLiteral="fltrmz-text-bullet-list-square-24" iconSize="12" />
+               </graphic>
+            </Label>
             <Label fx:id="totalTransactionsLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="0">
                <styleClass>
                   <String fx:value="flair-generic" />
@@ -73,7 +85,7 @@
       <Separator maxHeight="1.7976931348623157E308" orientation="VERTICAL" visible="false" VBox.vgrow="ALWAYS" />
       <HBox maxWidth="1.7976931348623157E308" spacing="10.0">
          <children>
-            <Button fx:id="editButton" alignment="BASELINE_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Edit" textAlignment="CENTER" HBox.hgrow="SOMETIMES">
+            <Button fx:id="editButton" alignment="BASELINE_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Edit details" textAlignment="CENTER" HBox.hgrow="SOMETIMES">
                <graphic>
                   <FontIcon iconLiteral="fltfal-edit-20" iconSize="12" textAlignment="CENTER" wrappingWidth="12.0" />
                </graphic>

@@ -93,7 +93,7 @@
                            <children>
                               <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
-                                    <Image url="@../../../../../../../../Pictures/profile_logo.jpg" />
+                                    <Image url="@icons/money_in_money_out_96.png" />
                                  </image>
                               </ImageView>
                               <Label alignment="CENTER" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Money In Money Out">
@@ -114,7 +114,7 @@
                            <children>
                               <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
-                                    <Image url="@../../../../../../../../Pictures/profile_logo.jpg" />
+                                    <Image url="@icons/pricer_96.png" />
                                  </image>
                               </ImageView>
                               <Label alignment="CENTER" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Pricer">
@@ -131,11 +131,11 @@
                               </Label>
                            </children>
                         </VBox>
-                        <VBox fx:id="subscriptionsCell" alignment="CENTER" styleClass="utility-cell">
+                        <VBox fx:id="subscriptionsCell" alignment="CENTER" disable="true" styleClass="utility-cell">
                            <children>
                               <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
-                                    <Image url="@../../../../../../../../Pictures/profile_logo.jpg" />
+                                    <Image url="@icons/subscriptions_96.png" />
                                  </image>
                               </ImageView>
                               <Label alignment="CENTER" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Subscriptions">

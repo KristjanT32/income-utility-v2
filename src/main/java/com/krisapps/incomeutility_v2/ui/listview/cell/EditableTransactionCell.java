@@ -8,6 +8,7 @@ import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
@@ -17,10 +18,10 @@ import javafx.util.StringConverter;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class EditableTransactionCell extends ListCell<Transaction> {
@@ -38,7 +39,7 @@ public class EditableTransactionCell extends ListCell<Transaction> {
     private ComboBox<TransactionType> typeSelector;
 
     @FXML
-    private ComboBox<TransactionCategory> categorySelector;
+    private ComboBox<String> categorySelector;
 
     @FXML
     private ComboBox<Account> fromSelector;
@@ -88,6 +89,18 @@ public class EditableTransactionCell extends ListCell<Transaction> {
             }
         });
 
+        categorySelector.setConverter(new StringConverter<String>() {
+            @Override
+            public String toString(String s) {
+                return DataManager.Formatting.humanize(s);
+            }
+
+            @Override
+            public String fromString(String s) {
+                return "";
+            }
+        });
+
 
         typeSelector.getItems().setAll(TransactionType.values());
         typeSelector.setConverter(new StringConverter<TransactionType>() {
@@ -118,7 +131,9 @@ public class EditableTransactionCell extends ListCell<Transaction> {
         fromSelector.getItems().setAll(FiscalService.getInstance().getAccounts());
         toSelector.getItems().setAll(FiscalService.getInstance().getAccounts());
 
-        categorySelector.getItems().setAll(TransactionCategory.values());
+        categorySelector.getItems().clear();
+        categorySelector.getItems().addAll(Arrays.stream(TransactionCategory.values()).map(Enum::name).toList());
+        categorySelector.getItems().addAll(DataManager.getInstance().getCustomTransactionCategories());
 
         deleteButton.setOnAction((ev) -> {
             if (getItem() != null) {
@@ -156,7 +171,12 @@ public class EditableTransactionCell extends ListCell<Transaction> {
 
         categorySelector.valueProperty().addListener((obs, old, val) -> {
             if (updating || getItem() == null) return;
-            getItem().setCategory(val);
+            try {
+                getItem().setCategory(TransactionCategory.valueOf(val));
+            } catch (IllegalArgumentException e) {
+                getItem().setCategory(TransactionCategory.CUSTOM);
+                getItem().setCustomCategory(val);
+            }
         });
 
         commentField.textProperty().addListener((obs, old, val) -> {
@@ -204,7 +224,7 @@ public class EditableTransactionCell extends ListCell<Transaction> {
             ));
 
             typeSelector.setValue(transaction.getType());
-            categorySelector.setValue(transaction.getCategory());
+            categorySelector.setValue(transaction.getCategory().name());
 
 
             refreshType(transaction);

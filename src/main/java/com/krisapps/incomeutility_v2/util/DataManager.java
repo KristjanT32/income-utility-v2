@@ -232,6 +232,10 @@ public class DataManager {
             initialize();
         }
         currentData.transactions.putIfAbsent(transaction.getId(), transaction);
+
+        if (!getCustomTransactionCategories().contains(transaction.getCustomCategory())) {
+            currentData.customTransactionCategories.add(transaction.getCustomCategory());
+        }
     }
 
     public void updateTransaction(UUID transactionId, Transaction data) {
@@ -375,6 +379,14 @@ public class DataManager {
             }
 
             return Character.toString(str.charAt(0)).toUpperCase() + str.toLowerCase().substring(1);
+        }
+
+        public static String humanize(String str) {
+            String s = str.toLowerCase();
+            s = s.trim();
+            s = s.replace('_', ' ');
+
+            return capitalize(s);
         }
 
         public static String getNumberSuffix(int number) {
