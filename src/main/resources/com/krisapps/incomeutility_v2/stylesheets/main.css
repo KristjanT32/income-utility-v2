@@ -90,6 +90,28 @@
     -fx-background-color: #93d3ea;
 }
 
+.category-expense-breakdown-list .list-cell:filled {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.category-expense-breakdown-list {
+    -fx-padding: 5px;
+}
+
+.category-expense-total-cell {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 5px;
+}
+
+.category-expense-breakdown-list .list-cell:selected {
+    -fx-border-color: black;
+}
+
 .leftmost-container {
     -fx-background-color: #cacaca;
     -fx-background-radius: 10px 0 0 10px;

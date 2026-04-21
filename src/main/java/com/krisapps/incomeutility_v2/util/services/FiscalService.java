@@ -55,6 +55,13 @@ public class FiscalService {
         return dataManager.getTransactions(account).stream().filter(transaction -> transaction.getTimestamp().toLocalDate().isBefore(date)).toList();
     }
 
+    public List<Transaction> getTransactionsBetween(Account account, LocalDate startInclusive, LocalDate endInclusive) {
+        return dataManager.getTransactions(account).stream().filter(transaction ->
+                (transaction.getTimestamp().toLocalDate().isEqual(startInclusive) || transaction.getTimestamp().toLocalDate().isAfter(startInclusive))
+                && (transaction.getTimestamp().toLocalDate().isEqual(endInclusive) || transaction.getTimestamp().toLocalDate().isBefore(endInclusive))
+        ).toList();
+    }
+
     public List<Transaction> getTransactionsOn(Account account, LocalDate date) {
         return dataManager.getTransactions(account).stream().filter(transaction -> transaction.getTimestamp().toLocalDate().isEqual(date)).toList();
     }

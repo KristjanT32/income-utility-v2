@@ -15,6 +15,14 @@
     -fx-padding: 1px;
 }
 
+.rounded-container.large {
+    -fx-padding: 5px;
+}
+
+.rounded-container.xl {
+    -fx-padding: 10px;
+}
+
 .rounded-container:hover {
     -fx-border-color: "black";
 }
@@ -94,6 +102,42 @@
     -fx-background-color: inherit;
 }
 /*</editor-fold>*/
+
+/* <editor-fold desc="Tab Pane"> */
+.tab {
+    -fx-border-radius: 10px 10px;
+    -fx-background-radius: 10px 10px;
+    -fx-border-color: black;
+    -fx-padding: 0px 10px 0px 10px;
+}
+
+.tab.large {
+    -fx-padding: 5px 10px 5px 10px;
+}
+
+.tab:selected {
+    -fx-font-weight: bold;
+}
+
+.tab-pane:top *.tab-header-area {
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.416667em 0.166667em 0.0em 0.0em; /* overridden as 5 2 0 0 */
+}
+
+.tab-pane:focused .tab-header-area .headers-region .tab:selected .focus-indicator {
+    -fx-border-width: 0;
+    -fx-border-insets: 0 0 0 0;
+    -fx-border-radius: 0;
+}
+
+.tab-pane > .tab-content-area {
+    -fx-padding: 5px 0 0 0;
+}
+
+.tab-header-background {
+    -fx-background-color: transparent;
+}
+/* </editor-fold> */
 
 /* <editor-fold desc="Context menus"> */
 .menu-bar {

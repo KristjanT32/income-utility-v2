@@ -5,10 +5,7 @@ import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 
 public class PricerController extends SubUtilityController {
 
@@ -29,6 +26,9 @@ public class PricerController extends SubUtilityController {
 
     @FXML
     private TextField unitBox;
+
+    @FXML
+    private Button backButton;
 
     @FXML
     private Spinner<Double> durationSpinner;
@@ -63,6 +63,7 @@ public class PricerController extends SubUtilityController {
         durationSpinner.valueProperty().addListener((_, _, _) -> {
             calculate();
         });
+        backButton.setOnAction(_ -> utility.stop());
     }
 
     public void calculate() {

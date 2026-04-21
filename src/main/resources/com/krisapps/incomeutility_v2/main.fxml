@@ -110,6 +110,27 @@
                               </Label>
                            </children>
                         </VBox>
+                        <VBox fx:id="breakdownCell" alignment="CENTER" styleClass="utility-cell">
+                           <children>
+                              <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@icons/fiscal_breakdown_96.png" />
+                                 </image>
+                              </ImageView>
+                              <Label alignment="CENTER" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Fiscal Breakdown">
+                                 <padding>
+                                    <Insets top="5.0" />
+                                 </padding>
+                                 <font>
+                                    <Font name="System Bold" size="16.0" />
+                                 </font>
+                                 <styleClass>
+                                    <String fx:value="medium-label" />
+                                    <String fx:value="bold" />
+                                 </styleClass>
+                              </Label>
+                           </children>
+                        </VBox>
                         <VBox fx:id="pricerCell" alignment="CENTER" styleClass="utility-cell">
                            <children>
                               <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">

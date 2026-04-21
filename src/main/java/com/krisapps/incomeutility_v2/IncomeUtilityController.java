@@ -37,6 +37,9 @@ public class IncomeUtilityController {
     private VBox pricerCell;
 
     @FXML
+    private VBox breakdownCell;
+
+    @FXML
     private VBox subscriptionsCell;
 
     @FXML
@@ -73,6 +76,14 @@ public class IncomeUtilityController {
                 utilities.openUtility(SubUtilityType.PRICER);
             } else {
                 utilities.focusAll(SubUtilityType.PRICER);
+            }
+        });
+
+        breakdownCell.setOnMouseClicked((e) -> {
+            if (!e.isShiftDown()) {
+                utilities.openUtility(SubUtilityType.BREAKDOWN);
+            } else {
+                utilities.focusAll(SubUtilityType.BREAKDOWN);
             }
         });
     }

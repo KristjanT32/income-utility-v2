@@ -1,6 +1,7 @@
 package com.krisapps.incomeutility_v2.subutilities;
 
 public enum SubUtilityType {
+    BREAKDOWN("Fiscal Breakdown"),
     PRICER("Pricer"),
     MONEY_IN_MONEY_OUT("Money In, Money Out"),
     ALL("All utilities");

@@ -13,14 +13,22 @@ public class TransactionCellFactory implements Callback<ListView<Transaction>, L
 
     private final Account parent;
     private final Consumer<Transaction> onItemDataChange;
+    private boolean isReadOnly = false;
 
     public TransactionCellFactory(Account parent, Consumer<Transaction> onItemDataChange) {
         this.parent = parent;
         this.onItemDataChange = onItemDataChange;
+        this.isReadOnly = false;
+    }
+
+    public TransactionCellFactory(Account parent, Consumer<Transaction> onItemDataChange, boolean readOnly) {
+        this.parent = parent;
+        this.onItemDataChange = onItemDataChange;
+        this.isReadOnly = readOnly;
     }
 
     @Override
     public ListCell<Transaction> call(ListView<Transaction> transactionListView) {
-        return new TransactionCell(parent, onItemDataChange);
+        return new TransactionCell(parent, onItemDataChange, isReadOnly);
     }
 }

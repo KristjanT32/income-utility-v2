@@ -55,12 +55,15 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
     private Button deleteButton;
     private final Transaction transaction;
 
-    public TransactionDetailsDialog(Transaction t, Account selectedAccount) {
+    public TransactionDetailsDialog(Transaction t, Account selectedAccount, boolean isReadOnly) {
         super("transaction-details.fxml", "Transaction details", "transaction_96.png");
         this.transaction = t;
 
         ButtonType cancelButton = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
         getDialogPane().getButtonTypes().setAll(cancelButton);
+
+        editButton.managedProperty().bind(editButton.visibleProperty());
+        deleteButton.managedProperty().bind(deleteButton.visibleProperty());
 
         editButton.setOnAction((ev) -> {
             EditTransactionDialog editDialog = new EditTransactionDialog(transaction, selectedAccount);
@@ -83,6 +86,11 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
                 }
             });
         });
+
+        if (isReadOnly) {
+            editButton.setVisible(false);
+            deleteButton.setVisible(false);
+        }
 
         transferPanel.managedProperty().bindBidirectional(transferPanel.visibleProperty());
         amountLabel.managedProperty().bindBidirectional(amountLabel.visibleProperty());

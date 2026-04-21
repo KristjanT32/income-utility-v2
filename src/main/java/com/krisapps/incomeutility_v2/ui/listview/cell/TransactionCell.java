@@ -25,6 +25,7 @@ public class TransactionCell extends ListCell<Transaction> {
 
     private final Account parent;
     private final Consumer<Transaction> onItemDataChange;
+    private final boolean isReadOnly;
     @FXML
     private final HBox rootPane;
     @FXML
@@ -38,13 +39,14 @@ public class TransactionCell extends ListCell<Transaction> {
     @FXML
     private FontIcon typeIcon;
 
-    public TransactionCell(Account parent, Consumer<Transaction> onItemDataChange) {
+    public TransactionCell(Account parent, Consumer<Transaction> onItemDataChange, boolean isReadOnly) {
         try {
             FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/ui/transaction_cell.fxml"));
             loader.setController(this);
             rootPane = loader.load();
             this.parent = parent;
             this.onItemDataChange = onItemDataChange;
+            this.isReadOnly = isReadOnly;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -69,7 +71,7 @@ public class TransactionCell extends ListCell<Transaction> {
         commentLabel.setStyle("-fx-text-fill: black");
 
         detailsButton.setOnAction((ev) -> {
-            TransactionDetailsDialog detailsDialog = new TransactionDetailsDialog(transaction, parent);
+            TransactionDetailsDialog detailsDialog = new TransactionDetailsDialog(transaction, parent, isReadOnly);
             detailsDialog.showAndWait();
             onItemDataChange.accept(transaction);
         });

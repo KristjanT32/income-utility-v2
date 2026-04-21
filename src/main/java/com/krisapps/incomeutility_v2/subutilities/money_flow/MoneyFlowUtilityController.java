@@ -113,7 +113,7 @@ public class MoneyFlowUtilityController extends SubUtilityController {
     }
 
     public void initUI() {
-        HashSet<Account> accounts = data.getAccounts();
+        HashSet<Account> accounts = fiscal.getAccounts();
         accountSelector.setConverter(new StringConverter<>() {
             @Override
             public String toString(Account account) {
