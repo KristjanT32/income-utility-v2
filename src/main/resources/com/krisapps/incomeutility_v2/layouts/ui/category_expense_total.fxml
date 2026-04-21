@@ -49,7 +49,7 @@
                   <Insets left="10.0" />
                </HBox.margin>
                <graphic>
-                  <FontIcon iconLiteral="fltfmz-text-bullet-list-24" />
+                  <FontIcon iconLiteral="fltfmz-text-bullet-list-24" iconSize="16" />
                </graphic>
             </Button>
          </children>

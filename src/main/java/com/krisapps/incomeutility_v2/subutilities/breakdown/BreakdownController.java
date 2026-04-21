@@ -1,23 +1,27 @@
 package com.krisapps.incomeutility_v2.subutilities.breakdown;
 
+import com.krisapps.incomeutility_v2.dialogs.ListDialog;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
 import com.krisapps.incomeutility_v2.types.data.CategoryExpenseSummary;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
-import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.CategoryExpenseTotalCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
-import com.krisapps.incomeutility_v2.ui.listview.cell.CategoryExpenseTotalCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import com.krisapps.incomeutility_v2.util.misc.Formats;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.util.StringConverter;
 
@@ -34,6 +38,9 @@ public class BreakdownController extends SubUtilityController {
 
     @FXML
     private Label mostSpentOnLabel;
+
+    @FXML
+    private Label transactionCountLabel;
 
     @FXML
     private ListView<CategoryExpenseSummary> categoryBreakdownListView;
@@ -62,8 +69,38 @@ public class BreakdownController extends SubUtilityController {
     @FXML
     private ComboBox<Account> accountPicker;
 
+    @FXML
+    private ComboBox<SortingOrder> sortSelector;
+
+    @FXML
+    private PieChart breakdownPieChart;
+
+    @FXML
+    private BarChart<String, Double> categoriesBarChart;
+
+    @FXML
+    private LineChart<String, Double> spendingLineChart;
+
     private static final FiscalService fiscal = FiscalService.getInstance();
     private Account selectedAccount;
+
+    private enum SortingOrder {
+        CHRONOLOGICAL_ASC("Chronologically, oldest first"),
+        CHRONOLOGICAL_DESC("Chronologically, most recent first"),
+        TRANSACTION_AMOUNT_ASC("By amount, ascending"),
+        TRANSACTION_AMOUNT_DESC("By amount, descending")
+        ;
+
+        String displayName;
+
+        SortingOrder(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
 
     @Override
     public void onStartup(SubUtility utility) {
@@ -99,16 +136,33 @@ public class BreakdownController extends SubUtilityController {
         periodEndPicker.setConverter(Formats.DATE_FORMAT);
         accountPicker.setCellFactory(new AccountComboboxCellFactory());
         accountPicker.setButtonCell(new AccountComboboxButtonCell());
+        sortSelector.setConverter(new StringConverter<SortingOrder>() {
+            @Override
+            public String toString(SortingOrder object) {
+                return object.getDisplayName();
+            }
+
+            @Override
+            public SortingOrder fromString(String string) {
+                return null;
+            }
+        });
+        sortSelector.setItems(FXCollections.observableList(Arrays.stream(SortingOrder.values()).toList()));
+        sortSelector.setValue(SortingOrder.TRANSACTION_AMOUNT_DESC);
+        sortSelector.valueProperty().addListener((obs, old, val) -> {
+            refreshUI();
+        });
+
         periodStartPicker.valueProperty().addListener((obs, old, val) -> {
-            calculate();
+            refreshUI();
         });
         periodEndPicker.valueProperty().addListener((obs, old, val) -> {
-            calculate();
+            refreshUI();
         });
 
         accountPicker.valueProperty().addListener(((_, _, newValue) -> {
             selectedAccount = newValue;
-            calculate();
+            refreshUI();
         }));
 
         resetPeriod.setOnAction(ev -> {
@@ -141,7 +195,7 @@ public class BreakdownController extends SubUtilityController {
         });
 
         categoryBreakdownListView.setCellFactory(new CategoryExpenseTotalCellFactory(selectedAccount));
-        transactionList.setCellFactory(new TransactionCellFactory(selectedAccount, (_) -> calculate(), true));
+        transactionList.setCellFactory(new TransactionCellFactory(selectedAccount, (_) -> refreshUI(), true));
 
         accountPicker.setItems(FXCollections.observableList(accounts.stream().toList()));
         accountPicker.setConverter(new StringConverter<>() {
@@ -159,10 +213,33 @@ public class BreakdownController extends SubUtilityController {
             }
         });
 
-        calculate();
+        breakdownPieChart.setLabelsVisible(true);
+        breakdownPieChart.dataProperty().addListener((obs, old, val) -> {
+            if (val == null) return;
+            val.forEach(slice -> {
+                slice.getNode().setOnMouseClicked(_ -> {
+                    System.out.println("Slice clicked: " + slice);
+                    ListDialog<Transaction> listDialog = new ListDialog<>("Transactions for category '" + slice.getName() + "'");
+                    listDialog.setLabel("Transactions marked");
+                    listDialog.setSubLabel(slice.getName());
+                    listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {}, true));
+                    listDialog.setItems(transactionList.getItems().stream().filter(t -> t.getCategory().name().equals(slice.getName()) || t.getCustomCategory().equals(slice.getName())).toList());
+                    listDialog.show();
+                });
+                slice.getNode().setOnMouseEntered(_ -> {
+                    slice.getNode().setStyle("-fx-border-width: 2px; -fx-border-color: black");
+                });
+
+                slice.getNode().setOnMouseExited(_ -> {
+                    slice.getNode().setStyle("");
+                });
+            });
+        });
+
+        refreshUI();
     }
 
-    private void calculate() {
+    private void refreshUI() {
         if (selectedAccount == null) return;
         List<Transaction> transactions = fiscal.getTransactionsBetween(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue()).stream().filter(t -> t.getAmount() < 0).toList();
         Map<String, List<Transaction>> categoriesToTransactions = transactions.stream().collect(Collectors.groupingBy(t -> t.getCategory() == TransactionCategory.CUSTOM ? t.getCustomCategory() : DataManager.Formatting.capitalize(t.getCategory().name())));
@@ -177,7 +254,44 @@ public class BreakdownController extends SubUtilityController {
         List<CategoryExpenseSummary> items = new ArrayList<>(categoriesToTransactions.entrySet().stream().map(entry -> new CategoryExpenseSummary(entry.getKey(), entry.getValue())).toList());
         items.sort(Comparator.comparingDouble(CategoryExpenseSummary::totalExpenses).reversed());
         categoryBreakdownListView.setItems(FXCollections.observableList(items));
-        transactionList.setItems(FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(Transaction::getAmount)).toList()));
 
+        ObservableList<Transaction> sortedItems = null;
+        switch (sortSelector.getValue()) {
+            case CHRONOLOGICAL_ASC -> {
+                sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(Transaction::getTimestamp)).toList());
+            }
+            case CHRONOLOGICAL_DESC -> {
+                sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(Transaction::getTimestamp).reversed()).toList());
+            }
+            case TRANSACTION_AMOUNT_ASC -> {
+                sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(Transaction::getAmount).reversed()).toList());
+            }
+            case TRANSACTION_AMOUNT_DESC -> {
+                sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(Transaction::getAmount)).toList());
+            }
+        }
+
+        transactionList.setItems(sortedItems);
+        transactionCountLabel.setText("%s total transactions, %s different categories".formatted(sortedItems.size(), items.size()));
+
+        refreshCharts(transactions, items);
+    }
+
+    private void refreshCharts(List<Transaction> transactions, List<CategoryExpenseSummary> categorisedTransactions) {
+        breakdownPieChart.setData(FXCollections.observableList(categorisedTransactions.stream().map(entry -> new PieChart.Data(entry.categoryName(), entry.totalExpenses())).toList()));
+
+        XYChart.Series<String, Double> series = new XYChart.Series<>();
+        categorisedTransactions.forEach(summary -> {
+            series.getData().add(new XYChart.Data<>(summary.categoryName(), summary.totalExpenses()));
+        });
+        categoriesBarChart.setData(FXCollections.observableList(List.of(series)));
+
+        Map<LocalDate, List<Transaction>> daysToSpending = transactions.stream().collect(Collectors.groupingBy(t -> t.getTimestamp().toLocalDate()));
+        XYChart.Series<String, Double> spendingSeries = new XYChart.Series<>();
+        daysToSpending.forEach((date, list) -> {
+            spendingSeries.getData().add(new XYChart.Data<>(Formats.DATE_FORMATTER.format(date), list.stream().mapToDouble(Transaction::getAbsoluteAmount).sum()));
+        });
+
+        spendingLineChart.setData(FXCollections.observableList(List.of(spendingSeries)));
     }
 }

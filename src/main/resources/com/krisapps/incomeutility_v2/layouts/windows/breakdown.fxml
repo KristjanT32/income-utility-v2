@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<StackPane alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="681.0" prefWidth="1096.0" spacing="10.0">
+         <children>
+            <VBox alignment="TOP_CENTER" maxWidth="1280.0" minHeight="-Infinity" minWidth="-Infinity" VBox.vgrow="ALWAYS">
+               <children>
+                  <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="20.0">
+                     <children>
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="title" text="Fiscal Breakdown">
+                           <font>
+                              <Font name="System Bold" size="22.0" />
+                           </font>
+                        </Label>
+                        <Button fx:id="backButton" maxHeight="1.7976931348623157E308" mnemonicParsing="false" text="Back">
+                           <graphic>
+                              <FontIcon iconLiteral="fltfal-arrow-hook-up-left-20" iconSize="12" />
+                           </graphic>
+                        </Button>
+                        <Separator maxHeight="1.7976931348623157E308" visible="false" HBox.hgrow="SOMETIMES" />
+                        <HBox maxHeight="1.7976931348623157E308" spacing="10.0">
+                           <children>
+                              <HBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                 <children>
+                                    <DatePicker fx:id="periodStartPicker" accessibleText="Start of period" maxHeight="1.7976931348623157E308" maxWidth="125.0">
+                                       <tooltip>
+                                          <Tooltip text="Start date of period" />
+                                       </tooltip>
+                                    </DatePicker>
+                                    <Label alignment="CENTER" maxHeight="1.7976931348623157E308" text="-">
+                                       <styleClass>
+                                          <String fx:value="xl-label" />
+                                          <String fx:value="bold" />
+                                       </styleClass>
+                                    </Label>
+                                    <DatePicker fx:id="periodEndPicker" accessibleText="End of period" maxHeight="1.7976931348623157E308" maxWidth="125.0">
+                                       <tooltip>
+                                          <Tooltip text="End date of period" />
+                                       </tooltip>
+                                    </DatePicker>
+                                 </children>
+                              </HBox>
+                              <HBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                                 <children>
+                                    <Button fx:id="prevMonthButton" accessibleText="Previous month" maxHeight="1.7976931348623157E308" mnemonicParsing="false">
+                                       <graphic>
+                                          <FontIcon iconLiteral="fltral-arrow-left-24" iconSize="16" />
+                                       </graphic>
+                                       <tooltip>
+                                          <Tooltip text="Previous month" />
+                                       </tooltip>
+                                    </Button>
+                                    <Button fx:id="resetPeriod" accessibleText="Reset to current month" maxHeight="1.7976931348623157E308" mnemonicParsing="false">
+                                       <graphic>
+                                          <FontIcon iconLiteral="fltral-calendar-date-24" iconSize="16" />
+                                       </graphic>
+                                       <tooltip>
+                                          <Tooltip text="Reset to current month" />
+                                       </tooltip>
+                                    </Button>
+                                    <Button fx:id="nextMonthButton" accessibleText="Next month" maxHeight="1.7976931348623157E308" mnemonicParsing="false">
+                                       <graphic>
+                                          <FontIcon iconLiteral="fltral-arrow-right-24" iconSize="16" />
+                                       </graphic>
+                                       <tooltip>
+                                          <Tooltip text="Next month" />
+                                       </tooltip>
+                                    </Button>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </HBox>
+                        <ComboBox fx:id="accountPicker" maxHeight="1.7976931348623157E308" promptText="Select account..." HBox.hgrow="SOMETIMES" />
+                     </children>
+                  </HBox>
+                  <VBox prefHeight="200.0" prefWidth="100.0" spacing="20.0" VBox.vgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="20.0">
+                           <children>
+                              <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="large-label" text="Total spending for selected period">
+                                       <VBox.margin>
+                                          <Insets bottom="5.0" />
+                                       </VBox.margin>
+                                    </Label>
+                                    <Label fx:id="totalSpendingLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="0.00">
+                                       <styleClass>
+                                          <String fx:value="xl-label" />
+                                          <String fx:value="bold" />
+                                       </styleClass>
+                                    </Label>
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                                 <styleClass>
+                                    <String fx:value="rounded-container" />
+                                    <String fx:value="xl" />
+                                 </styleClass>
+                              </VBox>
+                              <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="large-label" text="Most spent on">
+                                       <VBox.margin>
+                                          <Insets bottom="5.0" />
+                                       </VBox.margin>
+                                    </Label>
+                                    <Label fx:id="mostSpentOnLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="Category Name (0.00)">
+                                       <styleClass>
+                                          <String fx:value="xl-label" />
+                                          <String fx:value="bold" />
+                                       </styleClass>
+                                    </Label>
+                                 </children>
+                                 <padding>
+                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                 </padding>
+                                 <styleClass>
+                                    <String fx:value="rounded-container" />
+                                    <String fx:value="xl" />
+                                 </styleClass>
+                              </VBox>
+                           </children>
+                           <VBox.margin>
+                              <Insets top="10.0" />
+                           </VBox.margin>
+                        </HBox>
+                        <TabPane VBox.vgrow="ALWAYS">
+                           <tabs>
+                              <Tab closable="false" text="Breakdown by category">
+                                 <content>
+                                    <ListView fx:id="categoryBreakdownListView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="category-expense-breakdown-list" />
+                                 </content>
+                                 <styleClass>
+                                    <String fx:value="large-label" />
+                                    <String fx:value="large" />
+                                 </styleClass>
+                              </Tab>
+                              <Tab closable="false" text="Transactions within selected period">
+                                 <content>
+                                    <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0">
+                                       <children>
+                                          <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" spacing="5.0">
+                                             <children>
+                                                <Label fx:id="transactionCountLabel" maxWidth="1.7976931348623157E308" text="0 total transactions, 0 different categories" HBox.hgrow="ALWAYS">
+                                                   <styleClass>
+                                                      <String fx:value="large-label" />
+                                                      <String fx:value="bold" />
+                                                   </styleClass>
+                                                </Label>
+                                                <Label text="Sort: ">
+                                                   <styleClass>
+                                                      <String fx:value="medium-label" />
+                                                      <String fx:value="bold" />
+                                                   </styleClass>
+                                                </Label>
+                                                <ComboBox fx:id="sortSelector" maxWidth="1.7976931348623157E308" promptText="Chronologically" styleClass="medium" />
+                                             </children>
+                                          </HBox>
+                                          <ListView fx:id="transactionList" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="transaction-list" VBox.vgrow="ALWAYS" />
+                                       </children>
+                                       <padding>
+                                          <Insets top="5.0" />
+                                       </padding>
+                                    </VBox>
+                                 </content>
+                                 <styleClass>
+                                    <String fx:value="large-label" />
+                                    <String fx:value="large" />
+                                 </styleClass>
+                              </Tab>
+                              <Tab closable="false" text="Charts &amp; graphs">
+                                 <content>
+                                    <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0">
+                                       <padding>
+                                          <Insets top="5.0" />
+                                       </padding>
+                                       <children>
+                                          <HBox>
+                                             <children>
+                                                <PieChart fx:id="breakdownPieChart" labelLineLength="40.0" maxWidth="1.7976931348623157E308" styleClass="medium-label" title="Spending across categories" HBox.hgrow="ALWAYS">
+                                                   <padding>
+                                                      <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+                                                   </padding>
+                                                </PieChart>
+                                                <VBox maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+                                                   <children>
+                                                      <LineChart fx:id="spendingLineChart" legendSide="TOP" legendVisible="false" maxWidth="1.7976931348623157E308" styleClass="medium-label" title="Spending on different days" VBox.vgrow="ALWAYS">
+                                                        <xAxis>
+                                                          <CategoryAxis side="BOTTOM" />
+                                                        </xAxis>
+                                                        <yAxis>
+                                                          <NumberAxis side="LEFT" />
+                                                        </yAxis>
+                                                      </LineChart>
+                                                      <BarChart fx:id="categoriesBarChart" legendSide="TOP" legendVisible="false" maxWidth="1.7976931348623157E308" styleClass="medium-label" title="Spending across categories" VBox.vgrow="ALWAYS">
+                                                        <xAxis>
+                                                          <CategoryAxis side="BOTTOM" />
+                                                        </xAxis>
+                                                        <yAxis>
+                                                          <NumberAxis side="LEFT" />
+                                                        </yAxis>
+                                                      </BarChart>
+                                                   </children>
+                                                </VBox>
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </VBox>
+                                 </content>
+                                 <styleClass>
+                                    <String fx:value="large-label" />
+                                    <String fx:value="large" />
+                                 </styleClass>
+                              </Tab>
+                           </tabs>
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                        </TabPane>
+                     </children>
+                     <VBox.margin>
+                        <Insets top="10.0" />
+                     </VBox.margin>
+                  </VBox>
+               </children>
+            </VBox>
+         </children>
+         <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </padding>
+      </VBox>
+      <HBox fx:id="commandPrompt" alignment="CENTER_LEFT" fillHeight="false" maxHeight="30.0" maxWidth="1280.0" styleClass="command-prompt" stylesheets="@../../stylesheets/utilities.css" visible="false">
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </padding>
+         <StackPane.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </StackPane.margin>
+         <children>
+            <Label fx:id="commandPromptLabel" styleClass="prompt-label" text="breakdown">
+               <HBox.margin>
+                  <Insets right="5.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="commandPromptField" maxWidth="1.7976931348623157E308" styleClass="prompt" HBox.hgrow="ALWAYS" />
+         </children>
+      </HBox>
+   </children>
+   <stylesheets>
+      <URL value="@../../stylesheets/core-ui.css" />
+      <URL value="@../../stylesheets/main.css" />
+      <URL value="@../../stylesheets/utilities.css" />
+   </stylesheets>
+</StackPane>
