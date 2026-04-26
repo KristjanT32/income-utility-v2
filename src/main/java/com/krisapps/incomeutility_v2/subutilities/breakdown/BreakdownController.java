@@ -7,6 +7,7 @@ import com.krisapps.incomeutility_v2.types.data.CategoryExpenseSummary;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
+import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.CategoryExpenseTotalCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
@@ -18,6 +19,7 @@ import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.Cursor;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.PieChart;
@@ -26,6 +28,7 @@ import javafx.scene.control.*;
 import javafx.util.StringConverter;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,6 +83,21 @@ public class BreakdownController extends SubUtilityController {
 
     @FXML
     private LineChart<String, Double> spendingLineChart;
+
+    @FXML
+    private Label startingBalanceLabel;
+
+    @FXML
+    private Label inflowLabel;
+
+    @FXML
+    private Label outflowLabel;
+
+    @FXML
+    private Label changeLabel;
+
+    @FXML
+    private Label currentBalanceLabel;
 
     private static final FiscalService fiscal = FiscalService.getInstance();
     private Account selectedAccount;
@@ -194,9 +212,6 @@ public class BreakdownController extends SubUtilityController {
             }
         });
 
-        categoryBreakdownListView.setCellFactory(new CategoryExpenseTotalCellFactory(selectedAccount));
-        transactionList.setCellFactory(new TransactionCellFactory(selectedAccount, (_) -> refreshUI(), true));
-
         accountPicker.setItems(FXCollections.observableList(accounts.stream().toList()));
         accountPicker.setConverter(new StringConverter<>() {
             @Override
@@ -216,14 +231,18 @@ public class BreakdownController extends SubUtilityController {
         breakdownPieChart.setLabelsVisible(true);
         breakdownPieChart.dataProperty().addListener((obs, old, val) -> {
             if (val == null) return;
+            double total = breakdownPieChart.getData().stream().mapToDouble(PieChart.Data::getPieValue).sum();
+
             val.forEach(slice -> {
+
+                Tooltip tooltip = new Tooltip("%s (%s%%)".formatted(DataManager.Formatting.formatMoney(slice.getPieValue(), selectedAccount.getCurrencyConfig()), DataManager.Formatting.decimalFormatter.format((slice.getPieValue() / total) * 100)));
+                Tooltip.install(slice.getNode(), tooltip);
                 slice.getNode().setOnMouseClicked(_ -> {
-                    System.out.println("Slice clicked: " + slice);
                     ListDialog<Transaction> listDialog = new ListDialog<>("Transactions for category '" + slice.getName() + "'");
                     listDialog.setLabel("Transactions marked");
-                    listDialog.setSubLabel(slice.getName());
+                    listDialog.setSubLabel("%s, %s".formatted(slice.getName(), DataManager.Formatting.formatMoney(slice.getPieValue(), selectedAccount.getCurrencyConfig())));
                     listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {}, true));
-                    listDialog.setItems(transactionList.getItems().stream().filter(t -> t.getCategory().name().equals(slice.getName()) || t.getCustomCategory().equals(slice.getName())).toList());
+                    listDialog.setItems(transactionList.getItems().stream().filter(t -> t.getCategory().name().equalsIgnoreCase(slice.getName()) || t.getCustomCategory().equalsIgnoreCase(slice.getName())).toList());
                     listDialog.show();
                 });
                 slice.getNode().setOnMouseEntered(_ -> {
@@ -236,12 +255,59 @@ public class BreakdownController extends SubUtilityController {
             });
         });
 
+        spendingLineChart.dataProperty().addListener((obs, old, val) -> {
+            if (val == null) return;
+
+            val.forEach(series -> {
+                series.getData().forEach(dataPoint -> {
+                    Tooltip tooltip = new Tooltip(DataManager.Formatting.formatMoney(dataPoint.getYValue(), selectedAccount.getCurrencyConfig()));
+                    Tooltip.install(dataPoint.getNode(), tooltip);
+
+                    dataPoint.getNode().setCursor(Cursor.HAND);
+                    dataPoint.getNode().setOnMouseClicked(_ -> {
+                        ListDialog<Transaction> listDialog = new ListDialog<>("Transactions on " + dataPoint.getXValue());
+                        listDialog.setLabel("Transactions on " + dataPoint.getXValue());
+                        listDialog.setSubLabel("Total: " + DataManager.Formatting.formatMoney(dataPoint.getYValue(), selectedAccount.getCurrencyConfig()));
+                        listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {}, true));
+                        listDialog.setItems(transactionList.getItems().stream().filter(t -> t.getTimestamp().toLocalDate().equals(LocalDate.parse(dataPoint.getXValue(), DateTimeFormatter.ofPattern("dd/MM/yyyy")))).toList());
+                        listDialog.show();
+                    });
+                });
+            });
+        });
+
+        categoriesBarChart.dataProperty().addListener((obs, old, val) -> {
+            if (val == null) return;
+
+            val.forEach(series -> {
+                series.getData().forEach(dataPoint -> {
+                    dataPoint.getNode().setCursor(Cursor.HAND);
+
+                    Tooltip tooltip = new Tooltip(DataManager.Formatting.formatMoney(dataPoint.getYValue(), selectedAccount.getCurrencyConfig()));
+                    Tooltip.install(dataPoint.getNode(), tooltip);
+
+                    dataPoint.getNode().setOnMouseClicked(_ -> {
+                        ListDialog<Transaction> listDialog = new ListDialog<>("Transactions for category '" + dataPoint.getXValue() + "'");
+                        listDialog.setLabel("Transactions marked");
+                        listDialog.setSubLabel("%s, %s".formatted(dataPoint.getXValue(), DataManager.Formatting.formatMoney(dataPoint.getYValue(), selectedAccount.getCurrencyConfig())));
+                        listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {}, true));
+                        listDialog.setItems(transactionList.getItems().stream().filter(t -> t.getCategory().name().equalsIgnoreCase(dataPoint.getXValue()) || t.getCustomCategory().equalsIgnoreCase(dataPoint.getXValue())).toList());
+                        listDialog.show();
+                    });
+                });
+            });
+        });
+
         refreshUI();
     }
 
     private void refreshUI() {
         if (selectedAccount == null) return;
-        List<Transaction> transactions = fiscal.getTransactionsBetween(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue()).stream().filter(t -> t.getAmount() < 0).toList();
+
+        categoryBreakdownListView.setCellFactory(new CategoryExpenseTotalCellFactory(selectedAccount));
+        transactionList.setCellFactory(new TransactionCellFactory(selectedAccount, (_) -> refreshUI(), true));
+
+        List<Transaction> transactions = fiscal.getTransactionsBetween(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue()).stream().filter(t -> fiscal.isExpense(selectedAccount, t)).toList();
         Map<String, List<Transaction>> categoriesToTransactions = transactions.stream().collect(Collectors.groupingBy(t -> t.getCategory() == TransactionCategory.CUSTOM ? t.getCustomCategory() : DataManager.Formatting.capitalize(t.getCategory().name())));
 
         totalSpendingLabel.setText(DataManager.Formatting.formatMoney(transactions.stream().mapToDouble(Transaction::getAbsoluteAmount).sum(), selectedAccount.getCurrencyConfig()));
@@ -267,7 +333,13 @@ public class BreakdownController extends SubUtilityController {
                 sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(Transaction::getAmount).reversed()).toList());
             }
             case TRANSACTION_AMOUNT_DESC -> {
-                sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(Transaction::getAmount)).toList());
+                sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(t -> {
+                    if (t.getType().equals(TransactionType.TRANSFER)) {
+                        return -t.getAbsoluteAmount();
+                    } else {
+                        return t.getAmount();
+                    }
+                })).toList());
             }
         }
 
@@ -275,6 +347,15 @@ public class BreakdownController extends SubUtilityController {
         transactionCountLabel.setText("%s total transactions, %s different categories".formatted(sortedItems.size(), items.size()));
 
         refreshCharts(transactions, items);
+        refreshStats();
+    }
+
+    private void refreshStats() {
+        startingBalanceLabel.setText(DataManager.Formatting.formatMoney(fiscal.getStartingBalance(selectedAccount, periodStartPicker.getValue()), selectedAccount.getCurrencyConfig()));
+        currentBalanceLabel.setText(DataManager.Formatting.formatMoney(fiscal.getBalance(selectedAccount, periodEndPicker.getValue()), selectedAccount.getCurrencyConfig()));
+        inflowLabel.setText(DataManager.Formatting.formatMoney(fiscal.getInflow(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue())));
+        outflowLabel.setText(DataManager.Formatting.formatMoney(fiscal.getOutflow(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue())));
+        changeLabel.setText(DataManager.Formatting.formatMoney(fiscal.getChange(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue()), selectedAccount.getCurrencyConfig()));
     }
 
     private void refreshCharts(List<Transaction> transactions, List<CategoryExpenseSummary> categorisedTransactions) {

@@ -92,9 +92,9 @@ public class TransactionCell extends ListCell<Transaction> {
         amountLabel.setText(transaction.formatAmount(DataManager.getInstance(), true));
 
         rootPane.getStyleClass().removeAll("outflow", "inflow", "transfer");
+
         if (transaction.getType().equals(TransactionType.TRANSFER)) {
             if (parent.getId().equals(transaction.getTargetAccountId())) {
-
                 // If current account is the target
                 Optional<Account> account = DataManager.getInstance().getAccount(transaction.getSourceAccountId());
 

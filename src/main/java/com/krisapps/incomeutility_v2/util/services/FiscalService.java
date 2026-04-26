@@ -51,6 +51,14 @@ public class FiscalService {
         }
     }
 
+    public boolean isExpense(Account account, Transaction transaction) {
+        return getBalanceAdjustment(account, transaction) < 0;
+    }
+
+    public boolean isIncome(Account account, Transaction transaction) {
+        return getBalanceAdjustment(account, transaction) > 0;
+    }
+
     public List<Transaction> getTransactionsBefore(Account account, LocalDate date) {
         return dataManager.getTransactions(account).stream().filter(transaction -> transaction.getTimestamp().toLocalDate().isBefore(date)).toList();
     }
@@ -85,24 +93,95 @@ public class FiscalService {
         return account.getInitialBalance() + adjustment;
     }
 
+    /**
+     * Gets the supplied account's balance as of the current date.
+     * @param account The account whose balance to return
+     * @return The balance as of the current date.
+     */
     public double getCurrentBalance(Account account) {
+//        double adjustment = 0.0d;
+//        for (Transaction t : dataManager.getTransactions(account)) {
+//            adjustment += getBalanceAdjustment(account, t);
+//        }
+//        return account.getInitialBalance() + adjustment;
+        return getBalance(account, LocalDate.now());
+    }
+
+    /**
+     * Gets the supplied account's balance as of the supplied date.
+     * @param account The account whose balance to return
+     * @param date The date as of which to calculate the balance.
+     * @return The balance as of the supplied date.
+     */
+    public double getBalance(Account account, LocalDate date) {
         double adjustment = 0.0d;
-        for (Transaction t : dataManager.getTransactions(account)) {
+        for (Transaction t : getTransactionsBetween(account, LocalDate.MIN, date)) {
             adjustment += getBalanceAdjustment(account, t);
         }
         return account.getInitialBalance() + adjustment;
     }
 
+    /**
+     * Gets the total cash inflow on the supplied date for the supplied account.
+     * @param account The account whose inflow to calculate.
+     * @param date The date whose inflow to calculate.
+     * @return The total inflow on the supplied date.
+     */
     public double getInflow(Account account, LocalDate date) {
         return getTransactionsOn(account, date).stream().filter(transaction -> getBalanceAdjustment(account, transaction) > 0).mapToDouble(Transaction::getAmount).sum();
     }
 
+    /**
+     * Gets the total cash inflow between the supplied dates for the supplied account.
+     * @param account The account whose inflow to calculate.
+     * @param fromInclusive The start date (incl.) of the period
+     * @param toInclusive The end date (incl.) of the period
+     * @return The total inflow between the start and end dates (both inclusive).
+     */
+    public double getInflow(Account account, LocalDate fromInclusive, LocalDate toInclusive) {
+        return getTransactionsBetween(account, fromInclusive, toInclusive).stream().filter(transaction -> getBalanceAdjustment(account, transaction) > 0).mapToDouble(Transaction::getAmount).sum();
+    }
+
+    /**
+     * Gets the total cash outflow on the supplied date for the supplied account.
+     * @param account The account whose outflow to calculate.
+     * @param date The date whose outflow to calculate.
+     * @return The total outflow on the supplied date.
+     */
     public double getOutflow(Account account, LocalDate date) {
         return getTransactionsOn(account, date).stream().filter(transaction -> getBalanceAdjustment(account, transaction) < 0).mapToDouble(t -> Math.abs(t.getAmount())).sum();
     }
 
+    /**
+     * Gets the total cash outflow between the supplied dates for the supplied account.
+     * @param account The account whose outflow to calculate.
+     * @param fromInclusive The start date (incl.) of the period
+     * @param toInclusive The end date (incl.) of the period
+     * @return The total outflow between the start and end dates (both inclusive).
+     */
+    public double getOutflow(Account account, LocalDate fromInclusive, LocalDate toInclusive) {
+        return getTransactionsBetween(account, fromInclusive, toInclusive).stream().filter(transaction -> getBalanceAdjustment(account, transaction) < 0).mapToDouble(t -> Math.abs(t.getAmount())).sum();
+    }
+
+    /**
+     * Gets the difference between the total inflow and total outflow on the supplied date for the supplied account.
+     * @param account The account whose change to calculate.
+     * @param date The date whose change to calculate.
+     * @return The difference between the inflow and outflow on the supplied date.
+     */
     public double getChange(Account account, LocalDate date) {
         return getInflow(account, date) - getOutflow(account, date);
+    }
+
+    /**
+     * Gets the difference between the total inflow and total outflow between the supplied dates for the supplied account.
+     * @param account The account whose change to calculate.
+     * @param fromInclusive The start date (incl.) of the period.
+     * @param toInclusive The end date (incl.) of the period.
+     * @return The difference between the inflow and outflow between the supplied dates.
+     */
+    public double getChange(Account account, LocalDate fromInclusive, LocalDate toInclusive) {
+        return getInflow(account, fromInclusive, toInclusive) - getOutflow(account, fromInclusive, toInclusive);
     }
 
     public HashSet<Account> getAccounts() {
