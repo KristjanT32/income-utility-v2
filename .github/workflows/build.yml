@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p release
-          cp income-utility-v2/target/*.jar release/Income-Utility-${{ steps.get_version.outputs.VERSION }}.jar
+          cp "target/*.jar" release/Income-Utility-${{ steps.get_version.outputs.VERSION }}.jar
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
