@@ -88,7 +88,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <finalName>${project.name}-${project.version}</finalName>
+                            <finalName>IncomeUtility-${project.version}</finalName>
                             <transformers>
                                 <!-- This line fixes the Ikonli error by merging the service files -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
