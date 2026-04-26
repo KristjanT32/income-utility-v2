@@ -1,0 +1,33 @@
+name: Build JavaFX App
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25 (Liberica)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'liberica'
+          java-version: '25'
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Income-Utility
+          path: target/*.jar
