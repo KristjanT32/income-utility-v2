@@ -26,19 +26,19 @@ jobs:
       - name: Build
         run: mvn clean package
 
-        
       - name: Get version from pom.xml
         id: get_version
         run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
 
-      - name: Debug target folder
-        run: ls -R target
+      - name: Debug
+        id: debug_folder
+        run: ls -la
       
       - name: Prepare release folder
         shell: bash
         run: |
           mkdir -p release
-          cp "target/*.jar" release/Income-Utility-${{ steps.get_version.outputs.VERSION }}.jar
+          cp target/*.jar release/Income-Utility-${{ steps.get_version.outputs.VERSION }}.jar
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
