@@ -38,6 +38,7 @@ jobs:
         run: mvn help:evaluate -Dexpression=project.version -q -DforceStdout
       
       - name: Prepare release
+        shell: bash
         run: |
           mkdir -p release
           cp target/IncomeUtility-${{ steps.get_version.outputs.VERSION }}.jar \
