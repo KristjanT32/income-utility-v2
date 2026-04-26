@@ -30,6 +30,9 @@ jobs:
       - name: Get version from pom.xml
         id: get_version
         run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
+
+      - name: Debug target folder
+        run: ls -R target
       
       - name: Prepare release folder
         shell: bash
