@@ -18,6 +18,7 @@ import com.krisapps.incomeutility_v2.util.misc.Formats;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.chart.BarChart;
@@ -29,6 +30,7 @@ import javafx.util.StringConverter;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -102,6 +104,20 @@ public class BreakdownController extends SubUtilityController {
     private static final FiscalService fiscal = FiscalService.getInstance();
     private Account selectedAccount;
 
+    private void pickPreviousMonth() {
+        periodStartPicker.setValue(periodStartPicker.getValue().minusMonths(1));
+
+        LocalDate newEnd = periodEndPicker.getValue().minusMonths(1);
+        periodEndPicker.setValue(newEnd.withDayOfMonth(newEnd.getMonth().length(newEnd.isLeapYear())));
+    }
+
+    private void pickNextMonth() {
+        periodStartPicker.setValue(periodStartPicker.getValue().plusMonths(1).withDayOfMonth(1));
+
+        LocalDate newEnd = periodEndPicker.getValue().plusMonths(1);
+        periodEndPicker.setValue(newEnd.withDayOfMonth(newEnd.getMonth().length(newEnd.isLeapYear())));
+    }
+
     private enum SortingOrder {
         CHRONOLOGICAL_ASC("Chronologically, oldest first"),
         CHRONOLOGICAL_DESC("Chronologically, most recent first"),
@@ -128,6 +144,41 @@ public class BreakdownController extends SubUtilityController {
     @Override
     public void onShutdown() {
 
+    }
+
+    @Override
+    public void onPromptCommand(String command, String[] args) {
+        switch (command) {
+            case "show" -> {
+                if (args.length < 2) {
+
+                    List<String> aliasesForNow = List.of("now", "today", "current", "nw", "td", "cr");
+                    if (args.length == 1) {
+                        if (aliasesForNow.contains(args[0])) {
+                            autopickPeriod();
+                        } else {
+                            PopupManager.showPopup("Invalid syntax", "Syntax for 'show' is as follows:\nshow <period-start dd/MM/yyyy> <period-end dd/MM/yyyy>", Alert.AlertType.ERROR);
+                        }
+                    } else {
+                        PopupManager.showPopup("Invalid syntax", "Syntax for 'show' is as follows:\nshow <period-start dd/MM/yyyy> <period-end dd/MM/yyyy>", Alert.AlertType.ERROR);
+                    }
+                } else {
+                    try {
+                        LocalDate from = LocalDate.parse(args[0], DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                        LocalDate to = LocalDate.parse(args[0], DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+                        periodStartPicker.setValue(from);
+                        periodEndPicker.setValue(to);
+                    } catch (DateTimeParseException e) {
+                        PopupManager.showPopup("Invalid date format!", "Please use dd/MM/yyyy when specifying dates!", Alert.AlertType.ERROR);
+                    }
+                }
+            }
+            case "prev" -> pickPreviousMonth();
+            case "next" -> pickNextMonth();
+            case "refresh" -> refreshUI();
+            case "exit" -> utility.stop();
+        }
     }
 
     @FXML
@@ -187,19 +238,8 @@ public class BreakdownController extends SubUtilityController {
             autopickPeriod();
         });
 
-        prevMonthButton.setOnAction(ev -> {
-            periodStartPicker.setValue(periodStartPicker.getValue().minusMonths(1));
-
-            LocalDate newEnd = periodEndPicker.getValue().minusMonths(1);
-            periodEndPicker.setValue(newEnd.withDayOfMonth(newEnd.getMonth().length(newEnd.isLeapYear())));
-        });
-
-        nextMonthButton.setOnAction(ev -> {
-            periodStartPicker.setValue(periodStartPicker.getValue().plusMonths(1).withDayOfMonth(1));
-
-            LocalDate newEnd = periodEndPicker.getValue().plusMonths(1);
-            periodEndPicker.setValue(newEnd.withDayOfMonth(newEnd.getMonth().length(newEnd.isLeapYear())));
-        });
+        prevMonthButton.setOnAction(_ -> pickPreviousMonth());
+        nextMonthButton.setOnAction(_ -> pickNextMonth());
 
         HashSet<Account> accounts = fiscal.getAccounts();
         DataManager.getInstance().getLastActiveAccount().ifPresentOrElse(account -> {

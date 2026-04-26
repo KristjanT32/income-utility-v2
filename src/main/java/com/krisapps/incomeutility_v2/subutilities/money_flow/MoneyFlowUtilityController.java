@@ -96,12 +96,44 @@ public class MoneyFlowUtilityController extends SubUtilityController {
 
     public void onStartup(SubUtility utility) {
         this.utility = utility;
-        initializeCommandPrompt();
     }
 
     public void onShutdown() {
         data.updateLastOpenAccount(selectedAccount);
         data.saveCurrentData();
+    }
+
+    @Override
+    public void onPromptCommand(String command, String[] args) {
+        switch (command) {
+            case "prevday" -> previousDay();
+            case "nextday" -> nextDay();
+            case "today" -> resetToToday();
+            case "list" -> {
+                if (args.length < 1) {
+                    PopupManager.showPopup("Invalid syntax", "Missing argument: transactions/accounts for utility command date", Alert.AlertType.WARNING);
+                    return;
+                }
+
+                if (args[0].equals("transactions")) {
+                    PopupManager.showListDialog("Transactions", "Transactions", new ArrayList<>(data.getAllTransactions().values()), new TransactionCellFactory(selectedAccount, (transaction) -> {}));
+                }
+            }
+            case "date" -> {
+                if (args.length < 1) {
+                    String date = PopupManager.showInputDialog("Invalid syntax", "Missing argument: 'date (dd/MM/yyyy)' for utility command date", "Date: ", "");
+
+                    if (!date.isEmpty()) {
+                        datePicker.setValue(LocalDate.parse(date, Formats.DATE_FORMATTER));
+                    }
+                    return;
+                }
+                datePicker.setValue(LocalDate.parse(args[0], Formats.DATE_FORMATTER));
+            }
+            case "refresh" -> refreshUI();
+            case "exit" -> utility.stop();
+            default -> PopupManager.showPopup("Unknown utility command", "'" + command + "' is not a valid utility command.", Alert.AlertType.ERROR);
+        }
     }
 
     public Account getSelectedAccount() {
@@ -298,67 +330,5 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             refreshAccountSelector();
             PopupManager.showPopup("Import completed!", "Successfully imported %s new transactions of %s selected from Cashew.".formatted(imported, importedTransactions.getValue().size()), Alert.AlertType.INFORMATION);
         });
-    }
-
-    public void initializeCommandPrompt() {
-        commandPrompt.managedProperty().bind(commandPrompt.visibleProperty());
-        commandPromptLabel.setText("money-flow");
-        commandPromptField.setText("");
-        commandPromptField.setOnAction((action) -> {
-            String command = commandPromptField.getText();
-            handleParseCommand(command);
-            commandPrompt.setVisible(false);
-        });
-
-        utility.getInstance().getScene().setOnKeyPressed((keyEvent) -> {
-            if (keyEvent.getCode().equals(KeyCode.F1)) {
-                commandPrompt.setVisible(!commandPrompt.isVisible());
-                if (commandPrompt.isVisible()) {
-                    commandPromptField.requestFocus();
-                    commandPromptLabel.setText("money-flow");
-                    commandPromptField.setText("");
-                }
-            }
-            if (keyEvent.getCode().equals(KeyCode.ESCAPE)) {
-                if (commandPrompt.isVisible()) {
-                    commandPrompt.setVisible(false);
-                }
-            }
-        });
-
-        commandPrompt.setVisible(false);
-    }
-
-    public void handleParseCommand(String input) {
-        if (input.trim().isEmpty()) return;
-        String[] args = input.trim().split(" ");
-
-        switch (args[0]) {
-            case "prevday" -> previousDay();
-            case "nextday" -> nextDay();
-            case "today" -> resetToToday();
-            case "list" -> {
-                if (args.length < 2) {
-                    PopupManager.showPopup("Invalid syntax", "Missing argument: transactions/accounts for utility command date", Alert.AlertType.WARNING);
-                    return;
-                }
-
-                if (args[1].equals("transactions")) {
-                    PopupManager.showListDialog("Transactions", "Transactions", new ArrayList<>(data.getAllTransactions().values()), new TransactionCellFactory(selectedAccount, (transaction) -> {}));
-                }
-            }
-            case "date" -> {
-                if (args.length < 2) {
-                    String date = PopupManager.showInputDialog("Invalid syntax", "Missing argument: 'date (dd/MM/yyyy)' for utility command date", "Date: ", "");
-
-                    if (!date.isEmpty()) {
-                        datePicker.setValue(LocalDate.parse(date, Formats.DATE_FORMATTER));
-                    }
-                    return;
-                }
-                datePicker.setValue(LocalDate.parse(args[1], Formats.DATE_FORMATTER));
-            }
-            default -> PopupManager.showPopup("Unknown utility command", "'" + args[0] + "' is not a valid utility command.", Alert.AlertType.ERROR);
-        }
     }
 }

@@ -45,6 +45,11 @@ public class PricerController extends SubUtilityController {
 
     }
 
+    @Override
+    public void onPromptCommand(String command, String[] args) {
+
+    }
+
     @FXML
     public void initialize() {
         initUI();

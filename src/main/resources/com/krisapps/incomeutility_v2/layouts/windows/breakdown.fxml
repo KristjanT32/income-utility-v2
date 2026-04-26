@@ -127,6 +127,9 @@
                                              <graphic>
                                                 <FontIcon iconLiteral="fltfal-calendar-20" iconSize="15" styleClass="font-icon" />
                                              </graphic>
+                                             <tooltip>
+                                                <Tooltip text="Period starting balance" />
+                                             </tooltip>
                                           </Label>
                                           <Label fx:id="inflowLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="0.00" HBox.hgrow="ALWAYS">
                                              <font>
@@ -144,6 +147,9 @@
                                                    </styleClass>
                                                 </FontIcon>
                                              </graphic>
+                                             <tooltip>
+                                                <Tooltip text="Period inflow" />
+                                             </tooltip>
                                           </Label>
                                           <Label fx:id="outflowLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="0.00" HBox.hgrow="ALWAYS">
                                              <font>
@@ -161,6 +167,9 @@
                                                    </styleClass>
                                                 </FontIcon>
                                              </graphic>
+                                             <tooltip>
+                                                <Tooltip text="Period outflow" />
+                                             </tooltip>
                                           </Label>
                                           <Label fx:id="changeLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" styleClass="xl-label" text="0.00" HBox.hgrow="ALWAYS">
                                              <font>
@@ -169,6 +178,9 @@
                                              <graphic>
                                                 <FontIcon iconLiteral="fltfal-arrow-sort-20" iconSize="15" styleClass="font-icon" />
                                              </graphic>
+                                             <tooltip>
+                                                <Tooltip text="Balance change during period" />
+                                             </tooltip>
                                           </Label>
                                           <Label fx:id="currentBalanceLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="0.00" HBox.hgrow="ALWAYS">
                                              <font>
@@ -181,6 +193,9 @@
                                                 <String fx:value="xl-label" />
                                                 <String fx:value="bold" />
                                              </styleClass>
+                                             <tooltip>
+                                                <Tooltip text="Period ending balance" />
+                                             </tooltip>
                                           </Label>
                                        </children>
                                        <VBox.margin>

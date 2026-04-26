@@ -5,9 +5,12 @@ import com.krisapps.incomeutility_v2.util.DataManager;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -22,6 +25,10 @@ public abstract class SubUtility {
     private final int minWidth;
     private final int minHeight;
     private final boolean allowResize;
+
+    private HBox commandPrompt;
+    private TextField commandPromptField;
+    private Label commandPromptLabel;
 
 
     private String processId;
@@ -74,6 +81,52 @@ public abstract class SubUtility {
         window.setOnCloseRequest((_) -> {
             stop();
         });
+
+        // If the utility has a command prompt
+        if (loader.getNamespace().get("commandPrompt") != null) {
+            log("Command prompt found, setting up...");
+            commandPrompt = (HBox) loader.getNamespace().get("commandPrompt");
+            commandPromptField = (TextField) loader.getNamespace().get("commandPromptField");
+            commandPromptLabel = (Label) loader.getNamespace().get("commandPromptLabel");
+
+            commandPrompt.managedProperty().bind(commandPrompt.visibleProperty());
+            commandPromptLabel.setText(utilityName.toLowerCase().replaceAll("[,.;]", "").trim().replaceAll(" ", "-"));
+            commandPromptField.setText("");
+            commandPromptField.setOnAction((action) -> {
+                String command = commandPromptField.getText();
+                if (!command.isBlank()) {
+                    String[] split = command.split(" ");
+
+                    if (split.length > 1) {
+                        String[] args = new String[split.length - 1];
+                        System.arraycopy(split, 1, args, 0, split.length - 1);
+
+                        controller.onPromptCommand(split[0], args);
+                    } else {
+                        controller.onPromptCommand(command, new String[0]);
+                    }
+                }
+
+                commandPrompt.setVisible(false);
+            });
+
+            window.getScene().setOnKeyPressed((keyEvent) -> {
+                if (keyEvent.getCode().equals(KeyCode.F1)) {
+                    commandPrompt.setVisible(!commandPrompt.isVisible());
+                    if (commandPrompt.isVisible()) {
+                        commandPromptField.requestFocus();
+                        commandPromptField.setText("");
+                    }
+                }
+                if (keyEvent.getCode().equals(KeyCode.ESCAPE)) {
+                    if (commandPrompt.isVisible()) {
+                        commandPrompt.setVisible(false);
+                    }
+                }
+            });
+
+            commandPrompt.setVisible(false);
+        }
 
         try {
             this.id = processId;
