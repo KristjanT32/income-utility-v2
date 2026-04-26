@@ -30,6 +30,7 @@ jobs:
 
       - name: Get version from pom.xml
         id: get_version
+        shell: bash
         run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
 
       - name: Debug version step
