@@ -30,18 +30,12 @@ jobs:
       - name: Get version from pom.xml
         id: get_version
         run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
-
-      - name: Rename JAR (Linux)
-        if: runner.os != 'windows-latest'
+      
+      - name: Prepare release folder
+        shell: bash
         run: |
           mkdir -p release
           cp target/*.jar release/Income-Utility-${{ steps.get_version.outputs.VERSION }}.jar
-
-      - name: Rename JAR (Windows)
-        if: runner.os == 'windows-latest'
-        run: |
-          mkdir release
-          copy target\*.jar release\Income-Utility-${{ steps.get_version.outputs.VERSION }}.jar
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
