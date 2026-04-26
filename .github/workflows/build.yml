@@ -32,7 +32,7 @@ jobs:
 
       - name: Debug
         id: debug_folder
-        run: ls -la
+        run: echo target/*.jar
       
       - name: Prepare release folder
         shell: bash
