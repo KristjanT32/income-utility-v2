@@ -23,12 +23,13 @@ jobs:
           distribution: 'liberica'
           java-version: '25'
 
+      - name: Build
+        run: mvn clean package
+
+        
       - name: Get version from pom.xml
         id: get_version
         run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
-
-      - name: Build
-        run: mvn clean package
 
       - name: Rename JAR
         run: |
