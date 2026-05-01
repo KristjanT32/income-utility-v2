@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.String?>
-<?import java.net.URL?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-
+<?import java.lang.*?>
+<?import java.net.URL?>
 <StackPane alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="662.0" prefWidth="871.0" spacing="10.0">
+       <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+             minHeight="-Infinity" minWidth="-Infinity" prefHeight="729.0" prefWidth="899.0" spacing="10.0">
          <children>
             <VBox alignment="TOP_CENTER" maxWidth="1280.0" minHeight="-Infinity" minWidth="-Infinity" VBox.vgrow="ALWAYS">
                <children>
@@ -33,119 +28,301 @@
                         </Button>
                      </children>
                   </HBox>
-                  <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0">
-                     <children>
-                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0" HBox.hgrow="ALWAYS">
-                           <children>
-                              <Label text="Product name">
-                                 <styleClass>
-                                    <String fx:value="large-label" />
-                                    <String fx:value="bold" />
-                                 </styleClass>
-                              </Label>
-                              <TextField fx:id="nameBox" maxHeight="1.7976931348623157E308" styleClass="large-label" VBox.vgrow="ALWAYS" />
-                           </children>
-                           <padding>
-                              <Insets bottom="10.0" top="10.0" />
-                           </padding>
-                        </VBox>
-                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0" HBox.hgrow="ALWAYS">
-                           <children>
-                              <Label text="Product price">
-                                 <styleClass>
-                                    <String fx:value="large-label" />
-                                    <String fx:value="bold" />
-                                 </styleClass>
-                              </Label>
-                              <TextField fx:id="priceBox" maxHeight="1.7976931348623157E308" styleClass="large-label" VBox.vgrow="ALWAYS" />
-                           </children>
-                           <padding>
-                              <Insets bottom="10.0" top="10.0" />
-                           </padding>
-                        </VBox>
-                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0" HBox.hgrow="ALWAYS">
-                           <children>
-                              <Label text="Amount">
-                                 <styleClass>
-                                    <String fx:value="large-label" />
-                                    <String fx:value="bold" />
-                                 </styleClass>
-                              </Label>
-                              <TextField fx:id="amountBox" maxHeight="1.7976931348623157E308" styleClass="large-label" VBox.vgrow="ALWAYS" />
-                           </children>
-                           <padding>
-                              <Insets bottom="10.0" top="10.0" />
-                           </padding>
-                        </VBox>
-                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0">
-                           <children>
-                              <Label text="Unit name">
-                                 <styleClass>
-                                    <String fx:value="large-label" />
-                                    <String fx:value="bold" />
-                                 </styleClass>
-                              </Label>
-                              <TextField fx:id="unitBox" maxHeight="1.7976931348623157E308" styleClass="large-label" VBox.vgrow="ALWAYS" />
-                           </children>
-                           <padding>
-                              <Insets bottom="10.0" top="10.0" />
-                           </padding>
-                        </VBox>
-                     </children>
-                     <VBox.margin>
-                        <Insets top="20.0" />
-                     </VBox.margin>
-                  </HBox>
-                  <HBox spacing="5.0">
-                     <VBox.margin>
-                        <Insets bottom="20.0" />
-                     </VBox.margin>
-                     <children>
-                        <Label maxHeight="1.7976931348623157E308" text="Average duration of product (days):" HBox.hgrow="ALWAYS">
-                           <styleClass>
-                              <String fx:value="large-label" />
-                              <String fx:value="bold" />
-                           </styleClass>
-                        </Label>
-                        <Spinner fx:id="durationSpinner" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="large-label" HBox.hgrow="ALWAYS" />
-                     </children>
-                  </HBox>
-                  <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0">
-                     <children>
-                        <VBox maxHeight="1.7976931348623157E308" styleClass="rounded-container" HBox.hgrow="ALWAYS">
-                           <children>
-                              <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Price per unit" VBox.vgrow="ALWAYS">
-                                 <styleClass>
-                                    <String fx:value="large-label" />
-                                    <String fx:value="flair-generic" />
-                                 </styleClass>
-                              </Label>
-                              <Label fx:id="ppuLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="0.00€" VBox.vgrow="ALWAYS">
-                                 <styleClass>
-                                    <String fx:value="xl-label" />
-                                    <String fx:value="bold" />
-                                 </styleClass>
-                              </Label>
-                           </children>
-                        </VBox>
-                        <VBox maxHeight="1.7976931348623157E308" styleClass="rounded-container" HBox.hgrow="ALWAYS">
-                           <children>
-                              <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Price per unit of time" VBox.vgrow="ALWAYS">
-                                 <styleClass>
-                                    <String fx:value="large-label" />
-                                    <String fx:value="flair-generic" />
-                                 </styleClass>
-                              </Label>
-                              <Label fx:id="pputLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="0.00€" VBox.vgrow="ALWAYS">
-                                 <styleClass>
-                                    <String fx:value="xl-label" />
-                                    <String fx:value="bold" />
-                                 </styleClass>
-                              </Label>
-                           </children>
-                        </VBox>
-                     </children>
-                  </HBox>
+                   <TabPane>
+                       <VBox.margin>
+                           <Insets top="20.0"/>
+                       </VBox.margin>
+                       <tabs>
+                           <Tab closable="false" text="Product">
+                               <content>
+                                   <VBox spacing="20.0">
+                                       <children>
+                                           <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0">
+                                               <children>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308" spacing="5.0"
+                                                         HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <Label text="Product name">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <TextField fx:id="nameBox" maxHeight="1.7976931348623157E308"
+                                                                      styleClass="large-label" VBox.vgrow="ALWAYS"/>
+                                                       </children>
+                                                       <padding>
+                                                           <Insets bottom="10.0" top="10.0"/>
+                                                       </padding>
+                                                   </VBox>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308" spacing="5.0"
+                                                         HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <Label text="Product price">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <TextField fx:id="priceBox"
+                                                                      maxHeight="1.7976931348623157E308"
+                                                                      styleClass="large-label" VBox.vgrow="ALWAYS"/>
+                                                       </children>
+                                                       <padding>
+                                                           <Insets bottom="10.0" top="10.0"/>
+                                                       </padding>
+                                                   </VBox>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308" spacing="5.0"
+                                                         HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <Label text="Amount">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <TextField fx:id="amountBox"
+                                                                      maxHeight="1.7976931348623157E308"
+                                                                      styleClass="large-label" VBox.vgrow="ALWAYS"/>
+                                                       </children>
+                                                       <padding>
+                                                           <Insets bottom="10.0" top="10.0"/>
+                                                       </padding>
+                                                   </VBox>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308" spacing="5.0">
+                                                       <children>
+                                                           <Label text="Unit name">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <TextField fx:id="unitBox" maxHeight="1.7976931348623157E308"
+                                                                      styleClass="large-label" VBox.vgrow="ALWAYS"/>
+                                                       </children>
+                                                       <padding>
+                                                           <Insets bottom="10.0" top="10.0"/>
+                                                       </padding>
+                                                   </VBox>
+                                               </children>
+                                               <VBox.margin>
+                                                   <Insets top="10.0"/>
+                                               </VBox.margin>
+                                           </HBox>
+                                           <HBox spacing="5.0">
+                                               <children>
+                                                   <Label maxHeight="1.7976931348623157E308"
+                                                          text="Average duration of product (days):"
+                                                          HBox.hgrow="ALWAYS">
+                                                       <styleClass>
+                                                           <String fx:value="large-label"/>
+                                                           <String fx:value="bold"/>
+                                                       </styleClass>
+                                                   </Label>
+                                                   <Spinner fx:id="durationSpinner" maxHeight="1.7976931348623157E308"
+                                                            maxWidth="1.7976931348623157E308" styleClass="large-label"
+                                                            HBox.hgrow="ALWAYS"/>
+                                               </children>
+                                           </HBox>
+                                           <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0">
+                                               <children>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         styleClass="rounded-container" HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <Label alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308"
+                                                                  text="Price per unit" VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="flair-generic"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <Label fx:id="ppuLabel" alignment="CENTER"
+                                                                  maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="0.00€"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="xl-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                       </children>
+                                                   </VBox>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         styleClass="rounded-container" HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <Label alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308"
+                                                                  text="Price per unit of time" VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="flair-generic"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <Label fx:id="pputLabel" alignment="CENTER"
+                                                                  maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="0.00€"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="xl-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                       </children>
+                                                   </VBox>
+                                               </children>
+                                           </HBox>
+                                           <HBox alignment="CENTER" spacing="10.0">
+                                               <children>
+                                                   <Button maxHeight="1.7976931348623157E308"
+                                                           maxWidth="1.7976931348623157E308" mnemonicParsing="false"
+                                                           styleClass="large-label" text="Save item"
+                                                           HBox.hgrow="ALWAYS">
+                                                       <graphic>
+                                                           <FontIcon iconLiteral="fltrmz-save-copy-24" iconSize="16"/>
+                                                       </graphic>
+                                                   </Button>
+                                                   <Button maxHeight="1.7976931348623157E308"
+                                                           maxWidth="1.7976931348623157E308" mnemonicParsing="false"
+                                                           styleClass="large-label" text="Add item to cart"
+                                                           HBox.hgrow="ALWAYS">
+                                                       <graphic>
+                                                           <FontIcon iconLiteral="fltfal-cart-24" iconSize="16"/>
+                                                       </graphic>
+                                                   </Button>
+                                               </children>
+                                           </HBox>
+                                       </children>
+                                   </VBox>
+                               </content>
+                               <styleClass>
+                                   <String fx:value="large"/>
+                                   <String fx:value="large-label"/>
+                               </styleClass>
+                           </Tab>
+                           <Tab closable="false" text="Cart">
+                               <content>
+                                   <VBox spacing="20.0">
+                                       <children>
+                                           <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0">
+                                               <children>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308"
+                                                         styleClass="rounded-container" HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <Label alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="Cart total"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="flair-generic"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <Label fx:id="cartTotalLabel" alignment="CENTER"
+                                                                  maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="0.00€"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="xl-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                       </children>
+                                                       <HBox.margin>
+                                                           <Insets/>
+                                                       </HBox.margin>
+                                                   </VBox>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308"
+                                                         styleClass="rounded-container" HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <Label alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308"
+                                                                  text="Cart price per unit of time"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="flair-generic"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <Label fx:id="cartPerUnitOfTimeLabel" alignment="CENTER"
+                                                                  maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="0.00€"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="xl-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                       </children>
+                                                   </VBox>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308"
+                                                         styleClass="rounded-container">
+                                                       <children>
+                                                           <Label alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308"
+                                                                  text="Adjusted cart price per unit of time"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="flair-generic"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <Label fx:id="individualPPUTotal" alignment="CENTER"
+                                                                  maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="0.00€"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="xl-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                       </children>
+                                                   </VBox>
+                                               </children>
+                                               <VBox.margin>
+                                                   <Insets top="10.0"/>
+                                               </VBox.margin>
+                                           </HBox>
+                                           <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                                                 spacing="5.0" VBox.vgrow="ALWAYS">
+                                               <children>
+                                                   <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308">
+                                                       <children>
+                                                           <Label maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" styleClass="header"
+                                                                  text="Shopping cart" HBox.hgrow="ALWAYS"/>
+                                                           <Button fx:id="addCartItemButton"
+                                                                   maxHeight="1.7976931348623157E308"
+                                                                   maxWidth="1.7976931348623157E308"
+                                                                   mnemonicParsing="false" styleClass="medium-label"
+                                                                   text="Add product" HBox.hgrow="SOMETIMES">
+                                                               <graphic>
+                                                                   <FontIcon iconLiteral="fltfal-add-circle-24"
+                                                                             iconSize="14"/>
+                                                               </graphic>
+                                                           </Button>
+                                                       </children>
+                                                   </HBox>
+                                                   <ListView fx:id="cartItemList" maxHeight="1.7976931348623157E308"
+                                                             maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS"/>
+                                               </children>
+                                           </VBox>
+                                       </children>
+                                   </VBox>
+                               </content>
+                               <styleClass>
+                                   <String fx:value="large"/>
+                                   <String fx:value="large-label"/>
+                               </styleClass>
+                           </Tab>
+                       </tabs>
+                   </TabPane>
                </children>
             </VBox>
          </children>

@@ -3,7 +3,6 @@ package com.krisapps.incomeutility_v2.subutilities.money_flow;
 import com.krisapps.incomeutility_v2.dialogs.AddMultipleTransactionsDialog;
 import com.krisapps.incomeutility_v2.dialogs.AddSingleTransactionDialog;
 import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
-import com.krisapps.incomeutility_v2.dialogs.TransactionReviewDialog;
 import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
@@ -22,7 +21,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.util.Pair;
 import javafx.util.StringConverter;
@@ -30,7 +28,10 @@ import javafx.util.StringConverter;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Optional;
 
 /* Controller class for the Money In Money Out utility */
 public class MoneyFlowUtilityController extends SubUtilityController {
@@ -129,6 +130,29 @@ public class MoneyFlowUtilityController extends SubUtilityController {
                     return;
                 }
                 datePicker.setValue(LocalDate.parse(args[0], Formats.DATE_FORMATTER));
+            }
+            case "first-transaction" -> {
+                if (fiscal.getTransactions(selectedAccount).isEmpty()) {
+                    PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+                } else {
+                    fiscal.getTransactions(selectedAccount).stream().min(Comparator.comparing(Transaction::getTimestamp)).ifPresentOrElse((t) -> {
+                        datePicker.setValue(t.getTimestamp().toLocalDate());
+                    }, () -> {
+                        PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+                    });
+                }
+            }
+
+            case "last-transaction" -> {
+                if (fiscal.getTransactions(selectedAccount).isEmpty()) {
+                    PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+                } else {
+                    fiscal.getTransactions(selectedAccount).stream().max(Comparator.comparing(Transaction::getTimestamp)).ifPresentOrElse((t) -> {
+                        datePicker.setValue(t.getTimestamp().toLocalDate());
+                    }, () -> {
+                        PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+                    });
+                }
             }
             case "refresh" -> refreshUI();
             case "exit" -> utility.stop();
