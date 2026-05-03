@@ -233,8 +233,11 @@ public class DataManager {
         }
         currentData.transactions.putIfAbsent(transaction.getId(), transaction);
 
-        if (!getCustomTransactionCategories().contains(transaction.getCustomCategory())) {
-            currentData.customTransactionCategories.add(transaction.getCustomCategory());
+        String customCategory = transaction.getCustomCategory();
+        if (!getCustomTransactionCategories().contains(customCategory)) {
+            if (!customCategory.trim().isBlank()) {
+                currentData.customTransactionCategories.add(transaction.getCustomCategory());
+            }
         }
     }
 

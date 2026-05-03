@@ -2,6 +2,7 @@ package com.krisapps.incomeutility_v2.subutilities.pricer;
 
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
+import com.krisapps.incomeutility_v2.types.data.PricerProduct;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import javafx.fxml.FXML;
@@ -33,6 +34,9 @@ public class PricerController extends SubUtilityController {
     @FXML
     private Spinner<Double> durationSpinner;
 
+    @FXML
+    private TableView<PricerProduct> existingProductTable;
+
     private SubUtility utility;
 
     @Override
@@ -42,7 +46,6 @@ public class PricerController extends SubUtilityController {
 
     @Override
     public void onShutdown() {
-
     }
 
     @Override
@@ -69,6 +72,13 @@ public class PricerController extends SubUtilityController {
             calculate();
         });
         backButton.setOnAction(_ -> utility.stop());
+
+        setupExistingProductTable();
+    }
+
+    private void setupExistingProductTable() {
+        existingProductTable.getColumns().clear();
+
     }
 
     public void calculate() {

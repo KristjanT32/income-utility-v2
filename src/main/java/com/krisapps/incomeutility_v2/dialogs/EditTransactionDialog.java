@@ -14,7 +14,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
-import java.time.*;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
@@ -105,11 +105,11 @@ public class EditTransactionDialog extends IncomeUtilityDialog<Transaction> {
         refreshCategorySelector();
 
         transactionTypeSelector.setValue(outputTransaction.getType());
-        categorySelector.setValue(outputTransaction.getType().getDisplayName());
+        categorySelector.setValue(DataManager.Formatting.capitalize(outputTransaction.getCategory().name()));
+        customCategoryField.setText(outputTransaction.getCustomCategory());
         dateSelector.setValue(outputTransaction.getTimestamp().toLocalDate());
         timeField.setText(outputTransaction.getTimestamp().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         commentField.setText(outputTransaction.getComment());
-        customCategoryField.setText(outputTransaction.getCustomCategory());
         amountField.setText(DataManager.Formatting.formatMoney(outputTransaction.getAbsoluteAmount()));
 
         switch (outputTransaction.getType()) {
@@ -218,6 +218,7 @@ public class EditTransactionDialog extends IncomeUtilityDialog<Transaction> {
         });
 
         categorySelector.valueProperty().addListener((o, oldVal, newVal) -> {
+            if (newVal.trim().isBlank()) return;
             try {
                 outputTransaction.setCategory(TransactionCategory.valueOf(newVal.toUpperCase().replace(' ', '_')));
 
