@@ -445,13 +445,73 @@ public class DataManager {
     //<editor-fold desc="Data access">
 
     public HashSet<Account> getAccounts() {
-        Data d = getData();
-        return new HashSet<>(d.accounts.values());
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM accounts;");
+
+            ResultSet response = stmt.executeQuery();
+            HashSet<Account> out = new HashSet<>();
+            while (response.next()) {
+                out.add(new Account(
+                        UUID.fromString(response.getString("uuid")),
+                        response.getString("name"),
+                        response.getDouble("initial_balance"),
+                        new CurrencyConfig(
+                                response.getString("currency_symbol"),
+                                response.getBoolean("currency_is_prefix")
+                        ),
+                        Account.Type.valueOf(response.getString("type")),
+                        response.getBoolean("is_default")
+                ));
+            }
+            return out;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying accounts. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+        return new HashSet<>();
     }
 
     public Optional<Account> getAccount(UUID accountId) {
-        Data d = getData();
-        return Optional.ofNullable(d.accounts.get(accountId));
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        if (accountId == null) {
+            return Optional.empty();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM accounts WHERE uuid = ?;");
+            stmt.setString(1, accountId.toString());
+
+
+            ResultSet response = stmt.executeQuery();
+            if (response.next()) {
+                return Optional.of(new Account(
+                        UUID.fromString(response.getString("uuid")),
+                        response.getString("name"),
+                        response.getDouble("initial_balance"),
+                        new CurrencyConfig(
+                                response.getString("currency_symbol"),
+                                response.getBoolean("currency_is_prefix")
+                        ),
+                        Account.Type.valueOf(response.getString("type")),
+                        response.getBoolean("is_default")
+                ));
+            } else {
+                return Optional.empty();
+            }
+
+
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying account data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+        return Optional.empty();
     }
 
     public HashMap<UUID, Transaction> getAllTransactions() {

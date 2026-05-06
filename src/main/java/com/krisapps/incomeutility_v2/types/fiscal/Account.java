@@ -22,6 +22,15 @@ public class Account {
         this.currencyConfig = currencyConfig;
     }
 
+    public Account(UUID id, String name, double initialBalance, CurrencyConfig currencyConfig, Account.Type type, boolean isDefault) {
+        this.id = id;
+        this.name = name;
+        this.initialBalance = initialBalance;
+        this.currencyConfig = currencyConfig;
+        this.type = type;
+        this.isDefault = isDefault;
+    }
+
     public String getName() {
         return name;
     }
