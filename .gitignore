@@ -3,6 +3,8 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .kotlin
+.idea/PMDPlugin.xml
+.idea/db-forest-config.xml
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
