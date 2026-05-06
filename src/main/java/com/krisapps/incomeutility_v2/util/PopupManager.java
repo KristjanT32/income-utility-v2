@@ -2,6 +2,7 @@ package com.krisapps.incomeutility_v2.util;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.IncomeUtilityController;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -15,6 +16,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 @SuppressWarnings("ConstantConditions")
 public class PopupManager {
@@ -61,6 +64,23 @@ public class PopupManager {
         return a.showAndWait();
     }
 
+    public static Optional<ButtonType> showConfirmationAsync(String title, String message, ButtonType optionA, ButtonType optionB) {
+        if (Platform.isFxApplicationThread()) {
+            return showConfirmation(title, message, optionA, optionB);
+        } else {
+            FutureTask<Optional<ButtonType>> task = new FutureTask<>(() -> showConfirmation(title, message, optionA, optionB));
+            Platform.runLater(task);
+
+            try {
+                return task.get();
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     public static Optional<ButtonType> showChoicePopup(String title, String message, ButtonType... options) {
         if (Arrays.stream(options).noneMatch(type -> type.getButtonData().isCancelButton())) {
             throw new IllegalArgumentException("Cannot show a confirmation dialog without a cancel option - please ensure that either optionA or optionB is a cancellation ButtonType");
@@ -78,23 +98,26 @@ public class PopupManager {
     }
 
     public static void showPopup(String title, String message, Alert.AlertType type) {
-        Alert alert = new Alert(null);
-        alert.getDialogPane().getStylesheets().add(IncomeUtilityController.class.getResource("stylesheets/core-ui.css").toExternalForm());
-        alert.setTitle(title);
-        alert.setContentText(message);
-        alert.setAlertType(type);
-        alert.setHeaderText(null);
+        Platform.runLater(() -> {
+            Alert alert = new Alert(null);
+            alert.getDialogPane().getStylesheets().add(IncomeUtilityController.class.getResource("stylesheets/core-ui.css").toExternalForm());
+            alert.setTitle(title);
+            alert.setContentText(message);
+            alert.setAlertType(type);
+            alert.setHeaderText(null);
 
-        switch (type) {
-            case NONE -> {
+            switch (type) {
+                case NONE -> {
+                }
+                case INFORMATION -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(INFO_ICON);
+                case WARNING -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(WARNING_ICON);
+                case CONFIRMATION ->
+                        ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(CONFIRMATION_ICON);
+                case ERROR -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ERROR_ICON);
             }
-            case INFORMATION -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(INFO_ICON);
-            case WARNING -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(WARNING_ICON);
-            case CONFIRMATION -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(CONFIRMATION_ICON);
-            case ERROR -> ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ERROR_ICON);
-        }
 
-        alert.showAndWait();
+            alert.showAndWait();
+        });
     }
 
     public static String showInputDialog(String title, String message, String inputLabel, @Nullable String inputValue) {
