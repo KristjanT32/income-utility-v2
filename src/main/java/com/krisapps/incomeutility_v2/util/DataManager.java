@@ -4,23 +4,33 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.ToNumberPolicy;
 import com.google.gson.stream.JsonReader;
+import com.krisapps.incomeutility_v2.dialogs.LoadingDialog;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
+import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTimeTypeAdapter;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTypeAdapter;
 import com.krisapps.incomeutility_v2.util.misc.TransactionDeserializer;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.*;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 public class DataManager {
@@ -33,9 +43,11 @@ public class DataManager {
             .create();
     private static DataManager instance;
     private final File dataFile = new File(System.getProperty("user.home") + File.separator + "IncomeUtility v2" + File.separator + "data.json");
+    private final Path databaseFilePath = Paths.get(System.getProperty("user.home") + File.separator + "IncomeUtility v2" + File.separator + "data.db");
     private boolean isSaving = false;
 
     private Data currentData;
+    private Connection currentConnection;
 
     private DataManager() {
     }
@@ -61,6 +73,12 @@ public class DataManager {
 
     public void initialize() {
         loadData();
+
+        if (currentConnection != null) {
+            log("DataManager#initialize has been called after initialization - a new DB connection will not be opened.", Level.WARNING);
+        } else {
+            currentConnection = getDatabaseConnection();
+        }
     }
 
     private void firstTimeFileSetup() {
@@ -160,6 +178,269 @@ public class DataManager {
         currentData = getData();
         log("Done.");
     }
+
+    private Connection getDatabaseConnection() {
+        try {
+            log("Database connection ready!");
+            return DriverManager.getConnection("jdbc:sqlite:" + databaseFilePath);
+        } catch (SQLException e) {
+            Platform.runLater(() -> {
+                PopupManager.showPopup("Database initialization error!", "The following error was encountered when initializing the database:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            });
+        }
+        return null;
+    }
+
+    //<editor-fold desc="Migration">
+
+    public void migrateJSONDataToSQL() {
+
+        // Copy transactions
+        try {
+            currentConnection.setAutoCommit(false);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        AtomicBoolean success = new AtomicBoolean(false);
+
+        Platform.runLater(() -> {
+            LoadingDialog dlg = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
+            dlg.setPrimaryLabel("Data migration in progress");
+            dlg.setSecondaryLabel("Preparing for migration, please wait...");
+            dlg.show("JSON -> SQLite Data Migration Process", () -> {
+                dlg.setSecondaryLabel("Copying custom transactions...");
+                boolean categoriesCopied = copyCategories(dlg);
+                if (!categoriesCopied) {
+                    PopupManager.showPopup("Category migration failed!", "Errors were encountered while migrating custom transaction categories. Check the logs for more info.", Alert.AlertType.ERROR);
+                    return;
+                } else {
+                    Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Transaction categories have been successfully copied. Proceed to copy transactions?",
+                            new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
+                            new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                    );
+
+                    if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
+                        try {
+                            currentConnection.rollback();
+                            return;
+                        } catch (SQLException e) {
+                            PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                        }
+                        return;
+                    }
+
+                    try {
+                        currentConnection.commit();
+                    } catch (SQLException e) {
+                        PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                    }
+                }
+
+                dlg.setSecondaryLabel("Copying transactions...");
+                boolean transactionsCopied = copyTransactions(dlg);
+                if (!transactionsCopied) {
+                    PopupManager.showPopup("Transaction migration failed!", "Errors were encountered while migrating transactions. Check the logs for more info.", Alert.AlertType.ERROR);
+                    return;
+                } else {
+                    Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Transactions have been successfully copied. Proceed to copy accounts?",
+                            new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
+                            new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                    );
+
+                    if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
+                        try {
+                            currentConnection.rollback();
+                            return;
+                        } catch (SQLException e) {
+                            PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                        }
+                        return;
+                    }
+
+                    try {
+                        currentConnection.commit();
+                    } catch (SQLException e) {
+                        PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                    }
+                }
+
+                dlg.setSecondaryLabel("Copying accounts...");
+                boolean accountsCopied = copyAccounts(dlg);
+                if (!accountsCopied) {
+                    PopupManager.showPopup("Account migration failed!", "Errors were encountered while migrating accounts. Check the logs for more info.", Alert.AlertType.ERROR);
+                    return;
+                } else {
+                    Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Accounts categories have been successfully copied. Proceed to clean up?",
+                            new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
+                            new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                    );
+
+                    if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
+                        try {
+                            currentConnection.rollback();
+                            return;
+                        } catch (SQLException e) {
+                            PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                        }
+                    }
+
+                    try {
+                        currentConnection.commit();
+                    } catch (SQLException e) {
+                        PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                    }
+                }
+                success.set(true);
+            });
+
+            if (success.get()) {
+                PopupManager.showPopup("Migration finished!", "All data has been successfully copied to the SQLite DB. Yay!", Alert.AlertType.INFORMATION);
+            } else {
+                PopupManager.showPopup("Migration failed!", "Migration was terminated due to one or more errors. Check logs for more info.", Alert.AlertType.ERROR);
+            }
+        });
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private int getCustomCategoryId(String customCategory) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        PreparedStatement stmt;
+        try {
+            stmt = currentConnection.prepareStatement("SELECT id FROM transaction_categories WHERE display_name = ?;");
+            stmt.setString(1, customCategory);
+            ResultSet response = stmt.executeQuery();
+            return response.getInt("id");
+        } catch (SQLException e) {
+            log("Failed to prepare SQL statement! Error: " + e.getMessage(), Level.SEVERE);
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    private boolean copyCategories(LoadingDialog progressDialog) {
+        PreparedStatement stmt = null;
+        try {
+            stmt = currentConnection.prepareStatement("INSERT INTO transaction_categories (display_name) VALUES (?);");
+        } catch (SQLException e) {
+            PopupManager.showPopup("SQL exception during category migration!", "Failed to construct query! Error: " + e.getMessage(), Alert.AlertType.ERROR);
+            return false;
+        }
+
+        try {
+            for (String category : currentData.getCustomTransactionCategories()) {
+                progressDialog.setSecondaryLabel("Copying transaction category: " + category);
+                stmt.setString(1, category);
+                stmt.execute();
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return true;
+        } catch (SQLException e) {
+            PopupManager.showPopup("SQL exception during category migration!", "The following error occurred when migrating custom transaction categories: " + e.getMessage(), Alert.AlertType.ERROR);
+            return false;
+        }
+    }
+
+    private boolean copyAccounts(LoadingDialog progressDialog) {
+        PreparedStatement stmt = null;
+        try {
+            stmt = currentConnection.prepareStatement("INSERT INTO accounts (uuid, name, initial_balance, type, is_default, currency_symbol, currency_is_prefix) VALUES (?, ?, ?, ?, ?, ?, ?);");
+        } catch (SQLException e) {
+            PopupManager.showPopup("SQL exception during account migration!", "Failed to construct query! Error: " + e.getMessage(), Alert.AlertType.ERROR);
+            return false;
+        }
+
+        try {
+            for (Account account : currentData.getAccounts().values()) {
+                progressDialog.setSecondaryLabel("Copying account: " + account.getName());
+                stmt.setString(1, account.getId().toString());
+                stmt.setString(2, account.getName());
+                stmt.setDouble(3, account.getInitialBalance());
+                stmt.setString(4, account.getType().name());
+                stmt.setBoolean(5, account.isDefault());
+                stmt.setString(6, account.getCurrencyConfig().getCurrencySymbol());
+                stmt.setBoolean(7, account.getCurrencyConfig().isCurrencySymbolPrefix());
+                stmt.execute();
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return true;
+        } catch (SQLException e) {
+            PopupManager.showPopup("SQL exception during account migration!", "The following error occurred when migrating accounts: " + e.getMessage(), Alert.AlertType.ERROR);
+            return false;
+        }
+    }
+
+    private boolean copyTransactions(LoadingDialog progressDialog) {
+        PreparedStatement transactionStatement;
+        try {
+            transactionStatement = currentConnection.prepareStatement(
+                    "INSERT INTO transactions (uuid, cashewTransactionId, type, amount, sourceAccountId, targetAccountId, cashewSourceAccountId, cashewTargetAccountId, category, customCategoryId, comment, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+            );
+        } catch (SQLException e) {
+            Platform.runLater(() -> {
+                PopupManager.showPopup("SQL exception during transaction migration!", "Failed to construct query! Error: " + e.getMessage(), Alert.AlertType.ERROR);
+            });
+            return false;
+        }
+
+        try {
+            for (Map.Entry<UUID, Transaction> t : currentData.transactions.entrySet()) {
+                progressDialog.setSecondaryLabel("Copying transaction: " + t.getKey());
+                if (t.getValue() instanceof CashewTransaction asCashew) {
+                    transactionStatement.setString(1, asCashew.getId().toString());
+                    transactionStatement.setString(2, asCashew.getCashewTransactionId());
+                    transactionStatement.setString(3, asCashew.getType().toString());
+                    transactionStatement.setDouble(4, asCashew.getAmount());
+                    transactionStatement.setString(5, asCashew.getSourceAccountId() != null ? asCashew.getSourceAccountId().toString() : null);
+                    transactionStatement.setString(6, asCashew.getTargetAccountId() != null ? asCashew.getTargetAccountId().toString() : null);
+                    transactionStatement.setString(7, asCashew.getCashewSourceAccount());
+                    transactionStatement.setString(8, asCashew.getCashewTargetAccount());
+                    transactionStatement.setString(9, asCashew.getCategory().name());
+                    transactionStatement.setInt(10, getCustomCategoryId(asCashew.getCustomCategory()));
+                    transactionStatement.setString(11, asCashew.getComment());
+                    transactionStatement.setTimestamp(12, Timestamp.valueOf(asCashew.getTimestamp()));
+                } else {
+                    transactionStatement.setString(1, t.getValue().getId().toString());
+                    transactionStatement.setString(2, null);
+                    transactionStatement.setString(3, t.getValue().getType().toString());
+                    transactionStatement.setDouble(4, t.getValue().getAmount());
+                    transactionStatement.setString(5, t.getValue().getSourceAccountId() != null ? t.getValue().getSourceAccountId().toString() : null);
+                    transactionStatement.setString(6, t.getValue().getTargetAccountId() != null ? t.getValue().getTargetAccountId().toString() : null);
+                    transactionStatement.setString(7, null);
+                    transactionStatement.setString(8, null);
+                    transactionStatement.setString(9, t.getValue().getCategory().name());
+                    transactionStatement.setInt(10, getCustomCategoryId(t.getValue().getCustomCategory()));
+                    transactionStatement.setString(11, t.getValue().getComment());
+                    transactionStatement.setTimestamp(12, Timestamp.valueOf(t.getValue().getTimestamp()));
+                }
+                transactionStatement.execute();
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return true;
+        } catch (SQLException e) {
+            Platform.runLater(() -> {
+                PopupManager.showPopup("SQL exception transaction migration!", "The following error occurred when migrating transactions: " + e.getMessage(), Alert.AlertType.ERROR);
+            });
+            return false;
+        }
+    }
+
+    //</editor-fold>
 
     //<editor-fold desc="Data access">
 

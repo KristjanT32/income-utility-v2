@@ -154,6 +154,7 @@ public class MoneyFlowUtilityController extends SubUtilityController {
                     });
                 }
             }
+            case "migration" -> data.migrateJSONDataToSQL();
             case "refresh" -> refreshUI();
             case "exit" -> utility.stop();
             default -> PopupManager.showPopup("Unknown utility command", "'" + command + "' is not a valid utility command.", Alert.AlertType.ERROR);
