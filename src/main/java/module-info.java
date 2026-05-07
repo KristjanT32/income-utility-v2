@@ -23,6 +23,7 @@ module com.krisapps.incomeutility_v2 {
 
     exports com.krisapps.incomeutility_v2;
     exports com.krisapps.incomeutility_v2.types.transaction;
+    exports com.krisapps.incomeutility_v2.types.fiscal;
     opens com.krisapps.incomeutility_v2.util.services to com.google.gson;
     opens com.krisapps.incomeutility_v2.types.fiscal.cashew to com.google.gson;
     exports com.krisapps.incomeutility_v2.util;
