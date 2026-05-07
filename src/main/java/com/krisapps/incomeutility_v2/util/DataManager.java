@@ -9,6 +9,8 @@ import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
+import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
+import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTimeTypeAdapter;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTypeAdapter;
 import com.krisapps.incomeutility_v2.util.misc.TransactionDeserializer;
@@ -310,7 +312,7 @@ public class DataManager {
 
         PreparedStatement stmt;
         try {
-            stmt = currentConnection.prepareStatement("SELECT id FROM transaction_categories WHERE display_name = ?;");
+            stmt = currentConnection.prepareStatement("SELECT id FROM transaction_categories WHERE displayName = ?;");
             stmt.setString(1, customCategory);
             ResultSet response = stmt.executeQuery();
             return response.getInt("id");
@@ -324,7 +326,7 @@ public class DataManager {
     private boolean copyCategories(LoadingDialog progressDialog) {
         PreparedStatement stmt = null;
         try {
-            stmt = currentConnection.prepareStatement("INSERT INTO transaction_categories (display_name) VALUES (?);");
+            stmt = currentConnection.prepareStatement("INSERT INTO transaction_categories (displayName) VALUES (?);");
         } catch (SQLException e) {
             PopupManager.showPopup("SQL exception during category migration!", "Failed to construct query! Error: " + e.getMessage(), Alert.AlertType.ERROR);
             return false;
@@ -351,7 +353,7 @@ public class DataManager {
     private boolean copyAccounts(LoadingDialog progressDialog) {
         PreparedStatement stmt = null;
         try {
-            stmt = currentConnection.prepareStatement("INSERT INTO accounts (uuid, name, initial_balance, type, is_default, currency_symbol, currency_is_prefix) VALUES (?, ?, ?, ?, ?, ?, ?);");
+            stmt = currentConnection.prepareStatement("INSERT INTO accounts (uuid, name, initialBalance, type, isDefault, currencySymbol, currencyIsPrefixed) VALUES (?, ?, ?, ?, ?, ?, ?);");
         } catch (SQLException e) {
             PopupManager.showPopup("SQL exception during account migration!", "Failed to construct query! Error: " + e.getMessage(), Alert.AlertType.ERROR);
             return false;
@@ -409,7 +411,7 @@ public class DataManager {
                     transactionStatement.setString(9, asCashew.getCategory().name());
                     transactionStatement.setInt(10, getCustomCategoryId(asCashew.getCustomCategory()));
                     transactionStatement.setString(11, asCashew.getComment());
-                    transactionStatement.setTimestamp(12, Timestamp.valueOf(asCashew.getTimestamp()));
+                    transactionStatement.setString(12, Timestamp.valueOf(asCashew.getTimestamp()).toString());
                 } else {
                     transactionStatement.setString(1, t.getValue().getId().toString());
                     transactionStatement.setString(2, null);
@@ -422,7 +424,7 @@ public class DataManager {
                     transactionStatement.setString(9, t.getValue().getCategory().name());
                     transactionStatement.setInt(10, getCustomCategoryId(t.getValue().getCustomCategory()));
                     transactionStatement.setString(11, t.getValue().getComment());
-                    transactionStatement.setTimestamp(12, Timestamp.valueOf(t.getValue().getTimestamp()));
+                    transactionStatement.setString(12, Timestamp.valueOf(t.getValue().getTimestamp()).toString());
                 }
                 transactionStatement.execute();
                 try {
@@ -442,7 +444,48 @@ public class DataManager {
 
     //</editor-fold>
 
+
     //<editor-fold desc="Data access">
+
+    private Transaction mapResultSetToTransaction(ResultSet row) throws SQLException {
+        UUID uuid = UUID.fromString(row.getString("uuid"));
+        TransactionType type = TransactionType.valueOf(row.getString("type"));
+        String cashewTransactionId = row.getString("cashewTransactionId");
+
+        Transaction t = null;
+        switch (type) {
+            case DEPOSIT, WITHDRAWAL -> t = new Transaction(
+                    type,
+                    row.getDouble("amount"),
+                    UUID.fromString(row.getString("targetAccountId")),
+                    Timestamp.valueOf(row.getString("timestamp")).toLocalDateTime(),
+                    TransactionCategory.valueOf(row.getString("category")),
+                    row.getString("displayName"),
+                    row.getString("comment"),
+                    uuid
+            );
+            case TRANSFER -> t = new Transaction(
+                    type,
+                    row.getDouble("amount"),
+                    UUID.fromString(row.getString("sourceAccountId")),
+                    UUID.fromString(row.getString("targetAccountId")),
+                    Timestamp.valueOf(row.getString("timestamp")).toLocalDateTime(),
+                    TransactionCategory.valueOf(row.getString("category")),
+                    row.getString("displayName"),
+                    row.getString("comment"),
+                    uuid
+            );
+        }
+        if (cashewTransactionId != null) {
+            t = CashewTransaction.of(
+                    t,
+                    cashewTransactionId,
+                    row.getString("cashewSourceAccountId"),
+                    row.getString("cashewTargetAccountId")
+            );
+        }
+        return t;
+    }
 
     public HashSet<Account> getAccounts() {
         if (currentConnection == null) {
@@ -458,13 +501,13 @@ public class DataManager {
                 out.add(new Account(
                         UUID.fromString(response.getString("uuid")),
                         response.getString("name"),
-                        response.getDouble("initial_balance"),
+                        response.getDouble("initialBalance"),
                         new CurrencyConfig(
-                                response.getString("currency_symbol"),
-                                response.getBoolean("currency_is_prefix")
+                                response.getString("currencySymbol"),
+                                response.getBoolean("currencyIsPrefixed")
                         ),
                         Account.Type.valueOf(response.getString("type")),
-                        response.getBoolean("is_default")
+                        response.getBoolean("isDefault")
                 ));
             }
             return out;
@@ -494,13 +537,13 @@ public class DataManager {
                 return Optional.of(new Account(
                         UUID.fromString(response.getString("uuid")),
                         response.getString("name"),
-                        response.getDouble("initial_balance"),
+                        response.getDouble("initialBalance"),
                         new CurrencyConfig(
-                                response.getString("currency_symbol"),
-                                response.getBoolean("currency_is_prefix")
+                                response.getString("currencySymbol"),
+                                response.getBoolean("currencyIsPrefixed")
                         ),
                         Account.Type.valueOf(response.getString("type")),
-                        response.getBoolean("is_default")
+                        response.getBoolean("isDefault")
                 ));
             } else {
                 return Optional.empty();
@@ -514,9 +557,26 @@ public class DataManager {
         return Optional.empty();
     }
 
-    public HashMap<UUID, Transaction> getAllTransactions() {
-        Data d = getData();
-        return d.getTransactions();
+    public HashMap<UUID, ? extends Transaction> getAllTransactions() {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id;");
+
+            ResultSet response = stmt.executeQuery();
+            HashMap<UUID, Transaction> out = new HashMap<>();
+            while (response.next()) {
+                Transaction t = mapResultSetToTransaction(response);
+                out.put(t.getId(), t);
+            }
+            return out;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+        return new HashMap<>();
     }
 
     public List<Transaction> getTransactions(Account account) {
@@ -524,18 +584,79 @@ public class DataManager {
     }
 
     public List<Transaction> getTransactions(UUID accountId) {
-        Data d = getData();
-        return d.transactions.values().stream().filter(t -> t.isRelated(accountId)).toList();
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE sourceAccountId = ? OR targetAccountId = ?;");
+            stmt.setString(1, accountId.toString());
+            stmt.setString(2, accountId.toString());
+
+            ResultSet response = stmt.executeQuery();
+            List<Transaction> out = new ArrayList<>();
+            while (response.next()) {
+                Transaction t = mapResultSetToTransaction(response);
+                out.add(t);
+            }
+            return out;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
     public Optional<Transaction> getTransaction(UUID transactionId) {
-        Data d = getData();
-        return Optional.ofNullable(d.transactions.get(transactionId));
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        if (transactionId == null) {
+            return Optional.empty();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions WHERE uuid = ?;");
+            stmt.setString(1, transactionId.toString());
+
+
+            ResultSet response = stmt.executeQuery();
+            if (response.next()) {
+                return Optional.of(mapResultSetToTransaction(response));
+            } else {
+                return Optional.empty();
+            }
+
+
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transaction data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+        return Optional.empty();
     }
 
     public ArrayList<String> getCustomTransactionCategories() {
-        Data d = getData();
-        return d.customTransactionCategories;
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT displayName FROM transaction_categories;");
+
+            ResultSet response = stmt.executeQuery();
+            ArrayList<String> categories = new ArrayList<>();
+            while (response.next()) {
+                categories.add(response.getString("displayName"));
+            }
+
+            return categories;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+
     }
 
     public Optional<UUID> getLastActiveAccount() {

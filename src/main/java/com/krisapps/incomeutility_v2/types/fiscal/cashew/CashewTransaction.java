@@ -35,6 +35,23 @@ public class CashewTransaction extends Transaction {
         this.cashewTransactionId = cashewTransactionId;
     }
 
+    public static CashewTransaction of(Transaction t, String cashewTransactionId, String cashewSourceAccount, String cashewTargetAccount) {
+        return new CashewTransaction(
+                t.getType(),
+                t.getAmount(),
+                t.getSourceAccountId(),
+                t.getTargetAccountId(),
+                t.getTimestamp(),
+                t.getCategory(),
+                t.getCustomCategory(),
+                t.getComment(),
+                t.getId(),
+                cashewTransactionId,
+                cashewSourceAccount,
+                cashewTargetAccount
+        );
+    }
+
     public CashewTransaction() {
         super();
     }
