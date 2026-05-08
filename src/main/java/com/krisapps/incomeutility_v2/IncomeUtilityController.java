@@ -17,7 +17,9 @@ import javafx.scene.layout.*;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class IncomeUtilityController {
 
@@ -145,6 +147,9 @@ public class IncomeUtilityController {
         AddAccountWizard wizard = new AddAccountWizard();
         Optional<Account> account = wizard.showAndWait();
 
-        account.ifPresent(data::addAccount);
+        account.ifPresent(a -> {
+            data.addAccount(a);
+            refreshAccountView();
+        });
     }
 }

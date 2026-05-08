@@ -68,6 +68,7 @@ public class AccountInfoDialog extends IncomeUtilityDialog<Void>{
                         TransactionService.getInstance().deleteTransactionsFor(account);
                     });
                 }
+                close();
             });
         });
     }
