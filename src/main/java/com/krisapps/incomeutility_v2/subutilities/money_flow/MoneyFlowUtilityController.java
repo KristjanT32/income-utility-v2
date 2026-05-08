@@ -154,6 +154,9 @@ public class MoneyFlowUtilityController extends SubUtilityController {
                     });
                 }
             }
+            case "find" -> {
+                // TODO: Implement
+            }
             case "migration" -> data.migrateJSONDataToSQL();
             case "refresh" -> refreshUI();
             case "exit" -> utility.stop();

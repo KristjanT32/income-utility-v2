@@ -196,8 +196,6 @@ public class DataManager {
     //<editor-fold desc="Migration">
 
     public void migrateJSONDataToSQL() {
-
-        // Copy transactions
         try {
             currentConnection.setAutoCommit(false);
         } catch (SQLException e) {
@@ -206,101 +204,109 @@ public class DataManager {
 
         AtomicBoolean success = new AtomicBoolean(false);
 
-        Platform.runLater(() -> {
-            LoadingDialog dlg = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
-            dlg.setPrimaryLabel("Data migration in progress");
-            dlg.setSecondaryLabel("Preparing for migration, please wait...");
-            dlg.show("JSON -> SQLite Data Migration Process", () -> {
-                dlg.setSecondaryLabel("Copying custom transactions...");
-                boolean categoriesCopied = copyCategories(dlg);
-                if (!categoriesCopied) {
-                    PopupManager.showPopup("Category migration failed!", "Errors were encountered while migrating custom transaction categories. Check the logs for more info.", Alert.AlertType.ERROR);
-                    return;
-                } else {
-                    Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Transaction categories have been successfully copied. Proceed to copy transactions?",
-                            new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
-                            new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
-                    );
-
-                    if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
-                        try {
-                            currentConnection.rollback();
+        PopupManager.showConfirmationAsync("Begin data migration?", "Would you like to begin the JSON to SQL data migration process? This will copy all data from the data.json file and transform it into data storable in a SQLite database.\nThe process takes around a minute at most.\n\nProceed?",
+                new ButtonType("Start migration", ButtonBar.ButtonData.APPLY),
+                new ButtonType("No, not now", ButtonBar.ButtonData.CANCEL_CLOSE)
+        ).ifPresent(choice -> {
+            if (choice.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                Platform.runLater(() -> {
+                    LoadingDialog dlg = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
+                    dlg.setPrimaryLabel("Data migration in progress");
+                    dlg.setSecondaryLabel("Preparing for migration, please wait...");
+                    dlg.show("JSON -> SQLite Data Migration Process", () -> {
+                        dlg.setSecondaryLabel("Copying custom transactions...");
+                        boolean categoriesCopied = copyCategories(dlg);
+                        if (!categoriesCopied) {
+                            PopupManager.showPopup("Category migration failed!", "Errors were encountered while migrating custom transaction categories. Check the logs for more info.", Alert.AlertType.ERROR);
                             return;
-                        } catch (SQLException e) {
-                            PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                        } else {
+                            Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Transaction categories have been successfully copied. Proceed to copy transactions?",
+                                    new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
+                                    new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                            );
+
+                            if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
+                                try {
+                                    currentConnection.rollback();
+                                    return;
+                                } catch (SQLException e) {
+                                    PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                                }
+                                return;
+                            }
+
+                            try {
+                                currentConnection.commit();
+                            } catch (SQLException e) {
+                                PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                            }
                         }
-                        return;
-                    }
 
-                    try {
-                        currentConnection.commit();
-                    } catch (SQLException e) {
-                        PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
-                    }
-                }
-
-                dlg.setSecondaryLabel("Copying transactions...");
-                boolean transactionsCopied = copyTransactions(dlg);
-                if (!transactionsCopied) {
-                    PopupManager.showPopup("Transaction migration failed!", "Errors were encountered while migrating transactions. Check the logs for more info.", Alert.AlertType.ERROR);
-                    return;
-                } else {
-                    Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Transactions have been successfully copied. Proceed to copy accounts?",
-                            new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
-                            new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
-                    );
-
-                    if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
-                        try {
-                            currentConnection.rollback();
+                        dlg.setSecondaryLabel("Copying transactions...");
+                        boolean transactionsCopied = copyTransactions(dlg);
+                        if (!transactionsCopied) {
+                            PopupManager.showPopup("Transaction migration failed!", "Errors were encountered while migrating transactions. Check the logs for more info.", Alert.AlertType.ERROR);
                             return;
-                        } catch (SQLException e) {
-                            PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                        } else {
+                            Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Transactions have been successfully copied. Proceed to copy accounts?",
+                                    new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
+                                    new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                            );
+
+                            if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
+                                try {
+                                    currentConnection.rollback();
+                                    return;
+                                } catch (SQLException e) {
+                                    PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                                }
+                                return;
+                            }
+
+                            try {
+                                currentConnection.commit();
+                            } catch (SQLException e) {
+                                PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                            }
                         }
-                        return;
-                    }
 
-                    try {
-                        currentConnection.commit();
-                    } catch (SQLException e) {
-                        PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
-                    }
-                }
-
-                dlg.setSecondaryLabel("Copying accounts...");
-                boolean accountsCopied = copyAccounts(dlg);
-                if (!accountsCopied) {
-                    PopupManager.showPopup("Account migration failed!", "Errors were encountered while migrating accounts. Check the logs for more info.", Alert.AlertType.ERROR);
-                    return;
-                } else {
-                    Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Accounts categories have been successfully copied. Proceed to clean up?",
-                            new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
-                            new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
-                    );
-
-                    if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
-                        try {
-                            currentConnection.rollback();
+                        dlg.setSecondaryLabel("Copying accounts...");
+                        boolean accountsCopied = copyAccounts(dlg);
+                        if (!accountsCopied) {
+                            PopupManager.showPopup("Account migration failed!", "Errors were encountered while migrating accounts. Check the logs for more info.", Alert.AlertType.ERROR);
                             return;
-                        } catch (SQLException e) {
-                            PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                        } else {
+                            Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Accounts have been successfully copied. Proceed to clean up?",
+                                    new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
+                                    new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                            );
+
+                            if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
+                                try {
+                                    currentConnection.rollback();
+                                    return;
+                                } catch (SQLException e) {
+                                    PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                                }
+                            }
+
+                            try {
+                                currentConnection.commit();
+                            } catch (SQLException e) {
+                                PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                            }
                         }
-                    }
+                        success.set(true);
+                    });
 
-                    try {
-                        currentConnection.commit();
-                    } catch (SQLException e) {
-                        PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
+                    if (success.get()) {
+                        PopupManager.showPopup("Migration finished!", "All data has been successfully copied to the SQLite DB.\n\nFor the changes to take effect, please restart Income Utility.", Alert.AlertType.INFORMATION);
+                    } else {
+                        PopupManager.showPopup("Migration failed!", "Migration was terminated due to one or more errors. Check logs for more info.", Alert.AlertType.ERROR);
                     }
-                }
-                success.set(true);
-            });
-
-            if (success.get()) {
-                PopupManager.showPopup("Migration finished!", "All data has been successfully copied to the SQLite DB. Yay!", Alert.AlertType.INFORMATION);
-            } else {
-                PopupManager.showPopup("Migration failed!", "Migration was terminated due to one or more errors. Check logs for more info.", Alert.AlertType.ERROR);
+                });
             }
+
         });
     }
 
@@ -333,6 +339,8 @@ public class DataManager {
         }
 
         try {
+            currentConnection.prepareStatement("INSERT INTO transaction_categories (id, displayName) VALUES (0, 'No custom category');").execute();
+
             for (String category : currentData.getCustomTransactionCategories()) {
                 progressDialog.setSecondaryLabel("Copying transaction category: " + category);
                 stmt.setString(1, category);
@@ -589,7 +597,7 @@ public class DataManager {
         }
 
         try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE sourceAccountId = ? OR targetAccountId = ?;");
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE (sourceAccountId = ? OR targetAccountId = ?);");
             stmt.setString(1, accountId.toString());
             stmt.setString(2, accountId.toString());
 
@@ -617,9 +625,8 @@ public class DataManager {
         }
 
         try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions WHERE uuid = ?;");
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE uuid = ?;");
             stmt.setString(1, transactionId.toString());
-
 
             ResultSet response = stmt.executeQuery();
             if (response.next()) {
@@ -659,6 +666,91 @@ public class DataManager {
 
     }
 
+    public boolean customTransactionCategoryExists(String category) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "SELECT COUNT(*) FROM transaction_categories WHERE (displayName = ? or displayName LIKE ?);"
+            );
+            statement.setString(1, category);
+            statement.setString(2, category);
+
+            ResultSet set = statement.executeQuery();
+
+            return set.getInt(1) > 0;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return false;
+    }
+
+    public boolean transactionExists(Account source, Transaction t) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "SELECT COUNT(*) FROM transactions WHERE (sourceAccountId = ? OR targetAccountId = ?) AND uuid = ?"
+            );
+            statement.setString(1, source.getId().toString());
+            statement.setString(2, source.getId().toString());
+            statement.setString(3, t.getId().toString());
+
+            ResultSet set = statement.executeQuery();
+
+            return set.getInt(1) > 0;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return false;
+    }
+
+    public boolean importedTransactionExists(Account source, CashewTransaction t) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "SELECT COUNT(*) FROM transactions WHERE (sourceAccountId = ? OR targetAccountId = ?) AND cashewTransactionId = ?"
+            );
+            statement.setString(1, source.getId().toString());
+            statement.setString(2, source.getId().toString());
+            statement.setString(3, t.getCashewTransactionId());
+
+            ResultSet set = statement.executeQuery();
+
+            return set.getInt(1) > 0;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return false;
+    }
+
+    public boolean accountExists(Account account) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "SELECT COUNT(*) FROM accounts WHERE uuid = ?;"
+            );
+            statement.setString(1, account.getId().toString());
+
+            ResultSet set = statement.executeQuery();
+
+            return set.getInt(1) > 0;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking account data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return false;
+    }
+
     public Optional<UUID> getLastActiveAccount() {
         Data d = getData();
         return d.getLastActiveAccountId();
@@ -668,54 +760,244 @@ public class DataManager {
 
     //<editor-fold desc="Data modification">
     public void addAccount(Account account) {
-        if (currentData == null) {
-            initialize();
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
         }
-        currentData.accounts.putIfAbsent(account.getId(), account);
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "INSERT INTO accounts (uuid, name, initialBalance, type, isDefault, currencySymbol, currencyIsPrefixed) VALUES (?, ?, ?, ?, ?, ?, ?);"
+            );
+
+            statement.setString(1, account.getId().toString());
+            statement.setString(2, account.getName());
+            statement.setDouble(3, account.getInitialBalance());
+            statement.setString(4, account.getType().name());
+            statement.setBoolean(5, account.isDefault());
+            statement.setString(6, account.getCurrencyConfig().getCurrencySymbol());
+            statement.setBoolean(7, account.getCurrencyConfig().isCurrencySymbolPrefix());
+
+            statement.execute();
+
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing account data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     public void updateAccount(UUID accountId, Account data) {
-        if (currentData == null) {
-            initialize();
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
         }
-        currentData.accounts.replace(accountId, data);
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "UPDATE accounts SET uuid = ?, name = ?,initialBalance = ?, type = ?, isDefault = ?, currencySymbol = ?, currencyIsPrefixed = ? WHERE uuid = ?;"
+            );
+            statement.setString(1, accountId.toString());
+            statement.setString(2, data.getName());
+            statement.setDouble(3, data.getInitialBalance());
+            statement.setString(4, data.getType().name());
+            statement.setBoolean(5, data.isDefault());
+            statement.setString(6, data.getCurrencyConfig().getCurrencySymbol());
+            statement.setBoolean(7, data.getCurrencyConfig().isCurrencySymbolPrefix());
+            statement.setString(8, accountId.toString());
+
+            statement.execute();
+
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while updating account data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     public void deleteAccount(UUID accountId) {
-        if (currentData == null) {
-            initialize();
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
         }
-        currentData.accounts.remove(accountId);
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "DELETE FROM accounts WHERE uuid = ?;"
+            );
+            statement.setString(1, accountId.toString());
+
+            statement.execute();
+
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while deleting account data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public int addCustomTransactionCategory(String category) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+
+            if (!customTransactionCategoryExists(category)) {
+                PreparedStatement statement = currentConnection.prepareStatement(
+                        "INSERT INTO transaction_categories (displayName) VALUES (?);"
+                );
+
+                statement.setString(1, category);
+                statement.execute();
+            }
+
+            PreparedStatement idQuery = currentConnection.prepareStatement("SELECT id FROM transaction_categories WHERE displayName = ? OR displayName LIKE ?;");
+            idQuery.setString(1, category);
+            idQuery.setString(2, category);
+
+            return idQuery.executeQuery().getInt(1);
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            return -1;
+        }
+    }
+
+    public void removeCustomTransactionCategory(String category) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "DELETE FROM transaction_categories WHERE displayName = ? OR displayName LIKE ?;"
+            );
+            statement.setString(1, category);
+            statement.setString(2, category);
+
+            statement.execute();
+
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
 
     public void addTransaction(Transaction transaction) {
-        if (currentData == null) {
-            initialize();
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
         }
-        currentData.transactions.putIfAbsent(transaction.getId(), transaction);
 
-        String customCategory = transaction.getCustomCategory();
-        if (!getCustomTransactionCategories().contains(customCategory)) {
-            if (!customCategory.trim().isBlank()) {
-                currentData.customTransactionCategories.add(transaction.getCustomCategory());
+        int customCategoryId = 0;
+        if (transaction.getCategory().equals(TransactionCategory.CUSTOM)) {
+            customCategoryId = addCustomTransactionCategory(transaction.getCustomCategory());
+        }
+
+        try {
+            if (CashewTransaction.isImported(transaction)) {
+                CashewTransaction cashew = (CashewTransaction) transaction;
+                PreparedStatement statement = currentConnection.prepareStatement(
+                        "INSERT INTO transactions (uuid, cashewTransactionId, type, amount, sourceAccountId, targetAccountId, cashewSourceAccountId, cashewTargetAccountId, category, customCategoryId, comment, timestamp)" +
+                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                );
+                statement.setString(1, cashew.getId().toString());
+                statement.setString(2, cashew.getCashewTransactionId());
+                statement.setString(3, cashew.getType().name());
+                statement.setDouble(4, cashew.getAmount());
+                statement.setString(5, cashew.getSourceAccountId() != null ? cashew.getSourceAccountId().toString() : null);
+                statement.setString(6, cashew.getTargetAccountId() != null ? cashew.getTargetAccountId().toString() : null);
+                statement.setString(7, cashew.getCashewSourceAccount());
+                statement.setString(8, cashew.getCashewTargetAccount());
+                statement.setString(9, cashew.getCategory().name());
+                statement.setInt(10, customCategoryId == -1 ? 0 : customCategoryId);
+                statement.setString(11, cashew.getComment());
+                statement.setString(12, Timestamp.valueOf(cashew.getTimestamp()).toString());
+                statement.execute();
+            } else {
+                PreparedStatement statement = currentConnection.prepareStatement(
+                        "INSERT INTO transactions (uuid, type, amount, sourceAccountId, targetAccountId, category, customCategoryId, comment, timestamp)" +
+                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                );
+
+                statement.setString(1, transaction.getId().toString());
+                statement.setString(2, transaction.getType().name());
+                statement.setDouble(3, transaction.getAmount());
+                statement.setString(4, transaction.getSourceAccountId() != null ? transaction.getSourceAccountId().toString() : null);
+                statement.setString(5, transaction.getTargetAccountId() != null ? transaction.getTargetAccountId().toString() : null);
+                statement.setString(6, transaction.getCategory().name());
+                statement.setInt(7, customCategoryId == -1 ? 0 : customCategoryId);
+                statement.setString(8, transaction.getComment());
+                statement.setString(9, Timestamp.valueOf(transaction.getTimestamp()).toString());
+                statement.execute();
             }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing transaction data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
     public void updateTransaction(UUID transactionId, Transaction data) {
-        if (currentData == null) {
-            initialize();
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
         }
-        currentData.transactions.replace(transactionId, data);
+
+        int customCategoryId = 0;
+        if (data.getCategory().equals(TransactionCategory.CUSTOM)) {
+            customCategoryId = addCustomTransactionCategory(data.getCustomCategory());
+        }
+
+        try {
+            if (CashewTransaction.isImported(data)) {
+                CashewTransaction cashew = (CashewTransaction) data;
+                PreparedStatement statement = currentConnection.prepareStatement(
+                        "UPDATE transactions SET uuid = ?, cashewTransactionId = ?, type = ?, amount = ?, sourceAccountId = ?, targetAccountId = ?, cashewSourceAccountId = ?, cashewTargetAccountId = ?, category = ?, customCategoryId = ?, comment = ?, timestamp = ? WHERE uuid = ?;"
+                );
+                statement.setString(1, cashew.getId().toString());
+                statement.setString(2, cashew.getCashewTransactionId());
+                statement.setString(3, cashew.getType().name());
+                statement.setDouble(4, cashew.getAmount());
+                statement.setString(5, cashew.getSourceAccountId() != null ? cashew.getSourceAccountId().toString() : null);
+                statement.setString(6, cashew.getTargetAccountId() != null ? cashew.getTargetAccountId().toString() : null);
+                statement.setString(7, cashew.getCashewSourceAccount());
+                statement.setString(8, cashew.getCashewTargetAccount());
+                statement.setString(9, cashew.getCategory().name());
+                statement.setInt(10, customCategoryId == -1 ? 0 : customCategoryId);
+                statement.setString(11, cashew.getComment());
+                statement.setString(12, Timestamp.valueOf(cashew.getTimestamp()).toString());
+                statement.setString(13, transactionId.toString());
+                statement.execute();
+
+            } else {
+                PreparedStatement statement = currentConnection.prepareStatement(
+                        "UPDATE transactions SET uuid = ?, type = ?, amount = ?, sourceAccountId = ?, targetAccountId = ?, category = ?, customCategoryId = ?, comment = ?, timestamp = ? WHERE uuid = ?;"
+                );
+
+                statement.setString(1, data.getId().toString());
+                statement.setString(2, data.getType().name());
+                statement.setDouble(3, data.getAmount());
+                statement.setString(4, data.getSourceAccountId() != null ? data.getSourceAccountId().toString() : null);
+                statement.setString(5, data.getTargetAccountId() != null ? data.getTargetAccountId().toString() : null);
+                statement.setString(6, data.getCategory().name());
+                statement.setInt(7, customCategoryId == -1 ? 0 : customCategoryId);
+                statement.setString(8, data.getComment());
+                statement.setString(9, Timestamp.valueOf(data.getTimestamp()).toString());
+                statement.setString(10, transactionId.toString());
+                statement.execute();
+
+            }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while updating transaction data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+
         log("Updated transaction #" + transactionId);
     }
 
     public void deleteTransaction(UUID transactionId) {
-        if (currentData == null) {
-            initialize();
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
         }
-        currentData.transactions.remove(transactionId);
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "DELETE FROM transactions WHERE uuid = ?"
+            );
+            statement.setString(1, transactionId.toString());
+            statement.execute();
+
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while deleting transaction data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+
     }
 
 

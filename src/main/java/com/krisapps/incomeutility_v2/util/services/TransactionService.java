@@ -249,11 +249,13 @@ public class TransactionService {
     }
 
     public boolean transactionExists(Account account, Transaction transaction) {
-        return data.getTransactions(account).stream().anyMatch(t -> t.getId().equals(transaction.getId()));
+        return data.transactionExists(account, transaction);
+//        return data.getTransactions(account).stream().anyMatch(t -> t.getId().equals(transaction.getId()));
     }
 
     public boolean importedTransactionExists(Account account, CashewTransaction transaction) {
-        return data.getTransactions(account).stream().filter(Transaction::isImported).anyMatch(imported -> ((CashewTransaction) imported).getCashewTransactionId().equals(transaction.getCashewTransactionId()));
+        return data.importedTransactionExists(account, transaction);
+//        return data.getTransactions(account).stream().filter(Transaction::isImported).anyMatch(imported -> ((CashewTransaction) imported).getCashewTransactionId().equals(transaction.getCashewTransactionId()));
     }
 
     private void log(String msg) {
