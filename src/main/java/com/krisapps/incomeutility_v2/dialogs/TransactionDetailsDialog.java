@@ -3,6 +3,7 @@ package com.krisapps.incomeutility_v2.dialogs;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
+import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;
@@ -149,6 +150,6 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
         dateLabel.setText(DataManager.Formatting.formatLocalDate(transaction.getTimestamp().toLocalDate()));
         timeLabel.setText(DataManager.Formatting.formatLocalTime(transaction.getTimestamp().toLocalTime()));
         commentLabel.setText(transaction.getComment().isEmpty() ? "No comments added." : transaction.getComment());
-        categoryLabel.setText(!transaction.getCustomCategory().isEmpty() ? transaction.getCustomCategory() : DataManager.Formatting.capitalize(transaction.getCategory().name()));
+        categoryLabel.setText(transaction.getCategory().equals(TransactionCategory.CUSTOM) ? transaction.getCustomCategory() : DataManager.Formatting.humanize(transaction.getCategory().name()));
     }
 }

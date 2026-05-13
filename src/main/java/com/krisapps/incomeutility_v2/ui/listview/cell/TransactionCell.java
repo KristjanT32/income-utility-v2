@@ -4,7 +4,6 @@ import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.dialogs.TransactionDetailsDialog;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
-
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
@@ -118,8 +117,8 @@ public class TransactionCell extends ListCell<Transaction> {
             rootPane.getStyleClass().add(transaction.getType() == TransactionType.WITHDRAWAL ? "outflow" : transaction.getType() == TransactionType.DEPOSIT ? "inflow" : "transfer");
             categoryLabel.setText(
                     transaction.getCategory() == TransactionCategory.CUSTOM
-                            ? DataManager.Formatting.capitalize(transaction.getCustomCategory())
-                            : DataManager.Formatting.capitalize(transaction.getCategory().toString())
+                            ? transaction.getCustomCategory()
+                            : DataManager.Formatting.humanize(transaction.getCategory().toString())
             );
             commentLabel.setText(transaction.getComment().trim());
         }
