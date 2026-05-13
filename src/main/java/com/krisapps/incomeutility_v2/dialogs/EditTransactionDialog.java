@@ -97,11 +97,6 @@ public class EditTransactionDialog extends IncomeUtilityDialog<Transaction> {
         items.setAll(TransactionType.values());
         transactionTypeSelector.setItems(items);
 
-        HashSet<Account> accounts = data.getAccounts();
-
-        refreshSingleAccountSelector(accounts, selectedAccount);
-        refreshSourceAccountSelector(accounts, selectedAccount);
-        refreshTargetAccountSelector(accounts);
         refreshCategorySelector();
 
         transactionTypeSelector.setValue(outputTransaction.getType());
@@ -112,10 +107,15 @@ public class EditTransactionDialog extends IncomeUtilityDialog<Transaction> {
         commentField.setText(outputTransaction.getComment());
         amountField.setText(DataManager.Formatting.formatMoney(outputTransaction.getAbsoluteAmount()));
 
+        HashSet<Account> accounts = data.getAccounts();
         switch (outputTransaction.getType()) {
-            case DEPOSIT, WITHDRAWAL ->
-                    singleTargetSelector.setValue(data.getAccount(outputTransaction.getTargetAccountId()).get());
+            case DEPOSIT, WITHDRAWAL -> {
+                refreshSingleAccountSelector(accounts, selectedAccount);
+                singleTargetSelector.setValue(data.getAccount(outputTransaction.getTargetAccountId()).get());
+            }
             case TRANSFER -> {
+                refreshSourceAccountSelector(accounts, selectedAccount);
+                refreshTargetAccountSelector(accounts);
                 fromSelector.setValue(data.getAccount(outputTransaction.getSourceAccountId()).get());
                 toSelector.setValue(data.getAccount(outputTransaction.getTargetAccountId()).get());
             }
