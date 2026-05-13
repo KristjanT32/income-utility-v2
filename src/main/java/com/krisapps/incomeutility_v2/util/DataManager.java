@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidParameterException;
 import java.sql.*;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -311,14 +312,14 @@ public class DataManager {
     }
 
     @SuppressWarnings("ConstantConditions")
-    private int getCustomCategoryId(String customCategory) {
-        if (currentConnection == null) {
-            currentConnection = getDatabaseConnection();
+    private static int getCustomCategoryId(Connection connection, String customCategory) {
+        if (connection == null) {
+            throw new InvalidParameterException("Connection cannot be null!");
         }
 
         PreparedStatement stmt;
         try {
-            stmt = currentConnection.prepareStatement("SELECT id FROM transaction_categories WHERE displayName = ?;");
+            stmt = connection.prepareStatement("SELECT id FROM transaction_categories WHERE displayName = ?;");
             stmt.setString(1, customCategory);
             ResultSet response = stmt.executeQuery();
             return response.getInt("id");
@@ -417,7 +418,7 @@ public class DataManager {
                     transactionStatement.setString(7, asCashew.getCashewSourceAccount());
                     transactionStatement.setString(8, asCashew.getCashewTargetAccount());
                     transactionStatement.setString(9, asCashew.getCategory().name());
-                    transactionStatement.setInt(10, getCustomCategoryId(asCashew.getCustomCategory()));
+                    transactionStatement.setInt(10, getCustomCategoryId(currentConnection, asCashew.getCustomCategory()));
                     transactionStatement.setString(11, asCashew.getComment());
                     transactionStatement.setString(12, Timestamp.valueOf(asCashew.getTimestamp()).toString());
                 } else {
@@ -430,7 +431,7 @@ public class DataManager {
                     transactionStatement.setString(7, null);
                     transactionStatement.setString(8, null);
                     transactionStatement.setString(9, t.getValue().getCategory().name());
-                    transactionStatement.setInt(10, getCustomCategoryId(t.getValue().getCustomCategory()));
+                    transactionStatement.setInt(10, getCustomCategoryId(currentConnection, t.getValue().getCustomCategory()));
                     transactionStatement.setString(11, t.getValue().getComment());
                     transactionStatement.setString(12, Timestamp.valueOf(t.getValue().getTimestamp()).toString());
                 }
@@ -450,12 +451,67 @@ public class DataManager {
         }
     }
 
+    public static boolean copyTransaction(Transaction t, Connection database) {
+        PreparedStatement transactionStatement;
+        PreparedStatement categoryStatement;
+        try {
+            transactionStatement = database.prepareStatement(
+                    "INSERT INTO transactions (uuid, cashewTransactionId, type, amount, sourceAccountId, targetAccountId, cashewSourceAccountId, cashewTargetAccountId, category, customCategoryId, comment, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+            );
+            categoryStatement = database.prepareStatement("INSERT INTO transaction_categories (displayName) VALUES (?);");
+        } catch (SQLException e) {
+            System.err.println("Error copying transaction '" + t.getId() + "' - " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+        try {
+            if (t.getCategory().equals(TransactionCategory.CUSTOM)) {
+                categoryStatement.setString(1, t.getCustomCategory());
+                categoryStatement.execute();
+            }
+
+            if (t instanceof CashewTransaction asCashew) {
+                transactionStatement.setString(1, asCashew.getId().toString());
+                transactionStatement.setString(2, asCashew.getCashewTransactionId());
+                transactionStatement.setString(3, asCashew.getType().toString());
+                transactionStatement.setDouble(4, asCashew.getAmount());
+                transactionStatement.setString(5, asCashew.getSourceAccountId() != null ? asCashew.getSourceAccountId().toString() : null);
+                transactionStatement.setString(6, asCashew.getTargetAccountId() != null ? asCashew.getTargetAccountId().toString() : null);
+                transactionStatement.setString(7, asCashew.getCashewSourceAccount());
+                transactionStatement.setString(8, asCashew.getCashewTargetAccount());
+                transactionStatement.setString(9, asCashew.getCategory().name());
+                transactionStatement.setInt(10, getCustomCategoryId(database, asCashew.getCustomCategory()));
+                transactionStatement.setString(11, asCashew.getComment());
+                transactionStatement.setString(12, Timestamp.valueOf(asCashew.getTimestamp()).toString());
+            } else {
+                transactionStatement.setString(1, t.getId().toString());
+                transactionStatement.setString(2, null);
+                transactionStatement.setString(3, t.getType().toString());
+                transactionStatement.setDouble(4, t.getAmount());
+                transactionStatement.setString(5, t.getSourceAccountId() != null ? t.getSourceAccountId().toString() : null);
+                transactionStatement.setString(6, t.getTargetAccountId() != null ? t.getTargetAccountId().toString() : null);
+                transactionStatement.setString(7, null);
+                transactionStatement.setString(8, null);
+                transactionStatement.setString(9, t.getCategory().name());
+                transactionStatement.setInt(10, getCustomCategoryId(database, t.getCustomCategory()));
+                transactionStatement.setString(11, t.getComment());
+                transactionStatement.setString(12, Timestamp.valueOf(t.getTimestamp()).toString());
+            }
+            transactionStatement.execute();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error copying transaction '" + t.getId() + "' - " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     //</editor-fold>
 
 
     //<editor-fold desc="Data access">
 
-    private Transaction mapResultSetToTransaction(ResultSet row) throws SQLException {
+    public static Transaction mapResultSetToTransaction(ResultSet row) throws SQLException {
         UUID uuid = UUID.fromString(row.getString("uuid"));
         TransactionType type = TransactionType.valueOf(row.getString("type"));
         String cashewTransactionId = row.getString("cashewTransactionId");
@@ -1128,6 +1184,12 @@ public class DataManager {
             return Character.toString(str.charAt(0)).toUpperCase() + str.toLowerCase().substring(1);
         }
 
+        /**
+         * Replaces underscores with spaces, trims, then capitalizes the input string.
+         *
+         * @param str The input string
+         * @return A string with underscores replaced with spaces and the first letter capitalized with no trailing spaces.
+         */
         public static String humanize(String str) {
             String s = str.toLowerCase();
             s = s.trim();
