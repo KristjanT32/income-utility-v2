@@ -3,10 +3,10 @@ package com.krisapps.incomeutility_v2.util;
 import com.krisapps.incomeutility_v2.exceptions.NotInitializedException;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
-import com.krisapps.incomeutility_v2.subutilities.breakdown.BreakdownController;
 import com.krisapps.incomeutility_v2.subutilities.breakdown.BreakdownUtility;
 import com.krisapps.incomeutility_v2.subutilities.money_flow.MoneyFlowUtility;
 import com.krisapps.incomeutility_v2.subutilities.pricer.PricerUtility;
+import com.krisapps.incomeutility_v2.subutilities.settings.SettingsUtility;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 
@@ -64,6 +64,9 @@ public class UtilityManager {
             }
             case MONEY_IN_MONEY_OUT -> {
                 utility = new MoneyFlowUtility();
+            }
+            case SETTINGS -> {
+                utility = new SettingsUtility();
             }
 
             default -> throw new IllegalArgumentException("Invalid subutility '" + subutility + "'");

@@ -74,7 +74,26 @@
     -fx-padding: 0;
 }
 
-.transaction-list .list-cell:selected {
+.transaction-list .list-cell:selected, .transaction-list .list-cell:focused {
+    -fx-border-color: black;
+}
+
+
+.custom-category-cell {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.custom-category-list .list-cell:filled, .custom-category-cell {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 2px;
+}
+
+.custom-category-list .list-cell:selected, .custom-category-list .list-cell:focused {
     -fx-border-color: black;
 }
 

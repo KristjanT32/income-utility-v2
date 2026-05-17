@@ -45,6 +45,9 @@ public class IncomeUtilityController {
     private VBox subscriptionsCell;
 
     @FXML
+    private VBox settingsCell;
+
+    @FXML
     private GridPane accountView;
     private int nextRow = 0;
     private int nextColumn = 0;
@@ -86,6 +89,14 @@ public class IncomeUtilityController {
                 utilities.openUtility(SubUtilityType.BREAKDOWN);
             } else {
                 utilities.focusAll(SubUtilityType.BREAKDOWN);
+            }
+        });
+
+        settingsCell.setOnMouseClicked((e) -> {
+            if (!e.isShiftDown()) {
+                utilities.openUtility(SubUtilityType.SETTINGS);
+            } else {
+                utilities.focusAll(SubUtilityType.SETTINGS);
             }
         });
     }

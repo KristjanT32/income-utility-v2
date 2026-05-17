@@ -4,6 +4,7 @@ public enum SubUtilityType {
     BREAKDOWN("Fiscal Breakdown"),
     PRICER("Pricer"),
     MONEY_IN_MONEY_OUT("Money In, Money Out"),
+    SETTINGS("Settings & Customization"),
     ALL("All utilities");
 
     private final String displayName;

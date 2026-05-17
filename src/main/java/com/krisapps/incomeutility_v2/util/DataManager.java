@@ -18,6 +18,7 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.util.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -722,6 +723,31 @@ public class DataManager {
 
     }
 
+    public ArrayList<Pair<Integer, String>> getCustomTransactionCategoryEntries() {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT id, displayName FROM transaction_categories;");
+
+            ResultSet response = stmt.executeQuery();
+            ArrayList<Pair<Integer, String>> categories = new ArrayList<>();
+            while (response.next()) {
+                categories.add(new Pair<>(
+                        response.getInt("id"),
+                        response.getString("displayName")
+                ));
+            }
+
+            return categories;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying custom transaction category entries. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+    }
+
     public boolean customTransactionCategoryExists(String category) {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
@@ -733,6 +759,26 @@ public class DataManager {
             );
             statement.setString(1, category);
             statement.setString(2, category);
+
+            ResultSet set = statement.executeQuery();
+
+            return set.getInt(1) > 0;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return false;
+    }
+
+    public boolean customTransactionCategoryExists(int id) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "SELECT COUNT(*) FROM transaction_categories WHERE id = ?;"
+            );
+            statement.setInt(1, id);
 
             ResultSet set = statement.executeQuery();
 
@@ -910,6 +956,26 @@ public class DataManager {
         }
     }
 
+    public void updateCustomTransactionCategory(int id, String newValue) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            if (customTransactionCategoryExists(id)) {
+                PreparedStatement statement = currentConnection.prepareStatement(
+                        "UPDATE transaction_categories SET displayName = ? WHERE id = ?;"
+                );
+
+                statement.setString(1, newValue);
+                statement.setInt(2, id);
+                statement.execute();
+            }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while updating custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
     public void removeCustomTransactionCategory(String category) {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
@@ -926,6 +992,41 @@ public class DataManager {
 
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void removeCustomTransactionCategory(int id) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "DELETE FROM transaction_categories WHERE id = ?;"
+            );
+            statement.setInt(1, id);
+            statement.execute();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while trying to delete a custom transaction category. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void replaceCustomTransactionInTransactions(int oldId, int newId) throws InvalidParameterException {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        if (!customTransactionCategoryExists(newId)) {
+            throw new InvalidParameterException("Invalid replacement ID - " + newId + " does not correspond to any custom transaction categories!");
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement("UPDATE transactions SET customCategoryId = ? WHERE customCategoryId = ?;");
+            statement.setInt(1, newId);
+            statement.setInt(2, oldId);
+            statement.execute();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to update data!", "An SQL error was encountered while patching transaction data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
