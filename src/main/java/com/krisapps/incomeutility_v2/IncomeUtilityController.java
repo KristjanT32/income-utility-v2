@@ -55,10 +55,11 @@ public class IncomeUtilityController {
     @FXML
     public void initialize() {
         IncomeUtilityApplication.updateTitle("Starting application...", true);
+        data.initialize();
+
 
         registerHandlers();
         refreshAccountView();
-        data.initialize();
 
         IncomeUtilityApplication.updateTitle("Dashboard", false);
     }

@@ -3,6 +3,7 @@ package com.krisapps.incomeutility_v2.dialogs;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
+import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -57,7 +58,6 @@ public class AccountMappingDialog extends IncomeUtilityDialog<UUID> {
     }
 
     private void selectAccountWithSimilarName() {
-        System.out.println("Attempting to automatically select local account");
         for (String accountName: fiscal.getAccounts().stream().map(Account::getName).map(String::toLowerCase).toList()) {
             if (accountName.equals(externalWalletName.toLowerCase())) {
                 selectAccountByName(accountName);
@@ -75,6 +75,7 @@ public class AccountMappingDialog extends IncomeUtilityDialog<UUID> {
         for (int i = 0; i < accountSelector.getItems().size(); i++) {
             if (accountSelector.getItems().get(i).getName().toLowerCase().equals(account)) {
                 accountSelector.getSelectionModel().select(i);
+                DataManager.log("Auto-selected local account '%s' for Cashew account '%s'".formatted(accountSelector.getItems().get(i), account));
                 break;
             }
         }

@@ -56,7 +56,7 @@ public class IncomeUtilityApplication extends Application {
                         dialog.show("Shutting down...", new Runnable() {
                             @Override
                             public void run() {
-                                DataManager.getInstance().saveCurrentData();
+                                DataManager.getInstance().applyConfigurationData();
                                 try {
                                     Thread.sleep(1000);
                                 } catch (InterruptedException e) {

@@ -4,7 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.ToNumberPolicy;
 import com.google.gson.stream.JsonReader;
-import com.krisapps.incomeutility_v2.dialogs.LoadingDialog;
+import com.krisapps.incomeutility_v2.types.data.ConfigurationData;
+import com.krisapps.incomeutility_v2.types.data.LegacyData;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
@@ -14,17 +15,15 @@ import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTimeTypeAdapter;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTypeAdapter;
 import com.krisapps.incomeutility_v2.util.misc.TransactionDeserializer;
+import com.krisapps.incomeutility_v2.util.services.MigrationService;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 import javafx.util.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.InvalidParameterException;
 import java.sql.*;
 import java.text.DecimalFormat;
@@ -34,9 +33,9 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
+@SuppressWarnings("ConstantConditions")
 public class DataManager {
 
     private static final Gson gson = new GsonBuilder()
@@ -46,11 +45,12 @@ public class DataManager {
             .registerTypeAdapter(Transaction.class, new TransactionDeserializer())
             .create();
     private static DataManager instance;
-    private final File dataFile = new File(System.getProperty("user.home") + File.separator + "IncomeUtility v2" + File.separator + "data.json");
-    private final Path databaseFilePath = Paths.get(System.getProperty("user.home") + File.separator + "IncomeUtility v2" + File.separator + "data.db");
+    private final File configFile = new File(System.getProperty("user.home") + File.separator + "IncomeUtility v2" + File.separator + "config.json");
+    private Path databaseFilePath = null;
     private boolean isSaving = false;
 
-    private Data currentData;
+    public static final Path DATA_DIRECTORY_PATH = Path.of(System.getProperty("user.home") + File.separator + "IncomeUtility v2");
+    private ConfigurationData configurationData;
     private Connection currentConnection;
 
     private DataManager() {
@@ -61,6 +61,10 @@ public class DataManager {
             instance = new DataManager();
         }
         return instance;
+    }
+
+    public static Path getDataDirectory() {
+        return DATA_DIRECTORY_PATH;
     }
 
     public static void log(String msg) {
@@ -76,12 +80,80 @@ public class DataManager {
     }
 
     public void initialize() {
-        loadData();
+        loadConfigurationData();
+        databaseFilePath = configurationData.getDatabaseLocation();
 
         if (currentConnection != null) {
             log("DataManager#initialize has been called after initialization - a new DB connection will not be opened.", Level.WARNING);
         } else {
             currentConnection = getDatabaseConnection();
+
+            try {
+                Statement stmt = currentConnection.createStatement();
+                ResultSet rs = stmt.executeQuery("PRAGMA user_version");
+                int version = rs.next() ? rs.getInt(1) : 0;
+
+                if (version == 0) {
+                    initializeDatabase(currentConnection);
+                }
+
+            } catch (SQLException e) {
+                log("Failed to check database state.");
+            }
+
+        }
+    }
+
+    private void initializeDatabase(Connection currentConnection) {
+        try {
+            Statement statement = currentConnection.createStatement();
+
+            statement.execute("""
+                    CREATE TABLE IF NOT EXISTS "accounts" (
+                    	"id"	INTEGER NOT NULL UNIQUE,
+                    	"uuid"	TEXT NOT NULL UNIQUE,
+                    	"name"	TEXT NOT NULL DEFAULT 'New Account',
+                    	"initialBalance"	REAL NOT NULL DEFAULT 0.0,
+                    	"type"	TEXT NOT NULL,
+                    	"isDefault"	INTEGER NOT NULL DEFAULT 0,
+                    	"currencySymbol"	TEXT NOT NULL DEFAULT '€',
+                    	"currencyIsPrefixed"	INTEGER NOT NULL DEFAULT 0,
+                    	PRIMARY KEY("id" AUTOINCREMENT)
+                    )
+                    """);
+
+            statement.execute("""
+                    CREATE TABLE IF NOT EXISTS "transaction_categories" (
+                    	"id"	INTEGER NOT NULL UNIQUE,
+                    	"displayName"	TEXT NOT NULL DEFAULT 'New Category' UNIQUE,
+                    	PRIMARY KEY("id" AUTOINCREMENT)
+                    )
+                    """);
+
+            statement.execute("""
+                    CREATE TABLE IF NOT EXISTS "transactions" (
+                    	"id"	INTEGER NOT NULL,
+                    	"uuid"	TEXT NOT NULL UNIQUE,
+                    	"cashewTransactionId"	TEXT,
+                    	"type"	TEXT NOT NULL,
+                    	"amount"	REAL NOT NULL,
+                    	"sourceAccountId"	TEXT,
+                    	"targetAccountId"	TEXT,
+                    	"cashewSourceAccountId"	TEXT,
+                    	"cashewTargetAccountId"	TEXT,
+                    	"category"	TEXT NOT NULL,
+                    	"customCategoryId"	INTEGER,
+                    	"comment"	TEXT,
+                    	"timestamp"	TEXT NOT NULL,
+                    	PRIMARY KEY("id" AUTOINCREMENT),
+                    	CONSTRAINT "category_fk" FOREIGN KEY("customCategoryId") REFERENCES "transaction_categories"("id")
+                    )
+                    """);
+            statement.execute("PRAGMA user_version = 1");
+            log("Database successfully initialized!");
+        } catch (SQLException e) {
+            log("Failed to initialize database: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -89,28 +161,22 @@ public class DataManager {
         log("No files found, initializing first-time setup.");
 
         try {
-            log("Creating a data directory at: " + Path.of(System.getProperty("user.home") + File.separator + "IncomeUtility v2"));
-            Files.createDirectory(Path.of(System.getProperty("user.home") + File.separator + "IncomeUtility v2"));
+            log("Creating a data directory at: " + DATA_DIRECTORY_PATH);
+            Files.createDirectory(DATA_DIRECTORY_PATH);
         } catch (IOException e) {
             log("Failed to create data directory: " + e.getMessage());
         }
 
-        try {
-            if (!dataFile.exists()) {
-                dataFile.createNewFile();
-            }
-            log("Files successfully created.");
-        } catch (IOException e) {
-            log("Failed to create file: " + e.getMessage());
-        }
+        createConfigurationFile();
+        log("Files successfully created.");
     }
 
-    private void createDataFile() {
+    private void createConfigurationFile() {
         try {
-            if (!dataFile.exists()) {
-                dataFile.createNewFile();
-                Data data = new Data();
-                saveData(data);
+            if (!configFile.exists()) {
+                configFile.createNewFile();
+                ConfigurationData config = new ConfigurationData();
+                saveData(config);
             }
         } catch (IOException e) {
             log("Could not create a new data file - " + e.getMessage());
@@ -118,15 +184,15 @@ public class DataManager {
     }
 
 
-    public void saveData(Data data) {
+    public void saveData(ConfigurationData data) {
         isSaving = true;
 
-        if (!dataFile.exists()) {
-            createDataFile();
+        if (!configFile.exists()) {
+            createConfigurationFile();
         }
 
         try {
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataFile, false), StandardCharsets.UTF_16));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(configFile, false), StandardCharsets.UTF_16));
 
             writer.write(gson.toJson(data));
             writer.close();
@@ -140,11 +206,11 @@ public class DataManager {
         return isSaving;
     }
 
-    public void saveCurrentData() {
-        if (currentData == null) {
+    public void applyConfigurationData() {
+        if (configurationData == null) {
             return;
         }
-        saveData(currentData);
+        saveData(configurationData);
     }
 
     /**
@@ -152,35 +218,49 @@ public class DataManager {
      *
      * @return The data
      */
-    private Data getData() {
+    private ConfigurationData getConfigurationData() {
 
-        if (currentData != null) {
-            return currentData;
+        if (configurationData != null) {
+            return configurationData;
         } else {
-            if (!dataFile.exists()) {
+            if (!configFile.exists()) {
                 firstTimeFileSetup();
             }
 
             InputStreamReader inputStreamReader;
             try {
-                inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_16);
+                inputStreamReader = new InputStreamReader(new FileInputStream(configFile), StandardCharsets.UTF_16);
                 JsonReader reader = new JsonReader(inputStreamReader);
-                Data output = gson.fromJson(reader, Data.class);
+                ConfigurationData output = gson.fromJson(reader, ConfigurationData.class);
                 if (output == null) {
-                    output = new Data();
+                    output = new ConfigurationData();
                 }
                 return output;
             } catch (IOException e) {
                 log("Failed to retrieve data from data file: " + e.getMessage());
-                return new Data();
+                return new ConfigurationData();
             }
         }
     }
 
-    private void loadData() {
-        log("Caching current data...");
-        currentData = getData();
-        log("Done.");
+    public LegacyData getLegacyData(Path path) {
+        InputStreamReader inputStreamReader;
+        try {
+            inputStreamReader = new InputStreamReader(new FileInputStream(path.toFile()), StandardCharsets.UTF_16);
+            JsonReader reader = new JsonReader(inputStreamReader);
+            LegacyData output = gson.fromJson(reader, LegacyData.class);
+            if (output == null) {
+                output = new LegacyData();
+            }
+            return output;
+        } catch (IOException e) {
+            log("Failed to retrieve data from data file: " + e.getMessage());
+            return new LegacyData();
+        }
+    }
+
+    private void loadConfigurationData() {
+        configurationData = getConfigurationData();
     }
 
     private Connection getDatabaseConnection() {
@@ -188,9 +268,7 @@ public class DataManager {
             log("Database connection ready!");
             return DriverManager.getConnection("jdbc:sqlite:" + databaseFilePath);
         } catch (SQLException e) {
-            Platform.runLater(() -> {
-                PopupManager.showPopup("Database initialization error!", "The following error was encountered when initializing the database:\n" + e.getMessage(), Alert.AlertType.ERROR);
-            });
+            Platform.runLater(() -> PopupManager.showPopup("Database initialization error!", "The following error was encountered when initializing the database:\n" + e.getMessage(), Alert.AlertType.ERROR));
         }
         return null;
     }
@@ -198,315 +276,15 @@ public class DataManager {
     //<editor-fold desc="Migration">
 
     public void migrateJSONDataToSQL() {
+        MigrationService service = MigrationService.initialize(currentConnection);
+
         try {
-            currentConnection.setAutoCommit(false);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        AtomicBoolean success = new AtomicBoolean(false);
-
-        PopupManager.showConfirmationAsync("Begin data migration?", "Would you like to begin the JSON to SQL data migration process? This will copy all data from the data.json file and transform it into data storable in a SQLite database.\nThe process takes around a minute at most.\n\nProceed?",
-                new ButtonType("Start migration", ButtonBar.ButtonData.APPLY),
-                new ButtonType("No, not now", ButtonBar.ButtonData.CANCEL_CLOSE)
-        ).ifPresent(choice -> {
-            if (choice.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
-                Platform.runLater(() -> {
-                    LoadingDialog dlg = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
-                    dlg.setPrimaryLabel("Data migration in progress");
-                    dlg.setSecondaryLabel("Preparing for migration, please wait...");
-                    dlg.show("JSON -> SQLite Data Migration Process", () -> {
-                        dlg.setSecondaryLabel("Copying custom transactions...");
-                        boolean categoriesCopied = copyCategories(dlg);
-                        if (!categoriesCopied) {
-                            PopupManager.showPopup("Category migration failed!", "Errors were encountered while migrating custom transaction categories. Check the logs for more info.", Alert.AlertType.ERROR);
-                            return;
-                        } else {
-                            Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Transaction categories have been successfully copied. Proceed to copy transactions?",
-                                    new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
-                                    new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
-                            );
-
-                            if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
-                                try {
-                                    currentConnection.rollback();
-                                    return;
-                                } catch (SQLException e) {
-                                    PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
-                                }
-                                return;
-                            }
-
-                            try {
-                                currentConnection.commit();
-                            } catch (SQLException e) {
-                                PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
-                            }
-                        }
-
-                        dlg.setSecondaryLabel("Copying transactions...");
-                        boolean transactionsCopied = copyTransactions(dlg);
-                        if (!transactionsCopied) {
-                            PopupManager.showPopup("Transaction migration failed!", "Errors were encountered while migrating transactions. Check the logs for more info.", Alert.AlertType.ERROR);
-                            return;
-                        } else {
-                            Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Transactions have been successfully copied. Proceed to copy accounts?",
-                                    new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
-                                    new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
-                            );
-
-                            if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
-                                try {
-                                    currentConnection.rollback();
-                                    return;
-                                } catch (SQLException e) {
-                                    PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
-                                }
-                                return;
-                            }
-
-                            try {
-                                currentConnection.commit();
-                            } catch (SQLException e) {
-                                PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
-                            }
-                        }
-
-                        dlg.setSecondaryLabel("Copying accounts...");
-                        boolean accountsCopied = copyAccounts(dlg);
-                        if (!accountsCopied) {
-                            PopupManager.showPopup("Account migration failed!", "Errors were encountered while migrating accounts. Check the logs for more info.", Alert.AlertType.ERROR);
-                            return;
-                        } else {
-                            Optional<ButtonType> response = PopupManager.showConfirmationAsync("Proceed?", "Accounts have been successfully copied. Proceed to clean up?",
-                                    new ButtonType("Yes, proceed", ButtonBar.ButtonData.APPLY),
-                                    new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
-                            );
-
-                            if (response.isEmpty() || response.get().getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)) {
-                                try {
-                                    currentConnection.rollback();
-                                    return;
-                                } catch (SQLException e) {
-                                    PopupManager.showPopup("Failed to roll back!", "An SQL error was encountered when rolling back. Error: " + e.getMessage(), Alert.AlertType.ERROR);
-                                }
-                            }
-
-                            try {
-                                currentConnection.commit();
-                            } catch (SQLException e) {
-                                PopupManager.showPopup("Failed to commit!", "An SQL error was encountered when committing changes. Error: " + e.getMessage(), Alert.AlertType.ERROR);
-                            }
-                        }
-                        success.set(true);
-                    });
-
-                    if (success.get()) {
-                        PopupManager.showPopup("Migration finished!", "All data has been successfully copied to the SQLite DB.\n\nFor the changes to take effect, please restart Income Utility.", Alert.AlertType.INFORMATION);
-                    } else {
-                        PopupManager.showPopup("Migration failed!", "Migration was terminated due to one or more errors. Check logs for more info.", Alert.AlertType.ERROR);
-                    }
-                });
-            }
-
-        });
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    private static int getCustomCategoryId(Connection connection, String customCategory) {
-        if (connection == null) {
-            throw new InvalidParameterException("Connection cannot be null!");
-        }
-
-        PreparedStatement stmt;
-        try {
-            stmt = connection.prepareStatement("SELECT id FROM transaction_categories WHERE displayName = ?;");
-            stmt.setString(1, customCategory);
-            ResultSet response = stmt.executeQuery();
-            return response.getInt("id");
-        } catch (SQLException e) {
-            log("Failed to prepare SQL statement! Error: " + e.getMessage(), Level.SEVERE);
-            e.printStackTrace();
-            return -1;
+            service.migrateFromDefaultFile();
+            MigrationService.shutdown();
+        } catch (FileNotFoundException e) {
+            PopupManager.showPopup("Migration unavailable!", "Automatic migration from the default data file is not available right now, as data.json couldn't be found.", Alert.AlertType.ERROR);
         }
     }
-
-    private boolean copyCategories(LoadingDialog progressDialog) {
-        PreparedStatement stmt = null;
-        try {
-            stmt = currentConnection.prepareStatement("INSERT INTO transaction_categories (displayName) VALUES (?);");
-        } catch (SQLException e) {
-            PopupManager.showPopup("SQL exception during category migration!", "Failed to construct query! Error: " + e.getMessage(), Alert.AlertType.ERROR);
-            return false;
-        }
-
-        try {
-            currentConnection.prepareStatement("INSERT INTO transaction_categories (id, displayName) VALUES (0, 'No custom category');").execute();
-
-            for (String category : currentData.getCustomTransactionCategories()) {
-                progressDialog.setSecondaryLabel("Copying transaction category: " + category);
-                stmt.setString(1, category);
-                stmt.execute();
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return true;
-        } catch (SQLException e) {
-            PopupManager.showPopup("SQL exception during category migration!", "The following error occurred when migrating custom transaction categories: " + e.getMessage(), Alert.AlertType.ERROR);
-            return false;
-        }
-    }
-
-    private boolean copyAccounts(LoadingDialog progressDialog) {
-        PreparedStatement stmt = null;
-        try {
-            stmt = currentConnection.prepareStatement("INSERT INTO accounts (uuid, name, initialBalance, type, isDefault, currencySymbol, currencyIsPrefixed) VALUES (?, ?, ?, ?, ?, ?, ?);");
-        } catch (SQLException e) {
-            PopupManager.showPopup("SQL exception during account migration!", "Failed to construct query! Error: " + e.getMessage(), Alert.AlertType.ERROR);
-            return false;
-        }
-
-        try {
-            for (Account account : currentData.getAccounts().values()) {
-                progressDialog.setSecondaryLabel("Copying account: " + account.getName());
-                stmt.setString(1, account.getId().toString());
-                stmt.setString(2, account.getName());
-                stmt.setDouble(3, account.getInitialBalance());
-                stmt.setString(4, account.getType().name());
-                stmt.setBoolean(5, account.isDefault());
-                stmt.setString(6, account.getCurrencyConfig().getCurrencySymbol());
-                stmt.setBoolean(7, account.getCurrencyConfig().isCurrencySymbolPrefix());
-                stmt.execute();
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return true;
-        } catch (SQLException e) {
-            PopupManager.showPopup("SQL exception during account migration!", "The following error occurred when migrating accounts: " + e.getMessage(), Alert.AlertType.ERROR);
-            return false;
-        }
-    }
-
-    private boolean copyTransactions(LoadingDialog progressDialog) {
-        PreparedStatement transactionStatement;
-        try {
-            transactionStatement = currentConnection.prepareStatement(
-                    "INSERT INTO transactions (uuid, cashewTransactionId, type, amount, sourceAccountId, targetAccountId, cashewSourceAccountId, cashewTargetAccountId, category, customCategoryId, comment, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
-            );
-        } catch (SQLException e) {
-            Platform.runLater(() -> {
-                PopupManager.showPopup("SQL exception during transaction migration!", "Failed to construct query! Error: " + e.getMessage(), Alert.AlertType.ERROR);
-            });
-            return false;
-        }
-
-        try {
-            for (Map.Entry<UUID, Transaction> t : currentData.transactions.entrySet()) {
-                progressDialog.setSecondaryLabel("Copying transaction: " + t.getKey());
-                if (t.getValue() instanceof CashewTransaction asCashew) {
-                    transactionStatement.setString(1, asCashew.getId().toString());
-                    transactionStatement.setString(2, asCashew.getCashewTransactionId());
-                    transactionStatement.setString(3, asCashew.getType().toString());
-                    transactionStatement.setDouble(4, asCashew.getAmount());
-                    transactionStatement.setString(5, asCashew.getSourceAccountId() != null ? asCashew.getSourceAccountId().toString() : null);
-                    transactionStatement.setString(6, asCashew.getTargetAccountId() != null ? asCashew.getTargetAccountId().toString() : null);
-                    transactionStatement.setString(7, asCashew.getCashewSourceAccount());
-                    transactionStatement.setString(8, asCashew.getCashewTargetAccount());
-                    transactionStatement.setString(9, asCashew.getCategory().name());
-                    transactionStatement.setInt(10, getCustomCategoryId(currentConnection, asCashew.getCustomCategory()));
-                    transactionStatement.setString(11, asCashew.getComment());
-                    transactionStatement.setString(12, Timestamp.valueOf(asCashew.getTimestamp()).toString());
-                } else {
-                    transactionStatement.setString(1, t.getValue().getId().toString());
-                    transactionStatement.setString(2, null);
-                    transactionStatement.setString(3, t.getValue().getType().toString());
-                    transactionStatement.setDouble(4, t.getValue().getAmount());
-                    transactionStatement.setString(5, t.getValue().getSourceAccountId() != null ? t.getValue().getSourceAccountId().toString() : null);
-                    transactionStatement.setString(6, t.getValue().getTargetAccountId() != null ? t.getValue().getTargetAccountId().toString() : null);
-                    transactionStatement.setString(7, null);
-                    transactionStatement.setString(8, null);
-                    transactionStatement.setString(9, t.getValue().getCategory().name());
-                    transactionStatement.setInt(10, getCustomCategoryId(currentConnection, t.getValue().getCustomCategory()));
-                    transactionStatement.setString(11, t.getValue().getComment());
-                    transactionStatement.setString(12, Timestamp.valueOf(t.getValue().getTimestamp()).toString());
-                }
-                transactionStatement.execute();
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return true;
-        } catch (SQLException e) {
-            Platform.runLater(() -> {
-                PopupManager.showPopup("SQL exception transaction migration!", "The following error occurred when migrating transactions: " + e.getMessage(), Alert.AlertType.ERROR);
-            });
-            return false;
-        }
-    }
-
-    public static boolean copyTransaction(Transaction t, Connection database) {
-        PreparedStatement transactionStatement;
-        PreparedStatement categoryStatement;
-        try {
-            transactionStatement = database.prepareStatement(
-                    "INSERT INTO transactions (uuid, cashewTransactionId, type, amount, sourceAccountId, targetAccountId, cashewSourceAccountId, cashewTargetAccountId, category, customCategoryId, comment, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
-            );
-            categoryStatement = database.prepareStatement("INSERT INTO transaction_categories (displayName) VALUES (?);");
-        } catch (SQLException e) {
-            System.err.println("Error copying transaction '" + t.getId() + "' - " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-        try {
-            if (t.getCategory().equals(TransactionCategory.CUSTOM)) {
-                categoryStatement.setString(1, t.getCustomCategory());
-                categoryStatement.execute();
-            }
-
-            if (t instanceof CashewTransaction asCashew) {
-                transactionStatement.setString(1, asCashew.getId().toString());
-                transactionStatement.setString(2, asCashew.getCashewTransactionId());
-                transactionStatement.setString(3, asCashew.getType().toString());
-                transactionStatement.setDouble(4, asCashew.getAmount());
-                transactionStatement.setString(5, asCashew.getSourceAccountId() != null ? asCashew.getSourceAccountId().toString() : null);
-                transactionStatement.setString(6, asCashew.getTargetAccountId() != null ? asCashew.getTargetAccountId().toString() : null);
-                transactionStatement.setString(7, asCashew.getCashewSourceAccount());
-                transactionStatement.setString(8, asCashew.getCashewTargetAccount());
-                transactionStatement.setString(9, asCashew.getCategory().name());
-                transactionStatement.setInt(10, getCustomCategoryId(database, asCashew.getCustomCategory()));
-                transactionStatement.setString(11, asCashew.getComment());
-                transactionStatement.setString(12, Timestamp.valueOf(asCashew.getTimestamp()).toString());
-            } else {
-                transactionStatement.setString(1, t.getId().toString());
-                transactionStatement.setString(2, null);
-                transactionStatement.setString(3, t.getType().toString());
-                transactionStatement.setDouble(4, t.getAmount());
-                transactionStatement.setString(5, t.getSourceAccountId() != null ? t.getSourceAccountId().toString() : null);
-                transactionStatement.setString(6, t.getTargetAccountId() != null ? t.getTargetAccountId().toString() : null);
-                transactionStatement.setString(7, null);
-                transactionStatement.setString(8, null);
-                transactionStatement.setString(9, t.getCategory().name());
-                transactionStatement.setInt(10, getCustomCategoryId(database, t.getCustomCategory()));
-                transactionStatement.setString(11, t.getComment());
-                transactionStatement.setString(12, Timestamp.valueOf(t.getTimestamp()).toString());
-            }
-            transactionStatement.execute();
-            return true;
-        } catch (SQLException e) {
-            System.err.println("Error copying transaction '" + t.getId() + "' - " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     //</editor-fold>
 
 
@@ -854,8 +632,8 @@ public class DataManager {
     }
 
     public Optional<UUID> getLastActiveAccount() {
-        Data d = getData();
-        return d.getLastActiveAccountId();
+        ConfigurationData d = getConfigurationData();
+        return Optional.ofNullable(d.getLastActiveAccountId());
     }
 
     //</editor-fold>
@@ -1030,7 +808,6 @@ public class DataManager {
         }
     }
 
-
     public void addTransaction(Transaction transaction) {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
@@ -1165,10 +942,10 @@ public class DataManager {
      */
     public void updateLastOpenAccount(Account account) {
         if (account == null) return;
-        if (currentData == null) {
+        if (configurationData == null) {
             initialize();
         }
-        currentData.lastActiveAccountId = account.getId().toString();
+        configurationData.setLastActiveAccountId(account.getId());
     }
     //</editor-fold>
 
@@ -1319,33 +1096,4 @@ public class DataManager {
         }
     }
 
-    private static class Data {
-        private final HashMap<UUID, Transaction> transactions;
-        private final HashMap<UUID, Account> accounts;
-        private final ArrayList<String> customTransactionCategories;
-        private String lastActiveAccountId;
-
-        public Data() {
-            this.transactions = new HashMap<>();
-            this.accounts = new HashMap<>();
-            this.customTransactionCategories = new ArrayList<>();
-            this.lastActiveAccountId = "";
-        }
-
-        public HashMap<UUID, Transaction> getTransactions() {
-            return transactions;
-        }
-
-        public HashMap<UUID, Account> getAccounts() {
-            return accounts;
-        }
-
-        public ArrayList<String> getCustomTransactionCategories() {
-            return customTransactionCategories;
-        }
-
-        public Optional<UUID> getLastActiveAccountId() {
-            return lastActiveAccountId.isEmpty() ? Optional.empty() : Optional.of(UUID.fromString(lastActiveAccountId));
-        }
-    }
 }
