@@ -14,7 +14,10 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IncomeUtilityApplication extends Application {
 
@@ -51,36 +54,7 @@ public class IncomeUtilityApplication extends Application {
                         new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
                 ).ifPresent(response -> {
                     if (response.getButtonData() == ButtonBar.ButtonData.APPLY) {
-                        LoadingDialog dialog = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
-                        dialog.setPrimaryLabel("Cleaning up");
-                        dialog.show("Shutting down...", new Runnable() {
-                            @Override
-                            public void run() {
-                                DataManager.getInstance().applyConfigurationData();
-                                try {
-                                    Thread.sleep(1000);
-                                } catch (InterruptedException e) {
-                                    throw new RuntimeException(e);
-                                }
-
-                                UtilityManager.getInstance().stopAll(SubUtilityType.ALL);
-                                while (DataManager.getInstance().isSaving()) {
-                                    dialog.setPrimaryLabel("Saving data");
-                                    dialog.setSecondaryLabel("Waiting for I/O operations to finish...");
-                                }
-
-                                dialog.setPrimaryLabel("Resolving tension");
-                                dialog.setSecondaryLabel("Closing, bye!");
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException e) {
-                                    throw new RuntimeException(e);
-                                }
-
-                                Platform.exit();
-                                System.exit(0);
-                            }
-                        });
+                        shutdown();
                     }
                 });
             } else {
@@ -89,5 +63,70 @@ public class IncomeUtilityApplication extends Application {
             }
         });
         stage.show();
+    }
+
+    public static void restart() {
+        try {
+            String javaBin = System.getProperty("java.home")
+                    + File.separator + "bin"
+                    + File.separator + "java";
+
+            File currentJar = new File(
+                    IncomeUtilityApplication.class
+                            .getProtectionDomain()
+                            .getCodeSource()
+                            .getLocation()
+                            .toURI()
+            );
+
+            if (!currentJar.getName().endsWith(".jar")) {
+                DataManager.log("Restarting is not possible, as the application is not run from a .jar file.");
+                return;
+            }
+
+            List<String> command = new ArrayList<>();
+            command.add(javaBin);
+            command.add("-jar");
+            command.add(currentJar.getPath());
+
+            new ProcessBuilder(command).start();
+
+            shutdown();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void shutdown() {
+        LoadingDialog dialog = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
+        dialog.setPrimaryLabel("Cleaning up");
+        dialog.show("Shutting down...", new Runnable() {
+            @Override
+            public void run() {
+                DataManager.getInstance().saveCurrentConfigurationData();
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                UtilityManager.getInstance().stopAll(SubUtilityType.ALL);
+                while (DataManager.getInstance().isSaving()) {
+                    dialog.setPrimaryLabel("Saving data");
+                    dialog.setSecondaryLabel("Waiting for I/O operations to finish...");
+                }
+
+                dialog.setPrimaryLabel("Resolving tension");
+                dialog.setSecondaryLabel("Closing, bye!");
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                Platform.exit();
+                System.exit(0);
+            }
+        });
     }
 }

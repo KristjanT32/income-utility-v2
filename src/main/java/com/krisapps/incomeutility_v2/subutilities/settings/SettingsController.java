@@ -1,7 +1,9 @@
 package com.krisapps.incomeutility_v2.subutilities.settings;
 
+import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
+import com.krisapps.incomeutility_v2.types.data.ConfigurationData;
 import com.krisapps.incomeutility_v2.ui.listview.CustomCategoryCellFactory;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;
@@ -13,8 +15,12 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.util.Pair;
 
+import java.io.File;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class SettingsController extends SubUtilityController {
@@ -28,13 +34,23 @@ public class SettingsController extends SubUtilityController {
     @FXML
     private ListView<Pair<Integer, String>> categoryList;
 
+    @FXML
+    private TextField dbFilePathField;
+
+    @FXML
+    private Button dbFilePicker;
+
     private SubUtility self;
-    private final DataManager data = DataManager.getInstance();
+    private final DataManager dataman = DataManager.getInstance();
+    private ConfigurationData currentData;
+
+    private final FileChooser dbPicker = new FileChooser();
 
     @FXML
     public void initialize() {
         initUI();
-        refreshUI();
+        refreshGlobalSettings();
+        refreshMoneyFlowSettings();
     }
 
     @Override
@@ -47,11 +63,13 @@ public class SettingsController extends SubUtilityController {
                 self.log("Cleared all pending category additions");
             }
         });
+
+        currentData = dataman.getConfigurationData();
     }
 
     @Override
     public void onShutdown() {
-
+        dataman.saveCurrentConfigurationData();
     }
 
     @Override
@@ -70,10 +88,10 @@ public class SettingsController extends SubUtilityController {
 
         categoryList.setCellFactory(new CustomCategoryCellFactory(
                 (id, newValue) -> {
-                    if (data.customTransactionCategoryExists(id)) {
-                        data.updateCustomTransactionCategory(id, newValue);
+                    if (dataman.customTransactionCategoryExists(id)) {
+                        dataman.updateCustomTransactionCategory(id, newValue);
                     } else {
-                        data.addCustomTransactionCategory(newValue);
+                        dataman.addCustomTransactionCategory(newValue);
                     }
                     refreshCategoryList();
                 },
@@ -99,6 +117,40 @@ public class SettingsController extends SubUtilityController {
                 }
         ));
 
+        FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("Database files", "*.db", "*.sql", "*.sqlite");
+        dbPicker.setTitle("Select database file");
+        dbPicker.getExtensionFilters().add(filter);
+        dbPicker.setInitialDirectory(DataManager.getDataDirectory().toFile());
+
+        dbFilePicker.setOnAction((_) -> {
+            File f = dbPicker.showOpenDialog(self.getInstance().getOwner());
+            if (f != null) {
+                dbFilePathField.setText(f.getPath());
+
+                dataman.updateDatabaseLocation(f.toPath());
+                self.log("Data source switched to: " + f.getPath());
+                promptRestartProgram();
+            }
+        });
+
+        dbFilePathField.setOnAction(e -> {
+            try {
+                Path p = Path.of(dbFilePathField.getText());
+
+                if (!p.toString().isEmpty() && p.toFile().exists() && p.toFile().isFile()) {
+                    dataman.updateDatabaseLocation(p);
+                    self.log("Data source switched to: " + p);
+                    promptRestartProgram();
+                } else {
+                    dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
+                }
+            } catch (InvalidPathException _) {
+                dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
+            }
+        });
+
+        dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
+
 
         VBox box = new VBox();
         HBox.setHgrow(box, Priority.ALWAYS);
@@ -117,7 +169,11 @@ public class SettingsController extends SubUtilityController {
         categoryList.setPlaceholder(box);
     }
 
-    private void refreshUI() {
+    private void refreshGlobalSettings() {
+
+    }
+
+    private void refreshMoneyFlowSettings() {
         refreshCategoryList();
     }
 
@@ -127,7 +183,7 @@ public class SettingsController extends SubUtilityController {
 
     private void refreshCategoryList() {
         categoryList.getItems().clear();
-        categoryList.getItems().setAll(data.getCustomTransactionCategoryEntries());
+        categoryList.getItems().setAll(dataman.getCustomTransactionCategoryEntries());
     }
 
     private void addBlankCategory(ActionEvent ev) {
@@ -137,5 +193,16 @@ public class SettingsController extends SubUtilityController {
         categoryList.getFocusModel().focus(focusIndex);
         categoryList.getSelectionModel().select(focusIndex);
         categoryList.scrollTo(focusIndex);
+    }
+
+    private void promptRestartProgram() {
+        PopupManager.showConfirmation("Data source changed", "The active data source for Income Utility has changed - for these changes to take effect, the utility needs to be restarted.\n\nWould you like to restart the utility now?",
+                new ButtonType("Yes, restart", ButtonBar.ButtonData.APPLY),
+                new ButtonType("No, I'll restart later", ButtonBar.ButtonData.CANCEL_CLOSE)
+        ).ifPresent(r -> {
+            if (r.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                IncomeUtilityApplication.restart();
+            }
+        });
     }
 }

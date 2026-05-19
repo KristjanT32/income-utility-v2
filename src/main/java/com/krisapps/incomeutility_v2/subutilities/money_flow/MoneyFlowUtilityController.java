@@ -101,7 +101,7 @@ public class MoneyFlowUtilityController extends SubUtilityController {
 
     public void onShutdown() {
         data.updateLastOpenAccount(selectedAccount);
-        data.applyConfigurationData();
+        data.saveCurrentConfigurationData();
     }
 
     @Override

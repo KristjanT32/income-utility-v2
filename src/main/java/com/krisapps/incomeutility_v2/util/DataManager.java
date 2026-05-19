@@ -49,7 +49,7 @@ public class DataManager {
     private Path databaseFilePath = null;
     private boolean isSaving = false;
 
-    public static final Path DATA_DIRECTORY_PATH = Path.of(System.getProperty("user.home") + File.separator + "IncomeUtility v2");
+    private static final Path DATA_DIRECTORY_PATH = Path.of(System.getProperty("user.home") + File.separator + "IncomeUtility v2");
     private ConfigurationData configurationData;
     private Connection currentConnection;
 
@@ -176,15 +176,14 @@ public class DataManager {
             if (!configFile.exists()) {
                 configFile.createNewFile();
                 ConfigurationData config = new ConfigurationData();
-                saveData(config);
+                saveConfigurationData(config);
             }
         } catch (IOException e) {
             log("Could not create a new data file - " + e.getMessage());
         }
     }
 
-
-    public void saveData(ConfigurationData data) {
+    public void saveConfigurationData(ConfigurationData data) {
         isSaving = true;
 
         if (!configFile.exists()) {
@@ -202,23 +201,22 @@ public class DataManager {
         isSaving = false;
     }
 
+    public void saveCurrentConfigurationData() {
+        if (configurationData == null) {
+            return;
+        }
+        saveConfigurationData(configurationData);
+    }
+
     public boolean isSaving() {
         return isSaving;
     }
 
-    public void applyConfigurationData() {
-        if (configurationData == null) {
-            return;
-        }
-        saveData(configurationData);
-    }
-
     /**
-     * Loads the saved data from disk.
-     *
-     * @return The data
+     * Loads configuration data from the disk.
+     * @return The loaded data.
      */
-    private ConfigurationData getConfigurationData() {
+    public ConfigurationData getConfigurationData() {
 
         if (configurationData != null) {
             return configurationData;
@@ -948,6 +946,14 @@ public class DataManager {
         configurationData.setLastActiveAccountId(account.getId());
     }
     //</editor-fold>
+
+    public void updateDatabaseLocation(Path location) {
+        if (location == null) return;
+        if (configurationData == null) {
+            initialize();
+        }
+        configurationData.setDatabaseLocation(location);
+    }
 
     /**
      * Contains various methods for formatting data.

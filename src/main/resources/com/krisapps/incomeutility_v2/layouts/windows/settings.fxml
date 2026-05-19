@@ -42,6 +42,43 @@
                                             <padding>
                                                 <Insets top="10.0"/>
                                             </padding>
+                                            <children>
+                                                <VBox>
+                                                    <children>
+                                                        <Label maxWidth="1.7976931348623157E308"
+                                                               text="Database location">
+                                                            <styleClass>
+                                                                <String fx:value="large-label"/>
+                                                                <String fx:value="bold"/>
+                                                            </styleClass>
+                                                        </Label>
+                                                        <Label maxWidth="1.7976931348623157E308"
+                                                               styleClass="medium-label"
+                                                               text="The location of the database file Income Utility will use for data storage"/>
+                                                        <HBox spacing="5.0">
+                                                            <children>
+                                                                <Button fx:id="dbFilePicker"
+                                                                        maxHeight="1.7976931348623157E308"
+                                                                        maxWidth="1.7976931348623157E308"
+                                                                        mnemonicParsing="false" text="Select"
+                                                                        HBox.hgrow="SOMETIMES">
+                                                                    <graphic>
+                                                                        <FontIcon iconLiteral="fltfal-folder-24"
+                                                                                  iconSize="12"/>
+                                                                    </graphic>
+                                                                </Button>
+                                                                <TextField fx:id="dbFilePathField"
+                                                                           maxHeight="1.7976931348623157E308"
+                                                                           maxWidth="1.7976931348623157E308"
+                                                                           HBox.hgrow="ALWAYS"/>
+                                                            </children>
+                                                            <VBox.margin>
+                                                                <Insets top="5.0"/>
+                                                            </VBox.margin>
+                                                        </HBox>
+                                                    </children>
+                                                </VBox>
+                                            </children>
                                         </VBox>
                                     </content>
                                     <styleClass>
