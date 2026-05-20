@@ -43,16 +43,7 @@ public class CustomCategoryCell extends ListCell<Pair<Integer, String>> {
             rootPane = loader.load();
 
             categoryNameLabel.setOnMouseClicked((e) -> {
-                InputDialog dialog = new InputDialog("Edit category name");
-                dialog.setPrimaryLabel("Editing category name");
-                dialog.setDescription("To edit the category name for '" + getItem().getValue() + "', enter the desired new name into the text field below.");
-                dialog.setPrompt("New category name...");
-                dialog.setInitialValue(getItem().getValue());
-
-                Optional<String> newValue = dialog.showAndWait();
-                if (newValue.isPresent() && !newValue.get().isBlank()) {
-                    onEditRequest.accept(getItem().getKey(), newValue.get());
-                }
+                promptEditName();
             });
 
             deleteButton.setOnAction((e) -> {
@@ -62,6 +53,19 @@ public class CustomCategoryCell extends ListCell<Pair<Integer, String>> {
             categoryNameLabel.setCursor(Cursor.TEXT);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void promptEditName() {
+        InputDialog dialog = new InputDialog("Edit category name");
+        dialog.setPrimaryLabel("Editing category name");
+        dialog.setDescription("To edit the category name for '" + getItem().getValue() + "', enter the desired new name into the text field below.");
+        dialog.setPrompt("New category name...");
+        dialog.setInitialValue(getItem().getValue());
+
+        Optional<String> newValue = dialog.showAndWait();
+        if (newValue.isPresent() && !newValue.get().isBlank()) {
+            onEditRequest.accept(getItem().getKey(), newValue.get());
         }
     }
 

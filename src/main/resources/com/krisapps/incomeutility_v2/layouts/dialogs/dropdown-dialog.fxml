@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.*?>
+<?import java.net.URL?>
+<VBox maxHeight="200.0" maxWidth="500.0" minHeight="150.0" minWidth="400.0" spacing="10.0"
+      xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+    <children>
+        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
+            <children>
+                <Label fx:id="primaryLabel" alignment="TOP_LEFT" maxHeight="1.7976931348623157E308"
+                       maxWidth="1.7976931348623157E308" styleClass="title" text="Primary label"/>
+                <Label fx:id="descriptionLabel" alignment="TOP_LEFT" maxHeight="1.7976931348623157E308"
+                       maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Description label"
+                       wrapText="true" VBox.vgrow="SOMETIMES">
+                    <VBox.margin>
+                        <Insets top="5.0"/>
+                    </VBox.margin>
+                </Label>
+                <Separator maxWidth="1.7976931348623157E308" minHeight="15.0" orientation="VERTICAL" visible="false"
+                           VBox.vgrow="ALWAYS"/>
+                <ComboBox fx:id="comboBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                          prefWidth="150.0"/>
+            </children>
+            <VBox.margin>
+                <Insets/>
+            </VBox.margin>
+        </VBox>
+    </children>
+    <stylesheets>
+        <URL value="@../../stylesheets/core-ui.css"/>
+        <URL value="@../../stylesheets/main.css"/>
+    </stylesheets>
+</VBox>

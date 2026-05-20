@@ -423,6 +423,29 @@ public class DataManager {
         return getTransactions(account.getId());
     }
 
+    public List<Transaction> getTransactionsWithCustomCategory(int id) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE customCategoryId = ?;");
+            stmt.setInt(1, id);
+
+            ResultSet response = stmt.executeQuery();
+            List<Transaction> out = new ArrayList<>();
+            while (response.next()) {
+                Transaction t = mapResultSetToTransaction(response);
+                out.add(t);
+            }
+            return out;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+    }
+
     public List<Transaction> getTransactions(UUID accountId) {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();

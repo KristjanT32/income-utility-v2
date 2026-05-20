@@ -1,6 +1,7 @@
 package com.krisapps.incomeutility_v2.subutilities.settings;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
+import com.krisapps.incomeutility_v2.dialogs.generic.DropdownDialog;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
 import com.krisapps.incomeutility_v2.types.data.ConfigurationData;
@@ -17,10 +18,12 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.util.Pair;
+import javafx.util.StringConverter;
 
 import java.io.File;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
 public class SettingsController extends SubUtilityController {
@@ -96,6 +99,25 @@ public class SettingsController extends SubUtilityController {
                     refreshCategoryList();
                 },
                 (id) -> {
+                    if (id == 0) {
+                        PopupManager.showPopup("System category", "Sorry, but this is a system-reserved category and cannot be deleted.", Alert.AlertType.ERROR);
+                        return;
+                    }
+
+                    if (dataman.getTransactionsWithCustomCategory(id).isEmpty()) {
+                        PopupManager.showConfirmation("Delete category?", "Are you sure you wish to delete the selected category?\nThis cannot be undone.",
+                                new ButtonType("Yes, delete", ButtonBar.ButtonData.APPLY),
+                                new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                        ).ifPresent(r -> {
+                            if (r.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                                dataman.removeCustomTransactionCategory(id);
+                                refreshCategoryList();
+                                self.log("Deleted custom transaction category #" + id);
+                            }
+                        });
+                        return;
+                    }
+
                     Optional<ButtonType> response = PopupManager.showConfirmation(
                             "Category in use",
                             "The category you are trying to delete is in use in some transactions.\nTo delete it, you will need to specify a replacement transaction category.",
@@ -105,14 +127,33 @@ public class SettingsController extends SubUtilityController {
 
                     response.ifPresent(r -> {
                         if (r.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
-                            // TODO: Implement combobox dialog to allow for choosing from a list of options
-                            // TODO: Implement this
+                            List<Pair<Integer, String>> categories = dataman.getCustomTransactionCategoryEntries().stream().filter(cat -> !cat.getKey().equals(id)).toList();
+
+                            DropdownDialog<Pair<Integer, String>> chooser = new DropdownDialog<>("Choose replacement category");
+                            chooser.setItems(categories);
+                            chooser.setStringConverter(new StringConverter<>() {
+                                @Override
+                                public String toString(Pair<Integer, String> object) {
+                                    return object == null ? "Select option..." : object.getValue();
+                                }
+
+                                @Override
+                                public Pair<Integer, String> fromString(String string) {
+                                    return null;
+                                }
+                            });
+                            chooser.setPrimaryLabel("Select replacement");
+                            chooser.setDescription("To delete the selected category, please choose a replacement category from the list below.");
+                            Optional<Pair<Integer, String>> replacement = chooser.showAndWait();
+
+                            replacement.ifPresent(integerStringPair -> {
+                                dataman.replaceCustomTransactionInTransactions(id, integerStringPair.getKey());
+                                dataman.removeCustomTransactionCategory(id);
+                                self.log("Deleted custom transaction category #" + id);
+                            });
+                            refreshCategoryList();
                         }
                     });
-
-                    // data.replaceCustomTransactionInTransactions(id);
-                    // data.removeCustomTransactionCategory(id);
-                    PopupManager.showPredefinedPopup(PopupManager.PopupType.NOT_IMPLEMENTED);
                     refreshCategoryList();
                 }
         ));
@@ -193,6 +234,7 @@ public class SettingsController extends SubUtilityController {
         categoryList.getFocusModel().focus(focusIndex);
         categoryList.getSelectionModel().select(focusIndex);
         categoryList.scrollTo(focusIndex);
+
     }
 
     private void promptRestartProgram() {
