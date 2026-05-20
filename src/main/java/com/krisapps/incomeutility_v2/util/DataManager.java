@@ -45,15 +45,16 @@ public class DataManager {
             .registerTypeAdapter(Transaction.class, new TransactionDeserializer())
             .create();
     private static DataManager instance;
-    private final File configFile = new File(System.getProperty("user.home") + File.separator + "IncomeUtility v2" + File.separator + "config.json");
-    private Path databaseFilePath = null;
-    private boolean isSaving = false;
-
+    private final File configFile;
+    private Path databaseFilePath;
     private static final Path DATA_DIRECTORY_PATH = Path.of(System.getProperty("user.home") + File.separator + "IncomeUtility v2");
+
+    private boolean isSaving = false;
     private ConfigurationData configurationData;
     private Connection currentConnection;
 
     private DataManager() {
+        this.configFile = Path.of(DATA_DIRECTORY_PATH.toString(), "config.json").toFile();
     }
 
     public static DataManager getInstance() {
@@ -83,9 +84,7 @@ public class DataManager {
         loadConfigurationData();
         databaseFilePath = configurationData.getDatabaseLocation();
 
-        if (currentConnection != null) {
-            log("DataManager#initialize has been called after initialization - a new DB connection will not be opened.", Level.WARNING);
-        } else {
+        if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
 
             try {
@@ -98,7 +97,7 @@ public class DataManager {
                 }
 
             } catch (SQLException e) {
-                log("Failed to check database state.");
+                log("Failed to check database state. Error: " + e.getMessage());
             }
 
         }
@@ -196,7 +195,7 @@ public class DataManager {
             writer.write(gson.toJson(data));
             writer.close();
         } catch (IOException e) {
-            log("Data saving failed - " + e.getMessage());
+            log("Data saving failed: " + e.getMessage());
         }
         isSaving = false;
     }
