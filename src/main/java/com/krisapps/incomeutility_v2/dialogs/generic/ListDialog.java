@@ -1,11 +1,8 @@
-package com.krisapps.incomeutility_v2.dialogs;
+package com.krisapps.incomeutility_v2.dialogs.generic;
 
-import com.krisapps.incomeutility_v2.types.data.CategoryExpenseSummary;
+import com.krisapps.incomeutility_v2.dialogs.IncomeUtilityDialog;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;

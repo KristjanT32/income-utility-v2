@@ -1,5 +1,6 @@
 package com.krisapps.incomeutility_v2.dialogs;
 
+import com.krisapps.incomeutility_v2.dialogs.generic.LoadingDialog;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.PopupManager;

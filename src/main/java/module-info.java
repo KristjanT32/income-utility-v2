@@ -32,4 +32,5 @@ module com.krisapps.incomeutility_v2 {
     opens com.krisapps.incomeutility_v2.types.fiscal.cashew to com.google.gson;
     opens com.krisapps.incomeutility_v2.util to com.google.gson, javafx.fxml;
     opens com.krisapps.incomeutility_v2.ui.listview to javafx.fxml;
+    opens com.krisapps.incomeutility_v2.dialogs.generic to javafx.fxml;
 }

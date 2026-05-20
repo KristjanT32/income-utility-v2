@@ -1,10 +1,9 @@
 package com.krisapps.incomeutility_v2.ui.listview.cell;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
-import com.krisapps.incomeutility_v2.dialogs.ListDialog;
+import com.krisapps.incomeutility_v2.dialogs.generic.ListDialog;
 import com.krisapps.incomeutility_v2.types.data.CategoryExpenseSummary;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
-import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
 import com.krisapps.incomeutility_v2.util.DataManager;

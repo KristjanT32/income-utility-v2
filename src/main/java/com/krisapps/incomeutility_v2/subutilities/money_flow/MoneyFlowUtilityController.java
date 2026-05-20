@@ -3,6 +3,7 @@ package com.krisapps.incomeutility_v2.subutilities.money_flow;
 import com.krisapps.incomeutility_v2.dialogs.AddMultipleTransactionsDialog;
 import com.krisapps.incomeutility_v2.dialogs.AddSingleTransactionDialog;
 import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
+import com.krisapps.incomeutility_v2.dialogs.generic.InputDialog;
 import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
@@ -122,11 +123,12 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             }
             case "date" -> {
                 if (args.length < 1) {
-                    String date = PopupManager.showInputDialog("Invalid syntax", "Missing argument: 'date (dd/MM/yyyy)' for utility command date", "Date: ", "");
-
-                    if (!date.isEmpty()) {
-                        datePicker.setValue(LocalDate.parse(date, Formats.DATE_FORMATTER));
-                    }
+                    InputDialog dialog = new InputDialog("Missing argument");
+                    dialog.setPrimaryLabel("Invalid syntax");
+                    dialog.setDescription("You are missing an argument for the 'date' command. Please supply it using the text field below.");
+                    dialog.setPrompt("dd/MM/yyyy");
+                    Optional<String> date = dialog.showAndWait();
+                    date.ifPresent(s -> datePicker.setValue(LocalDate.parse(s, Formats.DATE_FORMATTER)));
                     return;
                 }
                 datePicker.setValue(LocalDate.parse(args[0], Formats.DATE_FORMATTER));

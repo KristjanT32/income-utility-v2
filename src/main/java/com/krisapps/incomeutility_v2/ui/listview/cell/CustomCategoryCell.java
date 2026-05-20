@@ -1,7 +1,7 @@
 package com.krisapps.incomeutility_v2.ui.listview.cell;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
-import com.krisapps.incomeutility_v2.util.PopupManager;
+import com.krisapps.incomeutility_v2.dialogs.generic.InputDialog;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
@@ -12,6 +12,7 @@ import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -42,14 +43,15 @@ public class CustomCategoryCell extends ListCell<Pair<Integer, String>> {
             rootPane = loader.load();
 
             categoryNameLabel.setOnMouseClicked((e) -> {
-                String newValue = PopupManager.showInputDialog(
-                        "Edit custom category",
-                        "Please enter the new value for the category in the box below.",
-                        "New value: ",
-                        getItem().getValue()
-                );
-                if (newValue != null && !newValue.isBlank()) {
-                    onEditRequest.accept(getItem().getKey(), newValue);
+                InputDialog dialog = new InputDialog("Edit category name");
+                dialog.setPrimaryLabel("Editing category name");
+                dialog.setDescription("To edit the category name for '" + getItem().getValue() + "', enter the desired new name into the text field below.");
+                dialog.setPrompt("New category name...");
+                dialog.setInitialValue(getItem().getValue());
+
+                Optional<String> newValue = dialog.showAndWait();
+                if (newValue.isPresent() && !newValue.get().isBlank()) {
+                    onEditRequest.accept(getItem().getKey(), newValue.get());
                 }
             });
 
