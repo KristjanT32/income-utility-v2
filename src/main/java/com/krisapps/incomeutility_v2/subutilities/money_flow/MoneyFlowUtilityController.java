@@ -77,6 +77,15 @@ public class MoneyFlowUtilityController extends SubUtilityController {
     private Button backButton;
 
     @FXML
+    private Button nextDayButton;
+
+    @FXML
+    private Button prevDayButton;
+
+    @FXML
+    private Button resetDateButton;
+
+    @FXML
     private HBox commandPrompt;
 
     @FXML
@@ -139,27 +148,11 @@ public class MoneyFlowUtilityController extends SubUtilityController {
                 datePicker.setValue(LocalDate.parse(args[0], Formats.DATE_FORMATTER));
             }
             case "first-transaction" -> {
-                if (fiscal.getTransactions(selectedAccount).isEmpty()) {
-                    PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
-                } else {
-                    fiscal.getTransactions(selectedAccount).stream().min(Comparator.comparing(Transaction::getTimestamp)).ifPresentOrElse((t) -> {
-                        datePicker.setValue(t.getTimestamp().toLocalDate());
-                    }, () -> {
-                        PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
-                    });
-                }
+                selectDateOfFirstTransaction();
             }
 
             case "last-transaction" -> {
-                if (fiscal.getTransactions(selectedAccount).isEmpty()) {
-                    PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
-                } else {
-                    fiscal.getTransactions(selectedAccount).stream().max(Comparator.comparing(Transaction::getTimestamp)).ifPresentOrElse((t) -> {
-                        datePicker.setValue(t.getTimestamp().toLocalDate());
-                    }, () -> {
-                        PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
-                    });
-                }
+                selectDateOfLastTransaction();
             }
             case "find" -> {
                 // TODO: Implement
@@ -168,6 +161,30 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             case "refresh" -> refreshUI();
             case "exit" -> utility.stop();
             default -> PopupManager.showPopup("Unknown utility command", "'" + command + "' is not a valid utility command.", Alert.AlertType.ERROR);
+        }
+    }
+
+    private void selectDateOfFirstTransaction() {
+        if (fiscal.getTransactions(selectedAccount).isEmpty()) {
+            PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+        } else {
+            fiscal.getTransactions(selectedAccount).stream().min(Comparator.comparing(Transaction::getTimestamp)).ifPresentOrElse((t) -> {
+                datePicker.setValue(t.getTimestamp().toLocalDate());
+            }, () -> {
+                PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+            });
+        }
+    }
+
+    private void selectDateOfLastTransaction() {
+        if (fiscal.getTransactions(selectedAccount).isEmpty()) {
+            PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+        } else {
+            fiscal.getTransactions(selectedAccount).stream().max(Comparator.comparing(Transaction::getTimestamp)).ifPresentOrElse((t) -> {
+                datePicker.setValue(t.getTimestamp().toLocalDate());
+            }, () -> {
+                PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+            });
         }
     }
 
@@ -237,6 +254,38 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             this.utility.stop();
         });
 
+        prevDayButton.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.isShiftDown()) {
+                selectDateOfFirstTransaction();
+            } else {
+                previousDay();
+            }
+        });
+
+        nextDayButton.setOnMouseClicked(mouseEvent -> {
+            nextDay();
+        });
+
+        resetDateButton.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.isShiftDown()) {
+                selectDateOfLastTransaction();
+            } else {
+                resetToToday();
+            }
+        });
+
+        Tooltip.install(resetDateButton, new Tooltip(
+                "Resets the date to today.\n\nNote: Shift+Click to reset to the date of the last transaction."
+        ));
+
+        Tooltip.install(prevDayButton, new Tooltip(
+                "Selects the previous day.\n\nNote: Shift+Click to select the day of the first transaction."
+        ));
+
+        Tooltip.install(nextDayButton, new Tooltip(
+                "Selects the next day."
+        ));
+
         refreshUI();
     }
 
@@ -304,17 +353,14 @@ public class MoneyFlowUtilityController extends SubUtilityController {
         addTransactionButton.setDisable(selectedAccount == null);
     }
 
-    @FXML
     public void nextDay() {
         datePicker.setValue(datePicker.getValue().plusDays(1));
     }
 
-    @FXML
     public void previousDay() {
         datePicker.setValue(datePicker.getValue().minusDays(1));
     }
 
-    @FXML
     public void resetToToday() {
         datePicker.setValue(LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault()));
     }
