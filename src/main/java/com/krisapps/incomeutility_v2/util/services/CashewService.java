@@ -1,6 +1,6 @@
 package com.krisapps.incomeutility_v2.util.services;
 
-import com.krisapps.incomeutility_v2.dialogs.LoadingDialog;
+import com.krisapps.incomeutility_v2.dialogs.generic.LoadingDialog;
 import com.krisapps.incomeutility_v2.types.DateFilteringMode;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewAccount;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;

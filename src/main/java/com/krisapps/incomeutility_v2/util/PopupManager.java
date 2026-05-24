@@ -151,6 +151,7 @@ public class PopupManager {
         root.setSpacing(5);
 
         inputField.setText(inputValue == null ? "" : inputValue);
+        inputField.requestFocus();
 
         a.getDialogPane().setContent(root);
 

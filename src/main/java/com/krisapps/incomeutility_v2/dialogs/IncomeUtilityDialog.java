@@ -17,6 +17,12 @@ public class IncomeUtilityDialog<T> extends Dialog<T> {
 
     protected VBox rootPane;
 
+    /**
+     * Constructs a generic IncomeUtilityDialog.
+     *
+     * @param dialogFileName The name of the dialog file (with extension), relative to the <code>dialogs</code> folder in the resource directory.
+     * @param title          The title of the dialog window.
+     */
     public IncomeUtilityDialog(String dialogFileName, String title) {
         try {
             FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/%s".formatted(dialogFileName)));
@@ -43,6 +49,12 @@ public class IncomeUtilityDialog<T> extends Dialog<T> {
         }
     }
 
+    /**
+     * Constructs a generic IncomeUtilityDialog.
+     * @param dialogFileName The name of the dialog file (with extension), relative to the <code>dialogs</code> folder in the resource directory.
+     * @param title The title of the dialog window.
+     * @param iconFileName The name of the icon file (with extension), relative to the <code>icons</code> folder in the resource directory.
+     */
     public IncomeUtilityDialog(String dialogFileName, String title, String iconFileName) {
         try {
             FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/dialogs/%s".formatted(dialogFileName)));

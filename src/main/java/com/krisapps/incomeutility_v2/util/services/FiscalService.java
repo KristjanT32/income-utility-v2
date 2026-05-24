@@ -38,16 +38,16 @@ public class FiscalService {
         if (transaction.getType().equals(TransactionType.TRANSFER)) {
             // If the supplied account is the source of the transfer, the adjustment has to be negative.
             if (transaction.getSourceAccountId().equals(account.getId())) {
-                return -Math.abs(transaction.getAmount());
+                return -transaction.getAbsoluteAmount();
             } else if (transaction.getTargetAccountId().equals(account.getId())) {
-                return Math.abs(transaction.getAmount());
+                return transaction.getAbsoluteAmount();
             } else {
                 log("Transaction #" + transaction.getId() + " is unrelated to account #" + account.getId());
                 return 0.0d;
             }
         } else {
             return (transaction.getType().equals(TransactionType.DEPOSIT)
-                    ? transaction.getAmount() : transaction.getType().equals(TransactionType.WITHDRAWAL) ? -Math.abs(transaction.getAmount()) : 0.0d);
+                    ? transaction.getAbsoluteAmount() : transaction.getType().equals(TransactionType.WITHDRAWAL) ? -transaction.getAbsoluteAmount() : 0.0d);
         }
     }
 
@@ -128,7 +128,7 @@ public class FiscalService {
      * @return The total inflow on the supplied date.
      */
     public double getInflow(Account account, LocalDate date) {
-        return getTransactionsOn(account, date).stream().filter(transaction -> getBalanceAdjustment(account, transaction) > 0).mapToDouble(Transaction::getAmount).sum();
+        return getTransactionsOn(account, date).stream().filter(transaction -> getBalanceAdjustment(account, transaction) > 0).mapToDouble(Transaction::getAbsoluteAmount).sum();
     }
 
     /**
@@ -139,7 +139,7 @@ public class FiscalService {
      * @return The total inflow between the start and end dates (both inclusive).
      */
     public double getInflow(Account account, LocalDate fromInclusive, LocalDate toInclusive) {
-        return getTransactionsBetween(account, fromInclusive, toInclusive).stream().filter(transaction -> getBalanceAdjustment(account, transaction) > 0).mapToDouble(Transaction::getAmount).sum();
+        return getTransactionsBetween(account, fromInclusive, toInclusive).stream().filter(transaction -> getBalanceAdjustment(account, transaction) > 0).mapToDouble(Transaction::getAbsoluteAmount).sum();
     }
 
     /**

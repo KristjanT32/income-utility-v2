@@ -15,11 +15,22 @@
     -fx-padding: 1px;
 }
 
-.rounded-container.large {
+.rounded-container-secondary {
+    -fx-border-color: "lightgray";
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-padding: 1px;
+}
+
+.rounded-container-secondary:hover {
+    -fx-border-color: "gray";
+}
+
+.rounded-container.large, .rounded-container-secondary.large {
     -fx-padding: 5px;
 }
 
-.rounded-container.xl {
+.rounded-container.xl, .rounded-container-secondary.xl {
     -fx-padding: 10px;
 }
 
@@ -403,3 +414,51 @@
 
 /* </editor-fold> */
 
+/* <editor-fold desc="Scrollbar"> */
+/* Entire scrollbar */
+.scroll-bar {
+    -fx-background-color: transparent;
+    -fx-padding: 1;
+}
+
+/* Track (background area) */
+.scroll-bar:vertical .track,
+.scroll-bar:horizontal .track {
+    -fx-background-color: #dadada;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+}
+
+/* Draggable thumb */
+.scroll-bar:vertical .thumb,
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: #5a5a5a;
+    -fx-background-radius: 10px;
+    -fx-background-insets: 2;
+}
+
+/* Hovered thumb */
+.scroll-bar:vertical .thumb:hover,
+.scroll-bar:horizontal .thumb:hover {
+    -fx-background-color: #7a7a7a;
+}
+
+/* Pressed thumb */
+.scroll-bar:vertical .thumb:pressed,
+.scroll-bar:horizontal .thumb:pressed {
+    -fx-background-color: #9a9a9a;
+}
+
+/* Increment/decrement buttons */
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+}
+
+/* Optional: corner between horizontal + vertical bars */
+.scroll-pane .corner {
+    -fx-background-color: transparent;
+}
+
+/* </editor-fold> */

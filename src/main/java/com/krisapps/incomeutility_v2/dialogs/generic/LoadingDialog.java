@@ -1,6 +1,7 @@
-package com.krisapps.incomeutility_v2.dialogs;
+package com.krisapps.incomeutility_v2.dialogs.generic;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityController;
+import com.krisapps.incomeutility_v2.dialogs.IncomeUtilityDialog;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;

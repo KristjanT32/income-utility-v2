@@ -162,7 +162,6 @@ public class EditTransactionDialog extends IncomeUtilityDialog<Transaction> {
         fromSelector.setItems(items);
         fromSelector.setCellFactory(new AccountComboboxCellFactory());
         fromSelector.setButtonCell(new AccountComboboxButtonCell());
-        fromSelector.setValue(selectedAccount);
     }
 
     private void refreshTargetAccountSelector(HashSet<Account> accounts) {

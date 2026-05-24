@@ -3,6 +3,7 @@ package com.krisapps.incomeutility_v2.subutilities.money_flow;
 import com.krisapps.incomeutility_v2.dialogs.AddMultipleTransactionsDialog;
 import com.krisapps.incomeutility_v2.dialogs.AddSingleTransactionDialog;
 import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
+import com.krisapps.incomeutility_v2.dialogs.generic.InputDialog;
 import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
@@ -28,6 +29,7 @@ import javafx.util.StringConverter;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -75,6 +77,15 @@ public class MoneyFlowUtilityController extends SubUtilityController {
     private Button backButton;
 
     @FXML
+    private Button nextDayButton;
+
+    @FXML
+    private Button prevDayButton;
+
+    @FXML
+    private Button resetDateButton;
+
+    @FXML
     private HBox commandPrompt;
 
     @FXML
@@ -101,7 +112,7 @@ public class MoneyFlowUtilityController extends SubUtilityController {
 
     public void onShutdown() {
         data.updateLastOpenAccount(selectedAccount);
-        data.saveCurrentData();
+        data.saveCurrentConfigurationData();
     }
 
     @Override
@@ -122,37 +133,26 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             }
             case "date" -> {
                 if (args.length < 1) {
-                    String date = PopupManager.showInputDialog("Invalid syntax", "Missing argument: 'date (dd/MM/yyyy)' for utility command date", "Date: ", "");
-
-                    if (!date.isEmpty()) {
-                        datePicker.setValue(LocalDate.parse(date, Formats.DATE_FORMATTER));
+                    InputDialog dialog = new InputDialog("Missing argument");
+                    dialog.setPrimaryLabel("Invalid syntax");
+                    dialog.setDescription("You are missing an argument for the 'date' command. Please supply it using the text field below.");
+                    dialog.setPrompt("dd/MM/yyyy");
+                    Optional<String> date = dialog.showAndWait();
+                    try {
+                        date.ifPresent(s -> datePicker.setValue(LocalDate.parse(s, Formats.DATE_FORMATTER)));
+                    } catch (DateTimeParseException e) {
+                        PopupManager.showPopup("Invalid date format", "The supplied date is not valid.\nPlease specify the date as dd/MM/yyyy.", Alert.AlertType.ERROR);
                     }
                     return;
                 }
                 datePicker.setValue(LocalDate.parse(args[0], Formats.DATE_FORMATTER));
             }
             case "first-transaction" -> {
-                if (fiscal.getTransactions(selectedAccount).isEmpty()) {
-                    PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
-                } else {
-                    fiscal.getTransactions(selectedAccount).stream().min(Comparator.comparing(Transaction::getTimestamp)).ifPresentOrElse((t) -> {
-                        datePicker.setValue(t.getTimestamp().toLocalDate());
-                    }, () -> {
-                        PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
-                    });
-                }
+                selectDateOfFirstTransaction();
             }
 
             case "last-transaction" -> {
-                if (fiscal.getTransactions(selectedAccount).isEmpty()) {
-                    PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
-                } else {
-                    fiscal.getTransactions(selectedAccount).stream().max(Comparator.comparing(Transaction::getTimestamp)).ifPresentOrElse((t) -> {
-                        datePicker.setValue(t.getTimestamp().toLocalDate());
-                    }, () -> {
-                        PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
-                    });
-                }
+                selectDateOfLastTransaction();
             }
             case "find" -> {
                 // TODO: Implement
@@ -161,6 +161,30 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             case "refresh" -> refreshUI();
             case "exit" -> utility.stop();
             default -> PopupManager.showPopup("Unknown utility command", "'" + command + "' is not a valid utility command.", Alert.AlertType.ERROR);
+        }
+    }
+
+    private void selectDateOfFirstTransaction() {
+        if (fiscal.getTransactions(selectedAccount).isEmpty()) {
+            PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+        } else {
+            fiscal.getTransactions(selectedAccount).stream().min(Comparator.comparing(Transaction::getTimestamp)).ifPresentOrElse((t) -> {
+                datePicker.setValue(t.getTimestamp().toLocalDate());
+            }, () -> {
+                PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+            });
+        }
+    }
+
+    private void selectDateOfLastTransaction() {
+        if (fiscal.getTransactions(selectedAccount).isEmpty()) {
+            PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+        } else {
+            fiscal.getTransactions(selectedAccount).stream().max(Comparator.comparing(Transaction::getTimestamp)).ifPresentOrElse((t) -> {
+                datePicker.setValue(t.getTimestamp().toLocalDate());
+            }, () -> {
+                PopupManager.showPopup("No transactions found", "No transactions exist, so no date could be found with any transactions to be shown.", Alert.AlertType.ERROR);
+            });
         }
     }
 
@@ -230,6 +254,38 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             this.utility.stop();
         });
 
+        prevDayButton.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.isShiftDown()) {
+                selectDateOfFirstTransaction();
+            } else {
+                previousDay();
+            }
+        });
+
+        nextDayButton.setOnMouseClicked(mouseEvent -> {
+            nextDay();
+        });
+
+        resetDateButton.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.isShiftDown()) {
+                selectDateOfLastTransaction();
+            } else {
+                resetToToday();
+            }
+        });
+
+        Tooltip.install(resetDateButton, new Tooltip(
+                "Resets the date to today.\n\nNote: Shift+Click to reset to the date of the last transaction."
+        ));
+
+        Tooltip.install(prevDayButton, new Tooltip(
+                "Selects the previous day.\n\nNote: Shift+Click to select the day of the first transaction."
+        ));
+
+        Tooltip.install(nextDayButton, new Tooltip(
+                "Selects the next day."
+        ));
+
         refreshUI();
     }
 
@@ -297,17 +353,14 @@ public class MoneyFlowUtilityController extends SubUtilityController {
         addTransactionButton.setDisable(selectedAccount == null);
     }
 
-    @FXML
     public void nextDay() {
         datePicker.setValue(datePicker.getValue().plusDays(1));
     }
 
-    @FXML
     public void previousDay() {
         datePicker.setValue(datePicker.getValue().minusDays(1));
     }
 
-    @FXML
     public void resetToToday() {
         datePicker.setValue(LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault()));
     }

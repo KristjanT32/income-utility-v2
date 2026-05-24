@@ -1,24 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.String?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+<?import java.lang.*?>
 <?import java.net.URL?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.DatePicker?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.MenuButton?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
-
-
 <StackPane alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" spacing="10.0">
@@ -197,17 +185,18 @@
                         <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="5.0">
                            <children>
                               <DatePicker fx:id="datePicker" maxHeight="1.7976931348623157E308" maxWidth="250.0" prefWidth="250.0" />
-                              <Button maxHeight="1.7976931348623157E308" mnemonicParsing="false" onAction="#previousDay">
+                               <Button fx:id="prevDayButton" maxHeight="1.7976931348623157E308" mnemonicParsing="false">
                                  <graphic>
                                     <FontIcon iconLiteral="fltfal-arrow-left-24" iconSize="16" />
                                  </graphic>
                               </Button>
-                              <Button maxHeight="1.7976931348623157E308" mnemonicParsing="false" onAction="#nextDay">
+                               <Button fx:id="nextDayButton" maxHeight="1.7976931348623157E308" mnemonicParsing="false">
                                  <graphic>
                                     <FontIcon iconLiteral="fltfal-arrow-right-24" iconSize="16" />
                                  </graphic>
                               </Button>
-                              <Button maxHeight="1.7976931348623157E308" mnemonicParsing="false" onAction="#resetToToday">
+                               <Button fx:id="resetDateButton" maxHeight="1.7976931348623157E308"
+                                       mnemonicParsing="false">
                                  <graphic>
                                     <FontIcon iconLiteral="fltfal-calendar-24" iconSize="16" />
                                  </graphic>

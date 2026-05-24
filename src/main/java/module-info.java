@@ -20,13 +20,17 @@ module com.krisapps.incomeutility_v2 {
     opens com.krisapps.incomeutility_v2.ui.listview.cell to javafx.fxml;
     opens com.krisapps.incomeutility_v2.subutilities.pricer to javafx.fxml;
     opens com.krisapps.incomeutility_v2.subutilities.breakdown to javafx.fxml;
+    opens com.krisapps.incomeutility_v2.subutilities.settings to javafx.fxml;
 
     exports com.krisapps.incomeutility_v2;
     exports com.krisapps.incomeutility_v2.types.transaction;
     exports com.krisapps.incomeutility_v2.types.fiscal;
+    exports com.krisapps.incomeutility_v2.util;
+    exports com.krisapps.incomeutility_v2.types.data;
+    opens com.krisapps.incomeutility_v2.types.data to com.google.gson;
     opens com.krisapps.incomeutility_v2.util.services to com.google.gson;
     opens com.krisapps.incomeutility_v2.types.fiscal.cashew to com.google.gson;
-    exports com.krisapps.incomeutility_v2.util;
     opens com.krisapps.incomeutility_v2.util to com.google.gson, javafx.fxml;
     opens com.krisapps.incomeutility_v2.ui.listview to javafx.fxml;
+    opens com.krisapps.incomeutility_v2.dialogs.generic to javafx.fxml;
 }

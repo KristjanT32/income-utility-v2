@@ -1,6 +1,6 @@
 package com.krisapps.incomeutility_v2.subutilities.breakdown;
 
-import com.krisapps.incomeutility_v2.dialogs.ListDialog;
+import com.krisapps.incomeutility_v2.dialogs.generic.ListDialog;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
 import com.krisapps.incomeutility_v2.types.data.CategoryExpenseSummary;
@@ -18,7 +18,6 @@ import com.krisapps.incomeutility_v2.util.misc.Formats;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.chart.BarChart;
@@ -391,6 +390,7 @@ public class BreakdownController extends SubUtilityController {
     }
 
     private void refreshStats() {
+        if (selectedAccount == null) return;
         startingBalanceLabel.setText(DataManager.Formatting.formatMoney(fiscal.getStartingBalance(selectedAccount, periodStartPicker.getValue()), selectedAccount.getCurrencyConfig()));
         currentBalanceLabel.setText(DataManager.Formatting.formatMoney(fiscal.getBalance(selectedAccount, periodEndPicker.getValue()), selectedAccount.getCurrencyConfig()));
         inflowLabel.setText(DataManager.Formatting.formatMoney(fiscal.getInflow(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue())));
