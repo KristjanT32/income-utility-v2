@@ -15,7 +15,8 @@
         <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
             <children>
                 <Label fx:id="primaryLabel" alignment="TOP_LEFT" maxHeight="1.7976931348623157E308"
-                       maxWidth="1.7976931348623157E308" styleClass="title" text="Primary label"/>
+                       maxWidth="1.7976931348623157E308" prefHeight="60.0" styleClass="title" text="Primary label"
+                       wrapText="true" VBox.vgrow="ALWAYS"/>
                 <Label fx:id="descriptionLabel" alignment="TOP_LEFT" maxHeight="1.7976931348623157E308"
                        maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Description label"
                        wrapText="true" VBox.vgrow="SOMETIMES">
@@ -24,9 +25,8 @@
                     </VBox.margin>
                 </Label>
                 <Separator maxWidth="1.7976931348623157E308" minHeight="15.0" orientation="VERTICAL" visible="false"
-                           VBox.vgrow="ALWAYS"/>
-                <ComboBox fx:id="comboBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-                          prefWidth="150.0"/>
+                           VBox.vgrow="SOMETIMES"/>
+                <ComboBox fx:id="comboBox" maxWidth="1.7976931348623157E308" prefWidth="150.0" VBox.vgrow="SOMETIMES"/>
             </children>
             <VBox.margin>
                 <Insets/>

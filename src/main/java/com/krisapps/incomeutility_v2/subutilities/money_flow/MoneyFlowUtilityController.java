@@ -29,6 +29,7 @@ import javafx.util.StringConverter;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -128,7 +129,11 @@ public class MoneyFlowUtilityController extends SubUtilityController {
                     dialog.setDescription("You are missing an argument for the 'date' command. Please supply it using the text field below.");
                     dialog.setPrompt("dd/MM/yyyy");
                     Optional<String> date = dialog.showAndWait();
-                    date.ifPresent(s -> datePicker.setValue(LocalDate.parse(s, Formats.DATE_FORMATTER)));
+                    try {
+                        date.ifPresent(s -> datePicker.setValue(LocalDate.parse(s, Formats.DATE_FORMATTER)));
+                    } catch (DateTimeParseException e) {
+                        PopupManager.showPopup("Invalid date format", "The supplied date is not valid.\nPlease specify the date as dd/MM/yyyy.", Alert.AlertType.ERROR);
+                    }
                     return;
                 }
                 datePicker.setValue(LocalDate.parse(args[0], Formats.DATE_FORMATTER));

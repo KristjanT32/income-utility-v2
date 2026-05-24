@@ -37,7 +37,7 @@ public class DropdownDialog<T> extends IncomeUtilityDialog<T> {
         );
 
         getDialogPane().setMaxWidth(500);
-        getDialogPane().setMaxHeight(200);
+        getDialogPane().setMaxHeight(300);
     }
 
     public void setPrimaryLabel(String text) {
