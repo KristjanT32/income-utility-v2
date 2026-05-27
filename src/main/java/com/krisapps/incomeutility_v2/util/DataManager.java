@@ -651,6 +651,26 @@ public class DataManager {
         return false;
     }
 
+    public boolean accountExists(UUID accountId) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "SELECT COUNT(*) FROM accounts WHERE uuid = ?;"
+            );
+            statement.setString(1, accountId.toString());
+
+            ResultSet set = statement.executeQuery();
+
+            return set.getInt(1) > 0;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking account data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return false;
+    }
+
     public Optional<UUID> getLastActiveAccount() {
         ConfigurationData d = getConfigurationData();
         return Optional.ofNullable(d.getLastActiveAccountId());

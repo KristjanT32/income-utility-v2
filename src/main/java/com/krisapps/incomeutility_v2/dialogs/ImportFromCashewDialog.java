@@ -22,10 +22,7 @@ import javafx.util.StringConverter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, ArrayList<CashewTransaction>>> {
 
@@ -227,6 +224,8 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
 
     private void performImport() {
         HashMap<String, UUID> accountMappings = new HashMap<>();
+        Set<UUID> excludedTransactions = new HashSet<>();
+
         AccountMappingDialog dlg = new AccountMappingDialog();
 
         for (CashewTransaction t : importedTransactions) {
@@ -242,9 +241,12 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                     dlg.setExternalAccountName(wallet.get().displayName());
                     dlg.setTitle("Transaction account mapping required: " + t.getCashewTransactionId());
                     Optional<UUID> mapping = dlg.showAndWait();
-                    mapping.ifPresent(uuid -> {
+                    mapping.ifPresentOrElse(uuid -> {
                         accountMappings.put(t.getCashewSourceAccount(), uuid);
                         t.setSourceAccountId(uuid);
+                    }, () -> {
+                        excludedTransactions.add(t.getId());
+                        DataManager.log("Excluding transaction #" + t.getId() + " (no account mapping provided)");
                     });
                 }
                 if (accountMappings.containsKey(t.getCashewTargetAccount())) {
@@ -258,9 +260,12 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                     dlg.setExternalAccountName(wallet.get().displayName());
                     dlg.setTitle("Transaction account mapping required: " + t.getCashewTransactionId());
                     Optional<UUID> mapping = dlg.showAndWait();
-                    mapping.ifPresent(uuid -> {
+                    mapping.ifPresentOrElse(uuid -> {
                         accountMappings.put(t.getCashewTargetAccount(), uuid);
                         t.setTargetAccountId(uuid);
+                    }, () -> {
+                        excludedTransactions.add(t.getId());
+                        DataManager.log("Excluding transaction #" + t.getId() + " (no account mapping provided)");
                     });
                 }
             } else {
@@ -275,13 +280,20 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                     dlg.setExternalAccountName(wallet.get().displayName());
                     dlg.setTitle("Transaction account mapping required: " + t.getCashewTransactionId());
                     Optional<UUID> mapping = dlg.showAndWait();
-                    mapping.ifPresent(uuid -> {
+                    mapping.ifPresentOrElse(uuid -> {
                         accountMappings.put(t.getCashewTargetAccount(), uuid);
                         t.setTargetAccountId(uuid);
+                    }, () -> {
+                        excludedTransactions.add(t.getId());
+                        DataManager.log("Excluding transaction #" + t.getId() + " (no account mapping provided)");
                     });
                 }
             }
         }
+
+        DataManager.log("Processing excluded transactions...");
+        importedTransactions.removeIf(t -> excludedTransactions.contains(t.getId()));
+        DataManager.log("Done.");
     }
 
     public void refreshUI() {

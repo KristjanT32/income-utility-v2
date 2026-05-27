@@ -152,9 +152,15 @@ public class IncomeUtilityController {
         Optional<UUID> lastActiveId = data.getLastActiveAccount();
         Optional<Account> account = Optional.empty();
 
-        if (lastActiveId.isPresent()) {
+        if (lastActiveId.isPresent() && data.accountExists(lastActiveId.get())) {
             account = data.getAccount(lastActiveId.get());
         } else {
+
+            if (data.getAccounts().isEmpty()) {
+                PopupManager.showPopup("No accounts exist", "You need to create an account to import transactions.", Alert.AlertType.WARNING);
+                return;
+            }
+
             DropdownDialog<Account> accountPicker = new DropdownDialog<>("Select account");
             accountPicker.setPrimaryLabel("Which account would you like to import transactions to?");
             accountPicker.setDescription("To proceed with importing, you need to pick an account.");
