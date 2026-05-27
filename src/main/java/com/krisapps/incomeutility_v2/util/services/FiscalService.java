@@ -51,18 +51,44 @@ public class FiscalService {
         }
     }
 
+    /**
+     * Checks whether the supplied transaction is an expense on the supplied account.
+     *
+     * @param account     The account whose transaction is supplied.
+     * @param transaction The transaction to check.
+     * @return <code>true</code> if the supplied transaction results in a negative adjustment to the supplied account's balance, <code>false</code> otherwise.
+     */
     public boolean isExpense(Account account, Transaction transaction) {
         return getBalanceAdjustment(account, transaction) < 0;
     }
 
+    /**
+     * Checks whether the supplied transaction is income on the supplied account.
+     * @param account The account whose transaction is supplied.
+     * @param transaction The transaction to check.
+     * @return <code>true</code> if the supplied transaction results in a positive adjustment to the supplied account's balance, <code>false</code> otherwise.
+     */
     public boolean isIncome(Account account, Transaction transaction) {
         return getBalanceAdjustment(account, transaction) > 0;
     }
 
+    /**
+     * Retrieves a list of transactions with timestamps before the supplied date.
+     * @param account The account whose transactions to retrieve.
+     * @param date The date to compare to (exclusive)
+     * @return All transactions of the supplied account with a date earlier than the supplied date. Transactions with the same date as the supplied one are excluded.
+     */
     public List<Transaction> getTransactionsBefore(Account account, LocalDate date) {
         return dataManager.getTransactions(account).stream().filter(transaction -> transaction.getTimestamp().toLocalDate().isBefore(date)).toList();
     }
 
+    /**
+     * Retrieves a list of transactions with dates between the supplied dates (both inclusive).
+     * @param account The accounts whose transactions to retrieve.
+     * @param startInclusive The start date of the period.
+     * @param endInclusive The end date of the period.
+     * @return All transactions of the supplied account with a date between the supplied dates.
+     */
     public List<Transaction> getTransactionsBetween(Account account, LocalDate startInclusive, LocalDate endInclusive) {
         return dataManager.getTransactions(account).stream().filter(transaction ->
                 (transaction.getTimestamp().toLocalDate().isEqual(startInclusive) || transaction.getTimestamp().toLocalDate().isAfter(startInclusive))
@@ -70,10 +96,22 @@ public class FiscalService {
         ).toList();
     }
 
+
+    /**
+     * Retrieves a list of transactions which took place on the supplied date.
+     * @param account The account whose transactions to retrieve.
+     * @param date The date whose transactions to retrieve.
+     * @return All transactions of the supplied account on the supplied date.
+     */
     public List<Transaction> getTransactionsOn(Account account, LocalDate date) {
         return dataManager.getTransactions(account).stream().filter(transaction -> transaction.getTimestamp().toLocalDate().isEqual(date)).toList();
     }
 
+    /**
+     * Retrieves a list of transactions for the supplied account.
+     * @param account The account whose transactions to retrieve.
+     * @return All transactions for the supplied account.
+     */
     public List<Transaction> getTransactions(Account account) {
         return dataManager.getTransactions(account);
     }
@@ -99,11 +137,6 @@ public class FiscalService {
      * @return The balance as of the current date.
      */
     public double getCurrentBalance(Account account) {
-//        double adjustment = 0.0d;
-//        for (Transaction t : dataManager.getTransactions(account)) {
-//            adjustment += getBalanceAdjustment(account, t);
-//        }
-//        return account.getInitialBalance() + adjustment;
         return getBalance(account, LocalDate.now());
     }
 
@@ -184,14 +217,28 @@ public class FiscalService {
         return getInflow(account, fromInclusive, toInclusive) - getOutflow(account, fromInclusive, toInclusive);
     }
 
+    /**
+     * Retrieves a set of all existing local accounts.
+     * @return All existing local accounts.
+     */
     public HashSet<Account> getAccounts() {
         return dataManager.getAccounts();
     }
 
+    /**
+     * Retrieves an account by the supplied display name.
+     * @param accountName The display name of the account to look for.
+     * @return An Optional with an account with the supplied display name, or an empty Optional, if none could be found.
+     */
     public Optional<Account> getAccountByName(String accountName) {
         return dataManager.getAccounts().stream().filter(acc -> acc.getName().equals(accountName)).findFirst();
     }
 
+    /**
+     * Retrieves an account by the supplied ID.
+     * @param accountId The ID of the account to look for.
+     * @return An Optional with an account with the supplied ID, or an empty Optional, if none could be found.
+     */
     public Optional<Account> getAccountById(UUID accountId) {
         return dataManager.getAccounts().stream().filter(acc -> acc.getId().equals(accountId)).findFirst();
     }

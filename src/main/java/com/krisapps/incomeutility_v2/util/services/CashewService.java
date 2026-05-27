@@ -87,6 +87,12 @@ public class CashewService {
         }
     }
 
+    /**
+     * Retrieves the Cashew Wallet with the supplied ID.
+     *
+     * @param id The ID of the wallet to look for.
+     * @return An Optional with the {@link CashewAccount} representing the requested wallet, or an empty Optional if none could be found.
+     */
     public Optional<CashewAccount> getWalletById(String id) {
         try {
             Connection connection = DriverManager.getConnection("jdbc:sqlite:" + file.getPath());
@@ -114,6 +120,11 @@ public class CashewService {
         return statement.executeQuery().getString("wallet_fk");
     }
 
+    /**
+     * Converts the date in the database to a {@link LocalDateTime} object.
+     * @param epochSeconds The date in epoch seconds from the database.
+     * @return A LocalDateTime object equal to the supplied epoch seconds.
+     */
     private LocalDateTime getDateFromSQL(Long epochSeconds) {
         return LocalDateTime.ofInstant(Instant.ofEpochSecond(epochSeconds), ZoneId.systemDefault());
     }
@@ -154,6 +165,10 @@ public class CashewService {
         return transaction;
     }
 
+    /**
+     * Retrieves a list of all Cashew wallets.
+     * @return A list of {@link CashewAccount} objects representing Cashew wallets.
+     */
     public ArrayList<CashewAccount> getWallets() {
         ArrayList<CashewAccount> wallets = new ArrayList<>();
 

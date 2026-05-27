@@ -29,6 +29,12 @@ public class MigrationService {
     private static MigrationService instance;
     private final Connection databaseConnection;
 
+    /**
+     * Initializes the MigrationService.
+     *
+     * @param databaseConnection The connection to the database.
+     * @return An initialized {@link MigrationService}.
+     */
     public static MigrationService initialize(Connection databaseConnection) {
         if (instance == null) {
             instance = new MigrationService(databaseConnection);
@@ -36,6 +42,9 @@ public class MigrationService {
         return instance;
     }
 
+    /**
+     * Commits all pending database transactions.
+     */
     public static void shutdown() {
         if (instance == null) {
             throw new NotInitializedException("Service not initialized! Please call MigrationService#initialize(...) before using this utility!");
@@ -58,6 +67,11 @@ public class MigrationService {
         DataManager.log("[Migration] " + msg, level);
     }
 
+    /**
+     * Pulls data from the supplied data file and pushes it into the active database.
+     * @param pathToFile The path to the JSON data file from which to pull the data.
+     * @throws FileNotFoundException If the supplied path doesn't point to a valid data file.
+     */
     public void migrateFromFile(Path pathToFile) throws FileNotFoundException {
         if (!pathToFile.toFile().exists()) {
             throw new FileNotFoundException("No data file found at: " + pathToFile + "!");
@@ -180,6 +194,10 @@ public class MigrationService {
 
     }
 
+    /**
+     * Pulls data from the local <code>data.json</code> file in the data directory and pushes it into the active database.
+     * @throws FileNotFoundException If <code>data.json</code> doesn't exist.
+     */
     public void migrateFromDefaultFile() throws FileNotFoundException {
         Path defaultPath = Path.of(System.getProperty("user.home") + File.separator + "IncomeUtility v2" + File.separator + "data.json");
 
@@ -190,7 +208,10 @@ public class MigrationService {
         migrateFromFile(defaultPath);
     }
 
-    @SuppressWarnings("ConstantConditions")
+    /**
+     * Gets the database ID for the supplied custom category.
+     * @return The database ID, or <code>-1</code> if the category couldn't be found.
+     */
     public int getCustomCategoryId(String customCategory) {
         if (databaseConnection == null) {
             throw new InvalidParameterException("No database connection!");
@@ -209,6 +230,12 @@ public class MigrationService {
         }
     }
 
+    /**
+     * Copies the specified custom category to the active database.
+     * @param customCategory The category to copy.
+     * @param progressDialog An optional progress dialog to show the progress. Can be null.
+     * @return <code>true</code>, if the category is successfully copied, <code>false</code> otherwise.
+     */
     public boolean copyCategory(String customCategory, @Nullable LoadingDialog progressDialog) {
         PreparedStatement stmt;
         try {
@@ -231,6 +258,12 @@ public class MigrationService {
         }
     }
 
+    /**
+     * Copies the specified custom categories to the active database.
+     * @param categories A list of custom categories to copy.
+     * @param progressDialog An optional progress dialog to show the progress. Can be null.
+     * @return <code>true</code>, if the categories are successfully copied, <code>false</code> otherwise.
+     */
     public boolean copyCategories(List<String> categories, @Nullable LoadingDialog progressDialog) {
         try {
             databaseConnection.prepareStatement("INSERT INTO transaction_categories (id, displayName) VALUES (0, 'No custom category');").execute();
@@ -253,6 +286,12 @@ public class MigrationService {
         }
     }
 
+    /**
+     * Copies the specified account to the active database.
+     * @param account The account to copy.
+     * @param progressDialog An optional progress dialog to show the progress. Can be null.
+     * @return <code>true</code>, if the account is successfully copied, <code>false</code> otherwise.
+     */
     public boolean copyAccount(Account account, @Nullable LoadingDialog progressDialog) {
         PreparedStatement stmt;
         try {
@@ -281,6 +320,12 @@ public class MigrationService {
         }
     }
 
+    /**
+     * Copies the specified accounts to the active database.
+     * @param accounts A list of accounts to copy.
+     * @param progressDialog An optional progress dialog to show the progress. Can be null.
+     * @return <code>true</code>, if the accounts are successfully copied, <code>false</code> otherwise.
+     */
     public boolean copyAccounts(List<Account> accounts, @Nullable LoadingDialog progressDialog) {
         for (Account account : accounts) {
             boolean success = copyAccount(account, progressDialog);
@@ -297,6 +342,12 @@ public class MigrationService {
         return true;
     }
 
+    /**
+     * Copies the specified transaction to the active database.
+     * @param t The transaction to copy.
+     * @param progressDialog An optional progress dialog to show the progress. Can be null.
+     * @return <code>true</code>, if the transaction is successfully copied, <code>false</code> otherwise.
+     */
     public boolean copyTransaction(Transaction t, @Nullable LoadingDialog progressDialog) {
         if (databaseConnection == null) {
             throw new InvalidParameterException("No database connection!");
@@ -353,6 +404,12 @@ public class MigrationService {
         }
     }
 
+    /**
+     * Copies the specified transactions to the active database.
+     * @param transactions A list of transactions to copy.
+     * @param progressDialog An optional progress dialog to show the progress. Can be null.
+     * @return <code>true</code>, if the transactions are successfully copied, <code>false</code> otherwise.
+     */
     public boolean copyTransactions(List<? extends Transaction> transactions, @Nullable LoadingDialog progressDialog) {
         for (Transaction t : transactions) {
             boolean success = copyTransaction(t, progressDialog);

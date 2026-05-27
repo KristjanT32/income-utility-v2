@@ -33,10 +33,21 @@ public class TransactionService {
         return instance;
     }
 
+    /**
+     * Retrieves the local account with the supplied ID.
+     *
+     * @param id The ID of the local account to retrieve
+     * @return An Optional with the requested {@link Account}, or an empty Optional, if no such account exists.
+     */
     private Optional<Account> getAccountById(UUID id) {
         return data.getAccount(id);
     }
 
+    /**
+     * Retrieves the transaction with the supplied ID.
+     * @param id The ID of the transaction to retrieve
+     * @return An Optional with the requested {@link Transaction}, or an empty Optional, if no such transaction exists.
+     */
     private Optional<Transaction> getTransactionById(UUID id) {
         return data.getTransaction(id);
     }
@@ -191,6 +202,7 @@ public class TransactionService {
      * @param account The account whose transactions to delete.
      */
     public void deleteTransactionsFor(Account account) {
+        // FIXME: This should be refactored
         if (account == null) {
             throw new InvalidParameterException("Account cannot be null!");
         }
@@ -248,14 +260,24 @@ public class TransactionService {
         return t;
     }
 
+    /**
+     * Checks if the supplied transaction exists.
+     * @param account The account whose transaction is supplied
+     * @param transaction The transaction to check
+     * @return <code>true</code> if the supplied transaction exists, <code>false</code> otherwise.
+     */
     public boolean transactionExists(Account account, Transaction transaction) {
         return data.transactionExists(account, transaction);
-//        return data.getTransactions(account).stream().anyMatch(t -> t.getId().equals(transaction.getId()));
     }
 
+    /**
+     * Checks if the supplied imported transaction exists.
+     * @param account The account whose transaction is supplied
+     * @param transaction The imported transaction to check
+     * @return <code>true</code> if the supplied imported transaction exists, <code>false</code> otherwise.
+     */
     public boolean importedTransactionExists(Account account, CashewTransaction transaction) {
         return data.importedTransactionExists(account, transaction);
-//        return data.getTransactions(account).stream().filter(Transaction::isImported).anyMatch(imported -> ((CashewTransaction) imported).getCashewTransactionId().equals(transaction.getCashewTransactionId()));
     }
 
     private void log(String msg) {
