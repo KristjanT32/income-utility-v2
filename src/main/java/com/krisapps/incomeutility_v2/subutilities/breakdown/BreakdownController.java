@@ -241,15 +241,12 @@ public class BreakdownController extends SubUtilityController {
         nextMonthButton.setOnAction(_ -> pickNextMonth());
 
         HashSet<Account> accounts = fiscal.getAccounts();
-        DataManager.getInstance().getLastActiveAccount().ifPresentOrElse(account -> {
-            accountPicker.setValue(fiscal.getAccountById(account).get());
-        }, () -> {
-            if (!accounts.isEmpty()) {
-                accountPicker.setValue(accounts.stream().findFirst().get());
-            } else {
-                PopupManager.showPopup("No accounts found!", "No accounts have been created yet, so no functionality will be available.", Alert.AlertType.WARNING);
-            }
-        });
+        Optional<Account> lastActive = DataManager.getInstance().tryPickActiveAccount();
+        if (lastActive.isPresent()) {
+            accountPicker.setValue(lastActive.get());
+        } else {
+            PopupManager.showPopup("No accounts found!", "No accounts have been created yet, so no functionality will be available.", Alert.AlertType.WARNING);
+        }
 
         accountPicker.setItems(FXCollections.observableList(accounts.stream().toList()));
         accountPicker.setConverter(new StringConverter<>() {

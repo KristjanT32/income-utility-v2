@@ -397,6 +397,28 @@ public class DataManager {
         return Optional.empty();
     }
 
+    /**
+     * Attempts to pick the account which was the last one in use.
+     * If an active account ID exists, it will return that account.
+     * If no such ID exists or the ID points to a non-existent account,
+     * this method will pick the first account in the database.
+     * If no accounts exist, it will return an empty Optional.
+     *
+     * @return An Optional representing the last active Account, or an
+     * empty Optional, if no such account could be selected.
+     */
+    public Optional<Account> tryPickActiveAccount() {
+        if (getAccounts().isEmpty()) {
+            return Optional.empty();
+        } else {
+            if (getLastActiveAccount().isPresent() && accountExists(getLastActiveAccount().get())) {
+                return getAccount(getLastActiveAccount().get());
+            } else {
+                return getAccounts().stream().findFirst();
+            }
+        }
+    }
+
     public HashMap<UUID, ? extends Transaction> getAllTransactions() {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();

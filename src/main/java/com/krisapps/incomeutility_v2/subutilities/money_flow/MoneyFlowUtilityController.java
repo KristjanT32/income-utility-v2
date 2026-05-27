@@ -240,15 +240,12 @@ public class MoneyFlowUtilityController extends SubUtilityController {
         });
         datePicker.setValue(LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault()));
 
-        data.getLastActiveAccount().ifPresentOrElse(account -> {
-            if (data.getAccount(account).isPresent()) {
-                accountSelector.setValue(data.getAccount(account).get());
-            } else {
-                accountSelector.setValue(data.getAccounts().stream().findFirst().orElse(null));
-            }
-        }, () -> {
-            accountSelector.setValue(data.getAccounts().stream().findFirst().orElse(null));
-        });
+        Optional<Account> lastActive = data.tryPickActiveAccount();
+        if (lastActive.isPresent()) {
+            accountSelector.setValue(lastActive.get());
+        } else {
+            PopupManager.showPopup("No accounts found!", "No accounts have been created yet, so no functionality will be available.", Alert.AlertType.WARNING);
+        }
 
         backButton.setOnAction((ev) -> {
             this.utility.stop();
