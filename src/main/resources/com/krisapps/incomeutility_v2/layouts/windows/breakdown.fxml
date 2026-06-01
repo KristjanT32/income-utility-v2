@@ -228,7 +228,42 @@
                            <tabs>
                               <Tab closable="false" text="Breakdown by category">
                                  <content>
-                                    <ListView fx:id="categoryBreakdownListView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="category-expense-breakdown-list" />
+                                     <VBox spacing="5.0">
+                                         <children>
+                                             <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                                 <children>
+                                                     <Label fx:id="categoryCountLabel"
+                                                            maxHeight="1.7976931348623157E308"
+                                                            maxWidth="1.7976931348623157E308" text="0 total categories"
+                                                            HBox.hgrow="ALWAYS">
+                                                         <styleClass>
+                                                             <String fx:value="large-label"/>
+                                                             <String fx:value="bold"/>
+                                                         </styleClass>
+                                                     </Label>
+                                                     <Label text="Show:">
+                                                         <styleClass>
+                                                             <String fx:value="medium-label"/>
+                                                             <String fx:value="bold"/>
+                                                         </styleClass>
+                                                     </Label>
+                                                     <ComboBox fx:id="breakdownTypeSelector"
+                                                               maxWidth="1.7976931348623157E308" promptText="Expenses"
+                                                               styleClass="medium"/>
+                                                 </children>
+                                                 <VBox.margin>
+                                                     <Insets/>
+                                                 </VBox.margin>
+                                             </HBox>
+                                             <ListView fx:id="categoryBreakdownListView"
+                                                       maxHeight="1.7976931348623157E308"
+                                                       maxWidth="1.7976931348623157E308"
+                                                       styleClass="category-expense-breakdown-list"/>
+                                         </children>
+                                         <padding>
+                                             <Insets top="5.0"/>
+                                         </padding>
+                                     </VBox>
                                  </content>
                                  <styleClass>
                                     <String fx:value="large-label" />

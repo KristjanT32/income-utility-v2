@@ -2,7 +2,7 @@ package com.krisapps.incomeutility_v2.ui.listview.cell;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.dialogs.generic.ListDialog;
-import com.krisapps.incomeutility_v2.types.data.CategoryExpenseSummary;
+import com.krisapps.incomeutility_v2.types.data.CategorySummary;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
@@ -16,7 +16,7 @@ import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 
-public class CategoryExpenseTotalCell extends ListCell<CategoryExpenseSummary> {
+public class CategoryExpenseTotalCell extends ListCell<CategorySummary> {
 
     @FXML
     private VBox rootPane;
@@ -42,7 +42,7 @@ public class CategoryExpenseTotalCell extends ListCell<CategoryExpenseSummary> {
 
     private void loadFXML() {
         try {
-            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/ui/category_expense_total.fxml"));
+            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/ui/category_summary_cell.fxml"));
             loader.setController(this);
             rootPane = loader.load();
         } catch (IOException e) {
@@ -51,23 +51,23 @@ public class CategoryExpenseTotalCell extends ListCell<CategoryExpenseSummary> {
     }
 
     @Override
-    protected void updateItem(CategoryExpenseSummary item, boolean empty) {
+    protected void updateItem(CategorySummary item, boolean empty) {
         super.updateItem(item, empty);
 
         showTransactionsButton.setOnAction(ev -> {
             ListDialog<Transaction> transactionListDialog = new ListDialog<>("Category transactions");
             transactionListDialog.setListViewCellFactory(new TransactionCellFactory(parent, (_) -> {}, true));
-            transactionListDialog.setItems(item.transactions());
+            transactionListDialog.setItems(item.getTransactions());
             transactionListDialog.setLabel("Transactions marked");
-            transactionListDialog.setSubLabel(item.categoryName());
+            transactionListDialog.setSubLabel(item.getCategoryName());
             transactionListDialog.show();
         });
 
         if (!empty) {
-            categoryNameLabel.setText(item.categoryName());
-            entryCountLabel.setText("Transactions in this category: " + item.transactionCount());
+            categoryNameLabel.setText(item.getCategoryName());
+            entryCountLabel.setText("Transactions in this category: " + item.getTransactionCount());
 
-            totalLabel.setText(DataManager.Formatting.formatMoney(item.totalExpenses(), parent.getCurrencyConfig()));
+            totalLabel.setText(DataManager.Formatting.formatMoney(item.sumTransactions(), parent.getCurrencyConfig()));
 
             categoryNameLabel.setStyle("-fx-text-fill: black");
             entryCountLabel.setStyle("-fx-text-fill: black");

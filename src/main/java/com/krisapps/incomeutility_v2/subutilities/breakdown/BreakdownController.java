@@ -3,7 +3,7 @@ package com.krisapps.incomeutility_v2.subutilities.breakdown;
 import com.krisapps.incomeutility_v2.dialogs.generic.ListDialog;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
-import com.krisapps.incomeutility_v2.types.data.CategoryExpenseSummary;
+import com.krisapps.incomeutility_v2.types.data.CategorySummary;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
@@ -46,7 +46,10 @@ public class BreakdownController extends SubUtilityController {
     private Label transactionCountLabel;
 
     @FXML
-    private ListView<CategoryExpenseSummary> categoryBreakdownListView;
+    private Label categoryCountLabel;
+
+    @FXML
+    private ListView<CategorySummary> categoryBreakdownListView;
 
     @FXML
     private ListView<Transaction> transactionList;
@@ -79,6 +82,9 @@ public class BreakdownController extends SubUtilityController {
     private ComboBox<TypeFilter> transactionTypeSelector;
 
     @FXML
+    private ComboBox<TypeFilter> breakdownTypeSelector;
+
+    @FXML
     private PieChart breakdownPieChart;
 
     @FXML
@@ -105,6 +111,7 @@ public class BreakdownController extends SubUtilityController {
     private static final FiscalService fiscal = FiscalService.getInstance();
     private Account selectedAccount;
     private TypeFilter currentTypeFilter = TypeFilter.EXPENSES;
+    private TypeFilter currentBreakdownFilter = TypeFilter.EXPENSES;
 
     private List<Transaction> cachedTransactions = new ArrayList<>();
     private boolean shouldRecache = true;
@@ -381,6 +388,26 @@ public class BreakdownController extends SubUtilityController {
             refreshUI();
         });
 
+        breakdownTypeSelector.setConverter(new StringConverter<TypeFilter>() {
+            @Override
+            public String toString(TypeFilter object) {
+                return object.getDisplayName();
+            }
+
+            @Override
+            public TypeFilter fromString(String string) {
+                return null;
+            }
+        });
+
+        breakdownTypeSelector.setValue(TypeFilter.EXPENSES);
+        breakdownTypeSelector.setItems(FXCollections.observableArrayList(TypeFilter.EXPENSES, TypeFilter.EXPENSES_NO_TRANSFERS, TypeFilter.INCOME));
+        breakdownTypeSelector.valueProperty().addListener((obs, old, val) -> {
+            if (val == null) return;
+            currentBreakdownFilter = val;
+            refreshUI();
+        });
+
         refreshUI();
     }
 
@@ -406,19 +433,36 @@ public class BreakdownController extends SubUtilityController {
         transactionList.setCellFactory(new TransactionCellFactory(selectedAccount, (_) -> refreshUI(), true));
 
         List<Transaction> expenses = cachedTransactions.stream().filter(t -> fiscal.isExpense(selectedAccount, t)).toList();
+        List<Transaction> income = cachedTransactions.stream().filter(t -> fiscal.isIncome(selectedAccount, t)).toList();
 
-        Map<String, List<Transaction>> categoriesToTransactions = expenses.stream().collect(Collectors.groupingBy(t -> t.getCategory() == TransactionCategory.CUSTOM ? t.getCustomCategory() : DataManager.Formatting.capitalize(t.getCategory().name())));
+        Map<String, List<Transaction>> categoriesToExpenses = expenses.stream().collect(Collectors.groupingBy(t -> t.getCategory() == TransactionCategory.CUSTOM ? t.getCustomCategory() : DataManager.Formatting.capitalize(t.getCategory().name())));
+        Map<String, List<Transaction>> categoriesToIncome = income.stream().collect(Collectors.groupingBy(t -> t.getCategory() == TransactionCategory.CUSTOM ? t.getCustomCategory() : DataManager.Formatting.capitalize(t.getCategory().name())));
 
         totalSpendingLabel.setText(DataManager.Formatting.formatMoney(expenses.stream().mapToDouble(Transaction::getAbsoluteAmount).sum(), selectedAccount.getCurrencyConfig()));
-        categoriesToTransactions.entrySet().stream().max(Comparator.comparingDouble(entry -> entry.getValue().stream().mapToDouble(Transaction::getAbsoluteAmount).sum())).ifPresentOrElse(max -> {
+        categoriesToExpenses.entrySet().stream().max(Comparator.comparingDouble(entry -> entry.getValue().stream().mapToDouble(Transaction::getAbsoluteAmount).sum())).ifPresentOrElse(max -> {
             mostSpentOnLabel.setText("%s (%s)".formatted(max.getKey(), DataManager.Formatting.formatMoney(max.getValue().stream().mapToDouble(Transaction::getAbsoluteAmount).sum(), selectedAccount.getCurrencyConfig())));
         }, () -> {
             mostSpentOnLabel.setText("N/A");
         });
 
-        List<CategoryExpenseSummary> items = new ArrayList<>(categoriesToTransactions.entrySet().stream().map(entry -> new CategoryExpenseSummary(entry.getKey(), entry.getValue())).toList());
-        items.sort(Comparator.comparingDouble(CategoryExpenseSummary::totalExpenses).reversed());
+
+        List<CategorySummary> items = new ArrayList<>();
+        switch (currentBreakdownFilter) {
+            case EXPENSES -> {
+                items = new ArrayList<>(categoriesToExpenses.entrySet().stream().map(entry -> new CategorySummary(entry.getKey(), entry.getValue(), CategorySummary.SummaryType.EXPENSES)).toList());
+                items.sort(Comparator.comparingDouble(CategorySummary::sumTransactions).reversed());
+            }
+            case INCOME -> {
+                items = new ArrayList<>(categoriesToIncome.entrySet().stream().map(entry -> new CategorySummary(entry.getKey(), entry.getValue(), CategorySummary.SummaryType.INCOME)).toList());
+                items.sort(Comparator.comparingDouble(CategorySummary::sumTransactions).reversed());
+            }
+            case EXPENSES_NO_TRANSFERS -> {
+                items = new ArrayList<>(categoriesToExpenses.entrySet().stream().map(entry -> new CategorySummary(entry.getKey(), entry.getValue().stream().filter(t -> !t.getType().equals(TransactionType.TRANSFER)).toList(), CategorySummary.SummaryType.EXPENSES)).toList());
+                items.sort(Comparator.comparingDouble(CategorySummary::sumTransactions).reversed());
+            }
+        }
         categoryBreakdownListView.setItems(FXCollections.observableList(items));
+        categoryCountLabel.setText(String.format("%s distinct categor%s%s", items.size(), items.size() == 1 ? "y" : "ies", (currentBreakdownFilter == TypeFilter.EXPENSES_NO_TRANSFERS ? ", excluding transfers" : "")));
 
         List<Transaction> sortedTransactionListItems = cachedTransactions.stream().filter(t -> switch (currentTypeFilter) {
             case EXPENSES -> fiscal.isExpense(selectedAccount, t);
@@ -450,8 +494,10 @@ public class BreakdownController extends SubUtilityController {
             }
         }
 
+        long categoryCount = sortedTransactionListItems.stream().map(t -> t.getCategory().equals(TransactionCategory.CUSTOM) ? t.getCustomCategory() : t.getCategory()).distinct().count();
+
         transactionList.setItems(FXCollections.observableList(sortedTransactionListItems));
-        transactionCountLabel.setText("%s total transactions, %s different categories".formatted(sortedTransactionListItems.size(), items.size()));
+        transactionCountLabel.setText("%s total transaction%s, %s distinct categor%s".formatted(sortedTransactionListItems.size(), sortedTransactionListItems.size() == 1 ? "" : "s", categoryCount, categoryCount == 1 ? "y" : "ies"));
 
         refreshCharts(cachedTransactions, items);
         refreshStats();
@@ -467,12 +513,12 @@ public class BreakdownController extends SubUtilityController {
         changeLabel.setText(DataManager.Formatting.formatMoney(fiscal.getChange(selectedAccount, cachedTransactions), selectedAccount.getCurrencyConfig()));
     }
 
-    private void refreshCharts(List<Transaction> transactions, List<CategoryExpenseSummary> categorisedTransactions) {
-        breakdownPieChart.setData(FXCollections.observableList(categorisedTransactions.stream().map(entry -> new PieChart.Data(entry.categoryName(), entry.totalExpenses())).toList()));
+    private void refreshCharts(List<Transaction> transactions, List<CategorySummary> categorisedExpenses) {
+        breakdownPieChart.setData(FXCollections.observableList(categorisedExpenses.stream().map(entry -> new PieChart.Data(entry.getCategoryName(), entry.sumTransactions())).toList()));
 
         XYChart.Series<String, Double> series = new XYChart.Series<>();
-        categorisedTransactions.forEach(summary -> {
-            series.getData().add(new XYChart.Data<>(summary.categoryName(), summary.totalExpenses()));
+        categorisedExpenses.forEach(summary -> {
+            series.getData().add(new XYChart.Data<>(summary.getCategoryName(), summary.sumTransactions()));
         });
         categoriesBarChart.setData(FXCollections.observableList(List.of(series)));
 
