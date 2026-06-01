@@ -99,9 +99,9 @@
                                           <String fx:value="bold" />
                                        </styleClass>
                                     </Label>
-                                     <HBox alignment="CENTER" maxHeight="80.0" maxWidth="1.7976931348623157E308"
-                                           minHeight="-Infinity" minWidth="-Infinity" spacing="10.0"
-                                           styleClass="rounded-container-secondary">
+                                    <HBox alignment="CENTER" maxHeight="80.0" maxWidth="1.7976931348623157E308"
+                                          minHeight="-Infinity" minWidth="-Infinity" spacing="10.0"
+                                          styleClass="rounded-container-secondary">
                                        <padding>
                                           <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                        </padding>
@@ -232,36 +232,35 @@
                                          <children>
                                              <HBox alignment="CENTER_RIGHT" spacing="10.0">
                                                  <children>
-                                                     <Label fx:id="categoryCountLabel"
-                                                            maxHeight="1.7976931348623157E308"
-                                                            maxWidth="1.7976931348623157E308" text="0 total categories"
-                                                            HBox.hgrow="ALWAYS">
+                                                    <Label fx:id="categoryCountLabel" maxHeight="1.7976931348623157E308"
+                                                           maxWidth="1.7976931348623157E308" text="0 total categories"
+                                                           HBox.hgrow="ALWAYS">
                                                          <styleClass>
-                                                             <String fx:value="large-label"/>
-                                                             <String fx:value="bold"/>
+                                                            <String fx:value="large-label"/>
+                                                            <String fx:value="bold"/>
                                                          </styleClass>
                                                      </Label>
                                                      <Label text="Show:">
                                                          <styleClass>
-                                                             <String fx:value="medium-label"/>
-                                                             <String fx:value="bold"/>
+                                                            <String fx:value="medium-label"/>
+                                                            <String fx:value="bold"/>
                                                          </styleClass>
                                                      </Label>
-                                                     <ComboBox fx:id="breakdownTypeSelector"
-                                                               maxWidth="1.7976931348623157E308" promptText="Expenses"
-                                                               styleClass="medium"/>
+                                                    <ComboBox fx:id="breakdownTypeSelector"
+                                                              maxWidth="1.7976931348623157E308" promptText="Expenses"
+                                                              styleClass="medium"/>
                                                  </children>
                                                  <VBox.margin>
-                                                     <Insets/>
+                                                    <Insets/>
                                                  </VBox.margin>
                                              </HBox>
-                                             <ListView fx:id="categoryBreakdownListView"
-                                                       maxHeight="1.7976931348623157E308"
-                                                       maxWidth="1.7976931348623157E308"
-                                                       styleClass="category-expense-breakdown-list"/>
+                                            <ListView fx:id="categoryBreakdownListView"
+                                                      maxHeight="1.7976931348623157E308"
+                                                      maxWidth="1.7976931348623157E308"
+                                                      styleClass="category-expense-breakdown-list" VBox.vgrow="ALWAYS"/>
                                          </children>
                                          <padding>
-                                             <Insets top="5.0"/>
+                                            <Insets top="5.0"/>
                                          </padding>
                                      </VBox>
                                  </content>
@@ -274,8 +273,8 @@
                                  <content>
                                     <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0">
                                        <children>
-                                           <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308"
-                                                 spacing="20.0">
+                                          <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308"
+                                                spacing="20.0">
                                              <children>
                                                 <Label fx:id="transactionCountLabel" maxWidth="1.7976931348623157E308" text="0 total transactions, 0 different categories" HBox.hgrow="ALWAYS">
                                                    <styleClass>
@@ -287,26 +286,25 @@
                                                      <children>
                                                          <Label text="Show:">
                                                              <styleClass>
-                                                                 <String fx:value="medium-label"/>
-                                                                 <String fx:value="bold"/>
+                                                                <String fx:value="medium-label"/>
+                                                                <String fx:value="bold"/>
                                                              </styleClass>
                                                          </Label>
-                                                         <ComboBox fx:id="transactionTypeSelector"
-                                                                   maxWidth="1.7976931348623157E308"
-                                                                   promptText="Expenses" styleClass="medium"/>
+                                                        <ComboBox fx:id="transactionTypeSelector"
+                                                                  maxWidth="1.7976931348623157E308"
+                                                                  promptText="Expenses" styleClass="medium"/>
                                                      </children>
                                                  </HBox>
                                                  <HBox alignment="CENTER_LEFT" spacing="10.0">
                                                      <children>
                                                          <Label text="Sort: ">
                                                              <styleClass>
-                                                                 <String fx:value="medium-label"/>
-                                                                 <String fx:value="bold"/>
+                                                                <String fx:value="medium-label"/>
+                                                                <String fx:value="bold"/>
                                                              </styleClass>
                                                          </Label>
-                                                         <ComboBox fx:id="sortSelector"
-                                                                   maxWidth="1.7976931348623157E308"
-                                                                   promptText="Chronologically" styleClass="medium"/>
+                                                        <ComboBox fx:id="sortSelector" maxWidth="1.7976931348623157E308"
+                                                                  promptText="Chronologically" styleClass="medium"/>
                                                      </children>
                                                  </HBox>
                                              </children>
@@ -323,21 +321,24 @@
                                     <String fx:value="large" />
                                  </styleClass>
                               </Tab>
-                              <Tab closable="false" text="Charts &amp; graphs">
+                              <Tab closable="false" text="Spending charts">
                                  <content>
                                     <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0">
                                        <padding>
                                           <Insets top="5.0" />
                                        </padding>
                                        <children>
-                                          <HBox>
+                                          <HBox VBox.vgrow="ALWAYS">
                                              <children>
-                                                <PieChart fx:id="breakdownPieChart" labelLineLength="40.0" maxWidth="1.7976931348623157E308" styleClass="medium-label" title="Spending across categories" HBox.hgrow="ALWAYS">
+                                                <PieChart fx:id="expensePieChart" labelLineLength="40.0"
+                                                          maxWidth="1.7976931348623157E308" styleClass="medium-label"
+                                                          title="Spending across categories" HBox.hgrow="ALWAYS">
                                                    <padding>
                                                       <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
                                                    </padding>
                                                 </PieChart>
-                                                <VBox maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+                                                <VBox maxWidth="1.7976931348623157E308" prefWidth="550.0"
+                                                      HBox.hgrow="ALWAYS">
                                                    <children>
                                                       <LineChart fx:id="spendingLineChart" legendSide="TOP" legendVisible="false" maxWidth="1.7976931348623157E308" styleClass="medium-label" title="Spending on different days" VBox.vgrow="ALWAYS">
                                                         <xAxis>
@@ -357,6 +358,45 @@
                                                       </BarChart>
                                                    </children>
                                                 </VBox>
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </VBox>
+                                 </content>
+                                 <styleClass>
+                                    <String fx:value="large-label"/>
+                                    <String fx:value="large"/>
+                                 </styleClass>
+                              </Tab>
+                              <Tab closable="false" text="Income charts">
+                                 <content>
+                                    <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                                          spacing="5.0">
+                                       <padding>
+                                          <Insets top="5.0"/>
+                                       </padding>
+                                       <children>
+                                          <HBox VBox.vgrow="ALWAYS">
+                                             <children>
+                                                <PieChart fx:id="incomePieChart" labelLineLength="40.0"
+                                                          maxHeight="1.7976931348623157E308"
+                                                          maxWidth="1.7976931348623157E308" styleClass="medium-label"
+                                                          title="Income breakdown" HBox.hgrow="ALWAYS">
+                                                   <padding>
+                                                      <Insets bottom="25.0" left="25.0" right="25.0" top="25.0"/>
+                                                   </padding>
+                                                </PieChart>
+                                                <BarChart fx:id="incomeBarChart" legendSide="TOP" legendVisible="false"
+                                                          maxHeight="1.7976931348623157E308"
+                                                          maxWidth="1.7976931348623157E308" styleClass="medium-label"
+                                                          title="Income by category">
+                                                   <xAxis>
+                                                      <CategoryAxis side="BOTTOM"/>
+                                                   </xAxis>
+                                                   <yAxis>
+                                                      <NumberAxis side="LEFT"/>
+                                                   </yAxis>
+                                                </BarChart>
                                              </children>
                                           </HBox>
                                        </children>
