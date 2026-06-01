@@ -440,13 +440,13 @@
 /* Hovered thumb */
 .scroll-bar:vertical .thumb:hover,
 .scroll-bar:horizontal .thumb:hover {
-    -fx-background-color: #7a7a7a;
+    -fx-background-color: #7a7a7a !important;
 }
 
 /* Pressed thumb */
 .scroll-bar:vertical .thumb:pressed,
 .scroll-bar:horizontal .thumb:pressed {
-    -fx-background-color: #9a9a9a;
+    -fx-background-color: #4a4a4a !important;
 }
 
 /* Increment/decrement buttons */

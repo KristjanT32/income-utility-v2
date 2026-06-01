@@ -85,10 +85,16 @@ public class BreakdownController extends SubUtilityController {
     private ComboBox<TypeFilter> breakdownTypeSelector;
 
     @FXML
-    private PieChart breakdownPieChart;
+    private PieChart expensePieChart;
+
+    @FXML
+    private PieChart incomePieChart;
 
     @FXML
     private BarChart<String, Double> categoriesBarChart;
+
+    @FXML
+    private BarChart<String, Double> incomeBarChart;
 
     @FXML
     private LineChart<String, Double> spendingLineChart;
@@ -298,10 +304,10 @@ public class BreakdownController extends SubUtilityController {
             }
         });
 
-        breakdownPieChart.setLabelsVisible(true);
-        breakdownPieChart.dataProperty().addListener((obs, old, val) -> {
+        expensePieChart.setLabelsVisible(true);
+        expensePieChart.dataProperty().addListener((obs, old, val) -> {
             if (val == null) return;
-            double total = breakdownPieChart.getData().stream().mapToDouble(PieChart.Data::getPieValue).sum();
+            double total = expensePieChart.getData().stream().mapToDouble(PieChart.Data::getPieValue).sum();
 
             val.forEach(slice -> {
 
@@ -313,6 +319,34 @@ public class BreakdownController extends SubUtilityController {
                     listDialog.setSubLabel("%s, %s".formatted(slice.getName(), DataManager.Formatting.formatMoney(slice.getPieValue(), selectedAccount.getCurrencyConfig())));
                     listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {}, true));
                     listDialog.setItems(transactionList.getItems().stream().filter(t -> t.getCategory().name().equalsIgnoreCase(slice.getName()) || t.getCustomCategory().equalsIgnoreCase(slice.getName())).toList());
+                    listDialog.show();
+                });
+                slice.getNode().setOnMouseEntered(_ -> {
+                    slice.getNode().setStyle("-fx-border-width: 2px; -fx-border-color: black");
+                });
+
+                slice.getNode().setOnMouseExited(_ -> {
+                    slice.getNode().setStyle("");
+                });
+            });
+        });
+
+        incomePieChart.setLabelsVisible(true);
+        incomePieChart.dataProperty().addListener((obs, old, val) -> {
+            if (val == null) return;
+            double total = incomePieChart.getData().stream().mapToDouble(PieChart.Data::getPieValue).sum();
+
+            val.forEach(slice -> {
+
+                Tooltip tooltip = new Tooltip("%s (%s%%)".formatted(DataManager.Formatting.formatMoney(slice.getPieValue(), selectedAccount.getCurrencyConfig()), DataManager.Formatting.decimalFormatter.format((slice.getPieValue() / total) * 100)));
+                Tooltip.install(slice.getNode(), tooltip);
+                slice.getNode().setOnMouseClicked(_ -> {
+                    ListDialog<Transaction> listDialog = new ListDialog<>("Transactions for category '" + slice.getName() + "'");
+                    listDialog.setLabel("Transactions marked");
+                    listDialog.setSubLabel("%s, %s".formatted(slice.getName(), DataManager.Formatting.formatMoney(slice.getPieValue(), selectedAccount.getCurrencyConfig())));
+                    listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {
+                    }, true));
+                    listDialog.setItems(cachedTransactions.stream().filter(t -> t.getCategory().name().equalsIgnoreCase(slice.getName()) || t.getCustomCategory().equalsIgnoreCase(slice.getName()) && fiscal.isIncome(selectedAccount, t)).toList());
                     listDialog.show();
                 });
                 slice.getNode().setOnMouseEntered(_ -> {
@@ -367,6 +401,28 @@ public class BreakdownController extends SubUtilityController {
                 });
             });
         });
+        incomeBarChart.dataProperty().addListener((obs, old, val) -> {
+            if (val == null) return;
+
+            val.forEach(series -> {
+                series.getData().forEach(dataPoint -> {
+                    dataPoint.getNode().setCursor(Cursor.HAND);
+
+                    Tooltip tooltip = new Tooltip(DataManager.Formatting.formatMoney(dataPoint.getYValue(), selectedAccount.getCurrencyConfig()));
+                    Tooltip.install(dataPoint.getNode(), tooltip);
+
+                    dataPoint.getNode().setOnMouseClicked(_ -> {
+                        ListDialog<Transaction> listDialog = new ListDialog<>("Transactions for category '" + dataPoint.getXValue() + "'");
+                        listDialog.setLabel("Transactions marked");
+                        listDialog.setSubLabel("%s, %s".formatted(dataPoint.getXValue(), DataManager.Formatting.formatMoney(dataPoint.getYValue(), selectedAccount.getCurrencyConfig())));
+                        listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {
+                        }, true));
+                        listDialog.setItems(cachedTransactions.stream().filter(t -> t.getCategory().name().equalsIgnoreCase(dataPoint.getXValue()) || t.getCustomCategory().equalsIgnoreCase(dataPoint.getXValue()) && fiscal.isIncome(selectedAccount, t)).toList());
+                        listDialog.show();
+                    });
+                });
+            });
+        });
 
         transactionTypeSelector.setConverter(new StringConverter<TypeFilter>() {
             @Override
@@ -408,6 +464,14 @@ public class BreakdownController extends SubUtilityController {
             refreshUI();
         });
 
+        Label breakdownPlaceholder = new Label("There are no categories to display.");
+        breakdownPlaceholder.getStyleClass().add("medium-label");
+        categoryBreakdownListView.setPlaceholder(breakdownPlaceholder);
+
+        Label transactionsPlaceholder = new Label("There are no transactions for the selected period.");
+        transactionsPlaceholder.getStyleClass().add("medium-label");
+        transactionList.setPlaceholder(transactionsPlaceholder);
+
         refreshUI();
     }
 
@@ -446,23 +510,23 @@ public class BreakdownController extends SubUtilityController {
         });
 
 
-        List<CategorySummary> items = new ArrayList<>();
+        List<CategorySummary> categorisedExpenses = new ArrayList<>();
         switch (currentBreakdownFilter) {
             case EXPENSES -> {
-                items = new ArrayList<>(categoriesToExpenses.entrySet().stream().map(entry -> new CategorySummary(entry.getKey(), entry.getValue(), CategorySummary.SummaryType.EXPENSES)).toList());
-                items.sort(Comparator.comparingDouble(CategorySummary::sumTransactions).reversed());
+                categorisedExpenses = new ArrayList<>(categoriesToExpenses.entrySet().stream().map(entry -> new CategorySummary(entry.getKey(), entry.getValue(), CategorySummary.SummaryType.EXPENSES)).toList());
+                categorisedExpenses.sort(Comparator.comparingDouble(CategorySummary::sumTransactions).reversed());
             }
             case INCOME -> {
-                items = new ArrayList<>(categoriesToIncome.entrySet().stream().map(entry -> new CategorySummary(entry.getKey(), entry.getValue(), CategorySummary.SummaryType.INCOME)).toList());
-                items.sort(Comparator.comparingDouble(CategorySummary::sumTransactions).reversed());
+                categorisedExpenses = new ArrayList<>(categoriesToIncome.entrySet().stream().map(entry -> new CategorySummary(entry.getKey(), entry.getValue(), CategorySummary.SummaryType.INCOME)).toList());
+                categorisedExpenses.sort(Comparator.comparingDouble(CategorySummary::sumTransactions).reversed());
             }
             case EXPENSES_NO_TRANSFERS -> {
-                items = new ArrayList<>(categoriesToExpenses.entrySet().stream().map(entry -> new CategorySummary(entry.getKey(), entry.getValue().stream().filter(t -> !t.getType().equals(TransactionType.TRANSFER)).toList(), CategorySummary.SummaryType.EXPENSES)).toList());
-                items.sort(Comparator.comparingDouble(CategorySummary::sumTransactions).reversed());
+                categorisedExpenses = new ArrayList<>(categoriesToExpenses.entrySet().stream().map(entry -> new CategorySummary(entry.getKey(), entry.getValue().stream().filter(t -> !t.getType().equals(TransactionType.TRANSFER)).toList(), CategorySummary.SummaryType.EXPENSES)).toList());
+                categorisedExpenses.sort(Comparator.comparingDouble(CategorySummary::sumTransactions).reversed());
             }
         }
-        categoryBreakdownListView.setItems(FXCollections.observableList(items));
-        categoryCountLabel.setText(String.format("%s distinct categor%s%s", items.size(), items.size() == 1 ? "y" : "ies", (currentBreakdownFilter == TypeFilter.EXPENSES_NO_TRANSFERS ? ", excluding transfers" : "")));
+        categoryBreakdownListView.setItems(FXCollections.observableList(categorisedExpenses));
+        categoryCountLabel.setText(String.format("%s distinct categor%s%s", categorisedExpenses.size(), categorisedExpenses.size() == 1 ? "y" : "ies", (currentBreakdownFilter == TypeFilter.EXPENSES_NO_TRANSFERS ? ", excluding transfers" : "")));
 
         List<Transaction> sortedTransactionListItems = cachedTransactions.stream().filter(t -> switch (currentTypeFilter) {
             case EXPENSES -> fiscal.isExpense(selectedAccount, t);
@@ -499,7 +563,9 @@ public class BreakdownController extends SubUtilityController {
         transactionList.setItems(FXCollections.observableList(sortedTransactionListItems));
         transactionCountLabel.setText("%s total transaction%s, %s distinct categor%s".formatted(sortedTransactionListItems.size(), sortedTransactionListItems.size() == 1 ? "" : "s", categoryCount, categoryCount == 1 ? "y" : "ies"));
 
-        refreshCharts(cachedTransactions, items);
+        List<CategorySummary> categorisedIncome = categoriesToIncome.entrySet().stream().map(entry -> new CategorySummary(entry.getKey(), entry.getValue().stream().filter(t -> fiscal.isIncome(selectedAccount, t)).toList(), CategorySummary.SummaryType.INCOME)).toList();
+
+        refreshCharts(cachedTransactions, categorisedExpenses, categorisedIncome);
         refreshStats();
         DataManager.log("UI refresh took " + (System.currentTimeMillis() - refreshStart) + "ms");
     }
@@ -513,21 +579,31 @@ public class BreakdownController extends SubUtilityController {
         changeLabel.setText(DataManager.Formatting.formatMoney(fiscal.getChange(selectedAccount, cachedTransactions), selectedAccount.getCurrencyConfig()));
     }
 
-    private void refreshCharts(List<Transaction> transactions, List<CategorySummary> categorisedExpenses) {
-        breakdownPieChart.setData(FXCollections.observableList(categorisedExpenses.stream().map(entry -> new PieChart.Data(entry.getCategoryName(), entry.sumTransactions())).toList()));
+    private void refreshCharts(List<Transaction> transactions, List<CategorySummary> categorisedExpenses, List<CategorySummary> categorisedIncome) {
+        expensePieChart.setData(FXCollections.observableList(categorisedExpenses.stream().map(entry -> new PieChart.Data(entry.getCategoryName(), entry.sumTransactions())).toList()));
+        incomePieChart.setData(FXCollections.observableList(categorisedIncome.stream().map(entry -> new PieChart.Data(entry.getCategoryName(), entry.sumTransactions())).toList()));
 
-        XYChart.Series<String, Double> series = new XYChart.Series<>();
+        XYChart.Series<String, Double> expenseSeries = new XYChart.Series<>();
         categorisedExpenses.forEach(summary -> {
-            series.getData().add(new XYChart.Data<>(summary.getCategoryName(), summary.sumTransactions()));
+            expenseSeries.getData().add(new XYChart.Data<>(summary.getCategoryName(), summary.sumTransactions()));
         });
-        categoriesBarChart.setData(FXCollections.observableList(List.of(series)));
+        categoriesBarChart.setData(FXCollections.observableList(List.of(expenseSeries)));
 
-        Map<LocalDate, List<Transaction>> daysToSpending = transactions.stream().collect(Collectors.groupingBy(t -> t.getTimestamp().toLocalDate()));
+        XYChart.Series<String, Double> incomeSeries = new XYChart.Series<>();
+        categorisedIncome.forEach(summary -> {
+            incomeSeries.getData().add(new XYChart.Data<>(summary.getCategoryName(), summary.sumTransactions()));
+        });
+        incomeBarChart.setData(FXCollections.observableList(List.of(incomeSeries)));
+
+        Map<LocalDate, List<Transaction>> daysToSpending = transactions.stream().filter(t -> fiscal.isExpense(selectedAccount, t)).collect(Collectors.groupingBy(t -> t.getTimestamp().toLocalDate()));
+
         XYChart.Series<String, Double> spendingSeries = new XYChart.Series<>();
+
         daysToSpending.forEach((date, list) -> {
             spendingSeries.getData().add(new XYChart.Data<>(Formats.DATE_FORMATTER.format(date), list.stream().mapToDouble(Transaction::getAbsoluteAmount).sum()));
         });
 
+        spendingSeries.getData().sort(Comparator.comparing(e -> LocalDate.parse(e.getXValue(), DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
         spendingLineChart.setData(FXCollections.observableList(List.of(spendingSeries)));
     }
 }
