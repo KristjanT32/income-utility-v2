@@ -17,7 +17,6 @@ import com.krisapps.incomeutility_v2.util.PopupManager;
 import com.krisapps.incomeutility_v2.util.misc.Formats;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.chart.BarChart;
@@ -77,6 +76,9 @@ public class BreakdownController extends SubUtilityController {
     private ComboBox<SortingOrder> sortSelector;
 
     @FXML
+    private ComboBox<TypeFilter> transactionTypeSelector;
+
+    @FXML
     private PieChart breakdownPieChart;
 
     @FXML
@@ -102,6 +104,10 @@ public class BreakdownController extends SubUtilityController {
 
     private static final FiscalService fiscal = FiscalService.getInstance();
     private Account selectedAccount;
+    private TypeFilter currentTypeFilter = TypeFilter.EXPENSES;
+
+    private List<Transaction> cachedTransactions = new ArrayList<>();
+    private boolean shouldRecache = true;
 
     private void pickPreviousMonth() {
         periodStartPicker.setValue(periodStartPicker.getValue().minusMonths(1));
@@ -127,6 +133,24 @@ public class BreakdownController extends SubUtilityController {
         String displayName;
 
         SortingOrder(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
+    private enum TypeFilter {
+        EXPENSES("All expenses"),
+        INCOME("All income"),
+        TRANSFERS("Only transfers"),
+        EXPENSES_NO_TRANSFERS("Expenses, excluding transfers"),
+        INCOME_NO_TRANSFERS("Income, excluding transfers");
+
+        String displayName;
+
+        TypeFilter(String displayName) {
             this.displayName = displayName;
         }
 
@@ -222,13 +246,16 @@ public class BreakdownController extends SubUtilityController {
         });
 
         periodStartPicker.valueProperty().addListener((obs, old, val) -> {
+            shouldRecache = true;
             refreshUI();
         });
         periodEndPicker.valueProperty().addListener((obs, old, val) -> {
+            shouldRecache = true;
             refreshUI();
         });
 
         accountPicker.valueProperty().addListener(((_, _, newValue) -> {
+            shouldRecache = true;
             selectedAccount = newValue;
             refreshUI();
         }));
@@ -334,19 +361,55 @@ public class BreakdownController extends SubUtilityController {
             });
         });
 
+        transactionTypeSelector.setConverter(new StringConverter<TypeFilter>() {
+            @Override
+            public String toString(TypeFilter object) {
+                return object.getDisplayName();
+            }
+
+            @Override
+            public TypeFilter fromString(String string) {
+                return null;
+            }
+        });
+
+        transactionTypeSelector.setValue(TypeFilter.EXPENSES);
+        transactionTypeSelector.setItems(FXCollections.observableList(List.of(TypeFilter.values())));
+        transactionTypeSelector.valueProperty().addListener((obs, old, val) -> {
+            if (val == null) return;
+            currentTypeFilter = val;
+            refreshUI();
+        });
+
         refreshUI();
+    }
+
+    public void updateCache() {
+        if (!shouldRecache) return;
+
+        DataManager.log("Beginning to cache data...");
+        long start = System.currentTimeMillis();
+
+        cachedTransactions = null;
+        cachedTransactions = fiscal.getTransactionsBetween(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue());
+
+        DataManager.log("Caching completed in " + (System.currentTimeMillis() - start) + "ms");
+        shouldRecache = false;
     }
 
     private void refreshUI() {
         if (selectedAccount == null) return;
+        updateCache();
 
+        long refreshStart = System.currentTimeMillis();
         categoryBreakdownListView.setCellFactory(new CategoryExpenseTotalCellFactory(selectedAccount));
         transactionList.setCellFactory(new TransactionCellFactory(selectedAccount, (_) -> refreshUI(), true));
 
-        List<Transaction> transactions = fiscal.getTransactionsBetween(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue()).stream().filter(t -> fiscal.isExpense(selectedAccount, t)).toList();
-        Map<String, List<Transaction>> categoriesToTransactions = transactions.stream().collect(Collectors.groupingBy(t -> t.getCategory() == TransactionCategory.CUSTOM ? t.getCustomCategory() : DataManager.Formatting.capitalize(t.getCategory().name())));
+        List<Transaction> expenses = cachedTransactions.stream().filter(t -> fiscal.isExpense(selectedAccount, t)).toList();
 
-        totalSpendingLabel.setText(DataManager.Formatting.formatMoney(transactions.stream().mapToDouble(Transaction::getAbsoluteAmount).sum(), selectedAccount.getCurrencyConfig()));
+        Map<String, List<Transaction>> categoriesToTransactions = expenses.stream().collect(Collectors.groupingBy(t -> t.getCategory() == TransactionCategory.CUSTOM ? t.getCustomCategory() : DataManager.Formatting.capitalize(t.getCategory().name())));
+
+        totalSpendingLabel.setText(DataManager.Formatting.formatMoney(expenses.stream().mapToDouble(Transaction::getAbsoluteAmount).sum(), selectedAccount.getCurrencyConfig()));
         categoriesToTransactions.entrySet().stream().max(Comparator.comparingDouble(entry -> entry.getValue().stream().mapToDouble(Transaction::getAbsoluteAmount).sum())).ifPresentOrElse(max -> {
             mostSpentOnLabel.setText("%s (%s)".formatted(max.getKey(), DataManager.Formatting.formatMoney(max.getValue().stream().mapToDouble(Transaction::getAbsoluteAmount).sum(), selectedAccount.getCurrencyConfig())));
         }, () -> {
@@ -357,42 +420,51 @@ public class BreakdownController extends SubUtilityController {
         items.sort(Comparator.comparingDouble(CategoryExpenseSummary::totalExpenses).reversed());
         categoryBreakdownListView.setItems(FXCollections.observableList(items));
 
-        ObservableList<Transaction> sortedItems = null;
+        List<Transaction> sortedTransactionListItems = cachedTransactions.stream().filter(t -> switch (currentTypeFilter) {
+            case EXPENSES -> fiscal.isExpense(selectedAccount, t);
+            case INCOME -> fiscal.isIncome(selectedAccount, t);
+            case TRANSFERS -> t.getType().equals(TransactionType.TRANSFER);
+            case EXPENSES_NO_TRANSFERS ->
+                    fiscal.isExpense(selectedAccount, t) && !t.getType().equals(TransactionType.TRANSFER);
+            case INCOME_NO_TRANSFERS ->
+                    fiscal.isIncome(selectedAccount, t) && !t.getType().equals(TransactionType.TRANSFER);
+        }).toList();
         switch (sortSelector.getValue()) {
             case CHRONOLOGICAL_ASC -> {
-                sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(Transaction::getTimestamp)).toList());
+                sortedTransactionListItems = sortedTransactionListItems.stream().sorted(Comparator.comparing(Transaction::getTimestamp)).toList();
             }
             case CHRONOLOGICAL_DESC -> {
-                sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(Transaction::getTimestamp).reversed()).toList());
+                sortedTransactionListItems = sortedTransactionListItems.stream().sorted(Comparator.comparing(Transaction::getTimestamp).reversed()).toList();
             }
             case TRANSACTION_AMOUNT_ASC -> {
-                sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(Transaction::getAmount).reversed()).toList());
+                sortedTransactionListItems = sortedTransactionListItems.stream().sorted(Comparator.comparing(Transaction::getAmount).reversed()).toList();
             }
             case TRANSACTION_AMOUNT_DESC -> {
-                sortedItems = FXCollections.observableList(transactions.stream().sorted(Comparator.comparing(t -> {
+                sortedTransactionListItems = sortedTransactionListItems.stream().sorted(Comparator.comparing(t -> {
                     if (t.getType().equals(TransactionType.TRANSFER)) {
                         return -t.getAbsoluteAmount();
                     } else {
                         return t.getAmount();
                     }
-                })).toList());
+                })).toList();
             }
         }
 
-        transactionList.setItems(sortedItems);
-        transactionCountLabel.setText("%s total transactions, %s different categories".formatted(sortedItems.size(), items.size()));
+        transactionList.setItems(FXCollections.observableList(sortedTransactionListItems));
+        transactionCountLabel.setText("%s total transactions, %s different categories".formatted(sortedTransactionListItems.size(), items.size()));
 
-        refreshCharts(transactions, items);
+        refreshCharts(cachedTransactions, items);
         refreshStats();
+        DataManager.log("UI refresh took " + (System.currentTimeMillis() - refreshStart) + "ms");
     }
 
     private void refreshStats() {
         if (selectedAccount == null) return;
         startingBalanceLabel.setText(DataManager.Formatting.formatMoney(fiscal.getStartingBalance(selectedAccount, periodStartPicker.getValue()), selectedAccount.getCurrencyConfig()));
         currentBalanceLabel.setText(DataManager.Formatting.formatMoney(fiscal.getBalance(selectedAccount, periodEndPicker.getValue()), selectedAccount.getCurrencyConfig()));
-        inflowLabel.setText(DataManager.Formatting.formatMoney(fiscal.getInflow(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue())));
-        outflowLabel.setText(DataManager.Formatting.formatMoney(fiscal.getOutflow(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue())));
-        changeLabel.setText(DataManager.Formatting.formatMoney(fiscal.getChange(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue()), selectedAccount.getCurrencyConfig()));
+        inflowLabel.setText(DataManager.Formatting.formatMoney(fiscal.getInflow(selectedAccount, cachedTransactions)));
+        outflowLabel.setText(DataManager.Formatting.formatMoney(fiscal.getOutflow(selectedAccount, cachedTransactions)));
+        changeLabel.setText(DataManager.Formatting.formatMoney(fiscal.getChange(selectedAccount, cachedTransactions), selectedAccount.getCurrencyConfig()));
     }
 
     private void refreshCharts(List<Transaction> transactions, List<CategoryExpenseSummary> categorisedTransactions) {

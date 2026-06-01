@@ -99,9 +99,9 @@
                                           <String fx:value="bold" />
                                        </styleClass>
                                     </Label>
-                                    <HBox alignment="CENTER" maxHeight="80.0" maxWidth="1.7976931348623157E308"
-                                          minHeight="-Infinity" minWidth="-Infinity" spacing="10.0"
-                                          styleClass="rounded-container-secondary">
+                                     <HBox alignment="CENTER" maxHeight="80.0" maxWidth="1.7976931348623157E308"
+                                           minHeight="-Infinity" minWidth="-Infinity" spacing="10.0"
+                                           styleClass="rounded-container-secondary">
                                        <padding>
                                           <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                        </padding>
@@ -235,11 +235,12 @@
                                     <String fx:value="large" />
                                  </styleClass>
                               </Tab>
-                              <Tab closable="false" text="Expenses within selected period">
+                               <Tab closable="false" text="Transactions within selected period">
                                  <content>
                                     <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0">
                                        <children>
-                                          <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" spacing="5.0">
+                                           <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308"
+                                                 spacing="20.0">
                                              <children>
                                                 <Label fx:id="transactionCountLabel" maxWidth="1.7976931348623157E308" text="0 total transactions, 0 different categories" HBox.hgrow="ALWAYS">
                                                    <styleClass>
@@ -247,13 +248,32 @@
                                                       <String fx:value="bold" />
                                                    </styleClass>
                                                 </Label>
-                                                <Label text="Sort: ">
-                                                   <styleClass>
-                                                      <String fx:value="medium-label" />
-                                                      <String fx:value="bold" />
-                                                   </styleClass>
-                                                </Label>
-                                                <ComboBox fx:id="sortSelector" maxWidth="1.7976931348623157E308" promptText="Chronologically" styleClass="medium" />
+                                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                     <children>
+                                                         <Label text="Show:">
+                                                             <styleClass>
+                                                                 <String fx:value="medium-label"/>
+                                                                 <String fx:value="bold"/>
+                                                             </styleClass>
+                                                         </Label>
+                                                         <ComboBox fx:id="transactionTypeSelector"
+                                                                   maxWidth="1.7976931348623157E308"
+                                                                   promptText="Expenses" styleClass="medium"/>
+                                                     </children>
+                                                 </HBox>
+                                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                     <children>
+                                                         <Label text="Sort: ">
+                                                             <styleClass>
+                                                                 <String fx:value="medium-label"/>
+                                                                 <String fx:value="bold"/>
+                                                             </styleClass>
+                                                         </Label>
+                                                         <ComboBox fx:id="sortSelector"
+                                                                   maxWidth="1.7976931348623157E308"
+                                                                   promptText="Chronologically" styleClass="medium"/>
+                                                     </children>
+                                                 </HBox>
                                              </children>
                                           </HBox>
                                           <ListView fx:id="transactionList" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="transaction-list" VBox.vgrow="ALWAYS" />

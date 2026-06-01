@@ -155,6 +155,17 @@ public class FiscalService {
     }
 
     /**
+     * Gets the total cash inflow for the supplied account, based on the supplied transactions.
+     *
+     * @param account      The account associated with the supplied transactions.
+     * @param transactions The transactions to use in order to calculate the inflow.
+     * @return The total inflow within the supplied transactions.
+     */
+    public double getInflow(Account account, List<? extends Transaction> transactions) {
+        return transactions.stream().filter(transaction -> getBalanceAdjustment(account, transaction) > 0).mapToDouble(Transaction::getAbsoluteAmount).sum();
+    }
+
+    /**
      * Gets the total cash inflow on the supplied date for the supplied account.
      * @param account The account whose inflow to calculate.
      * @param date The date whose inflow to calculate.
@@ -176,6 +187,17 @@ public class FiscalService {
     }
 
     /**
+     * Gets the total cash outflow for the supplied account, based on the supplied transactions.
+     *
+     * @param account      The account associated with the supplied transactions.
+     * @param transactions The transactions to use in order to calculate the outflow.
+     * @return The total outflow within the supplied transactions.
+     */
+    public double getOutflow(Account account, List<? extends Transaction> transactions) {
+        return transactions.stream().filter(transaction -> getBalanceAdjustment(account, transaction) < 0).mapToDouble(Transaction::getAbsoluteAmount).sum();
+    }
+
+    /**
      * Gets the total cash outflow on the supplied date for the supplied account.
      * @param account The account whose outflow to calculate.
      * @param date The date whose outflow to calculate.
@@ -194,6 +216,17 @@ public class FiscalService {
      */
     public double getOutflow(Account account, LocalDate fromInclusive, LocalDate toInclusive) {
         return getTransactionsBetween(account, fromInclusive, toInclusive).stream().filter(transaction -> getBalanceAdjustment(account, transaction) < 0).mapToDouble(t -> Math.abs(t.getAmount())).sum();
+    }
+
+    /**
+     * Gets the difference between the total inflow and total outflow for the supplied account, based on the supplied transactions.
+     *
+     * @param account      The account whose change to calculate.
+     * @param transactions The transactions to use in order to calculate the change.
+     * @return The difference between the inflow and outflow based on the supplied transactions.
+     */
+    public double getChange(Account account, List<? extends Transaction> transactions) {
+        return getInflow(account, transactions) - getOutflow(account, transactions);
     }
 
     /**
