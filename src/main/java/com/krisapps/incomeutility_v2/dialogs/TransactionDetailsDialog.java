@@ -6,6 +6,7 @@ import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -124,7 +125,7 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
             Optional<Account> to = dataManager.getAccount(transaction.getTargetAccountId());
             transferToLabel.setText(to.isPresent() ? to.get().getName() : "Unknown account");
 
-            amountLabel.setText(DataManager.Formatting.formatMoney(
+            amountLabel.setText(Formatting.formatMoney(
                     transaction.getAbsoluteAmount(),
                     to.isPresent() ? to.get().getCurrencyConfig() : CurrencyConfig.DEFAULT
             ));
@@ -137,7 +138,7 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
             accountLabel.setText(acc.isPresent() ? acc.get().getName() : "Unknown account");
 
             amountLabel.setText(
-                    DataManager.Formatting.formatMoney(
+                    Formatting.formatMoney(
                             transaction.getAbsoluteAmount(),
                             acc.isPresent() ? acc.get().getCurrencyConfig() : CurrencyConfig.DEFAULT
                     ));
@@ -147,9 +148,9 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
             accountLabel.setManaged(true);
         }
 
-        dateLabel.setText(DataManager.Formatting.formatLocalDate(transaction.getTimestamp().toLocalDate()));
-        timeLabel.setText(DataManager.Formatting.formatLocalTime(transaction.getTimestamp().toLocalTime()));
+        dateLabel.setText(Formatting.formatLocalDate(transaction.getTimestamp().toLocalDate()));
+        timeLabel.setText(Formatting.formatLocalTime(transaction.getTimestamp().toLocalTime()));
         commentLabel.setText(transaction.getComment().isEmpty() ? "No comments added." : transaction.getComment());
-        categoryLabel.setText(transaction.getCategory().equals(TransactionCategory.CUSTOM) ? transaction.getCustomCategory() : DataManager.Formatting.humanize(transaction.getCategory().name()));
+        categoryLabel.setText(transaction.getCategory().equals(TransactionCategory.CUSTOM) ? transaction.getCustomCategory() : Formatting.humanize(transaction.getCategory().name()));
     }
 }

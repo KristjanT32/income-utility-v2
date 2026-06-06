@@ -7,6 +7,7 @@ import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
@@ -99,8 +100,8 @@ public class TransactionCell extends ListCell<Transaction> {
 
                 rootPane.getStyleClass().add("inflow");
                 categoryLabel.setText("Transferred from " + (account.isPresent() ? account.get().getName() : "Unknown account") + " (" + (transaction.getCategory() == TransactionCategory.CUSTOM
-                        ? DataManager.Formatting.capitalize(transaction.getCustomCategory())
-                        : DataManager.Formatting.capitalize(transaction.getCategory().toString())) + ")");
+                        ? Formatting.capitalize(transaction.getCustomCategory())
+                        : Formatting.capitalize(transaction.getCategory().toString())) + ")");
                 commentLabel.setText(transaction.getComment());
             } else if (parent.getId().equals(transaction.getSourceAccountId())) {
 
@@ -109,8 +110,8 @@ public class TransactionCell extends ListCell<Transaction> {
 
                 rootPane.getStyleClass().add("outflow");
                 categoryLabel.setText("Transferred to " + (account.isPresent() ? account.get().getName() : "Unknown account") + " (" + (transaction.getCategory() == TransactionCategory.CUSTOM
-                        ? DataManager.Formatting.capitalize(transaction.getCustomCategory())
-                        : DataManager.Formatting.capitalize(transaction.getCategory().toString())) + ")");
+                        ? Formatting.capitalize(transaction.getCustomCategory())
+                        : Formatting.capitalize(transaction.getCategory().toString())) + ")");
                 commentLabel.setText(transaction.getComment());
             }
         } else {
@@ -118,7 +119,7 @@ public class TransactionCell extends ListCell<Transaction> {
             categoryLabel.setText(
                     transaction.getCategory() == TransactionCategory.CUSTOM
                             ? transaction.getCustomCategory()
-                            : DataManager.Formatting.humanize(transaction.getCategory().toString())
+                            : Formatting.humanize(transaction.getCategory().toString())
             );
             commentLabel.setText(transaction.getComment().trim());
         }

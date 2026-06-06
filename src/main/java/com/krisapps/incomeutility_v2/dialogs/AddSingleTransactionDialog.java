@@ -7,6 +7,7 @@ import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import com.krisapps.incomeutility_v2.util.misc.Formats;
 import javafx.collections.ObservableList;
@@ -110,7 +111,7 @@ public class AddSingleTransactionDialog extends IncomeUtilityDialog<Transaction>
         categorySelector.setConverter(new StringConverter<String>() {
             @Override
             public String toString(String s) {
-                return DataManager.Formatting.humanize(s);
+                return Formatting.humanize(s);
             }
 
             @Override

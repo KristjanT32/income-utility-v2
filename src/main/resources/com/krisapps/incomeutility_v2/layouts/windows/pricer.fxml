@@ -4,13 +4,14 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import org.kordamp.ikonli.javafx.*?>
 <?import java.lang.*?>
 <?import java.net.URL?>
-<StackPane alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane alignment="TOP_CENTER" prefWidth="1000.0" xmlns="http://javafx.com/javafx/25"
+           xmlns:fx="http://javafx.com/fxml/1">
    <children>
        <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-             minHeight="-Infinity" minWidth="-Infinity" prefHeight="729.0" prefWidth="899.0" spacing="10.0">
+             minHeight="-Infinity" minWidth="-Infinity" spacing="10.0">
          <children>
             <VBox alignment="TOP_CENTER" maxWidth="1280.0" minHeight="-Infinity" minWidth="-Infinity" VBox.vgrow="ALWAYS">
                <children>
@@ -28,14 +29,14 @@
                         </Button>
                      </children>
                   </HBox>
-                   <TabPane>
+                   <TabPane maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
                        <VBox.margin>
                            <Insets top="20.0"/>
                        </VBox.margin>
                        <tabs>
                            <Tab closable="false" text="Product">
                                <content>
-                                   <VBox spacing="20.0">
+                                   <VBox maxHeight="1.7976931348623157E308" spacing="20.0">
                                        <children>
                                            <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0">
                                                <children>
@@ -50,7 +51,7 @@
                                                                    <String fx:value="flair-generic"/>
                                                                </styleClass>
                                                            </Label>
-                                                           <Label fx:id="ppuLabel" alignment="CENTER"
+                                                           <Label fx:id="pricerPerUnitLabel" alignment="CENTER"
                                                                   maxHeight="1.7976931348623157E308"
                                                                   maxWidth="1.7976931348623157E308" text="0.00€"
                                                                   VBox.vgrow="ALWAYS">
@@ -72,7 +73,7 @@
                                                                    <String fx:value="flair-generic"/>
                                                                </styleClass>
                                                            </Label>
-                                                           <Label fx:id="pputLabel" alignment="CENTER"
+                                                           <Label fx:id="pricePerDayOfUseLabel" alignment="CENTER"
                                                                   maxHeight="1.7976931348623157E308"
                                                                   maxWidth="1.7976931348623157E308" text="0.00€"
                                                                   VBox.vgrow="ALWAYS">
@@ -85,166 +86,43 @@
                                                    </VBox>
                                                </children>
                                            </HBox>
-                                           <VBox fx:id="addProductPanel" spacing="20.0">
+                                           <VBox maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
                                                <children>
-                                                   <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0">
-                                                       <children>
-                                                           <VBox maxHeight="1.7976931348623157E308"
-                                                                 maxWidth="1.7976931348623157E308" spacing="5.0"
-                                                                 HBox.hgrow="ALWAYS">
-                                                               <children>
-                                                                   <Label text="Product name">
-                                                                       <styleClass>
-                                                                           <String fx:value="large-label"/>
-                                                                           <String fx:value="bold"/>
-                                                                       </styleClass>
-                                                                   </Label>
-                                                                   <TextField fx:id="nameBox"
-                                                                              maxHeight="1.7976931348623157E308"
-                                                                              styleClass="large-label"
-                                                                              VBox.vgrow="ALWAYS"/>
-                                                               </children>
-                                                               <padding>
-                                                                   <Insets bottom="10.0" top="10.0"/>
-                                                               </padding>
-                                                           </VBox>
-                                                           <VBox maxHeight="1.7976931348623157E308"
-                                                                 maxWidth="1.7976931348623157E308" spacing="5.0"
-                                                                 HBox.hgrow="ALWAYS">
-                                                               <children>
-                                                                   <Label text="Product price">
-                                                                       <styleClass>
-                                                                           <String fx:value="large-label"/>
-                                                                           <String fx:value="bold"/>
-                                                                       </styleClass>
-                                                                   </Label>
-                                                                   <TextField fx:id="priceBox"
-                                                                              maxHeight="1.7976931348623157E308"
-                                                                              styleClass="large-label"
-                                                                              VBox.vgrow="ALWAYS"/>
-                                                               </children>
-                                                               <padding>
-                                                                   <Insets bottom="10.0" top="10.0"/>
-                                                               </padding>
-                                                           </VBox>
-                                                           <VBox maxHeight="1.7976931348623157E308"
-                                                                 maxWidth="1.7976931348623157E308" spacing="5.0"
-                                                                 HBox.hgrow="ALWAYS">
-                                                               <children>
-                                                                   <Label text="Amount">
-                                                                       <styleClass>
-                                                                           <String fx:value="large-label"/>
-                                                                           <String fx:value="bold"/>
-                                                                       </styleClass>
-                                                                   </Label>
-                                                                   <TextField fx:id="amountBox"
-                                                                              maxHeight="1.7976931348623157E308"
-                                                                              styleClass="large-label"
-                                                                              VBox.vgrow="ALWAYS"/>
-                                                               </children>
-                                                               <padding>
-                                                                   <Insets bottom="10.0" top="10.0"/>
-                                                               </padding>
-                                                           </VBox>
-                                                           <VBox maxHeight="1.7976931348623157E308"
-                                                                 maxWidth="1.7976931348623157E308" spacing="5.0">
-                                                               <children>
-                                                                   <Label text="Unit name">
-                                                                       <styleClass>
-                                                                           <String fx:value="large-label"/>
-                                                                           <String fx:value="bold"/>
-                                                                       </styleClass>
-                                                                   </Label>
-                                                                   <TextField fx:id="unitBox"
-                                                                              maxHeight="1.7976931348623157E308"
-                                                                              styleClass="large-label"
-                                                                              VBox.vgrow="ALWAYS"/>
-                                                               </children>
-                                                               <padding>
-                                                                   <Insets bottom="10.0" top="10.0"/>
-                                                               </padding>
-                                                           </VBox>
-                                                       </children>
-                                                   </HBox>
-                                                   <HBox spacing="5.0">
-                                                       <children>
-                                                           <Label maxHeight="1.7976931348623157E308"
-                                                                  text="Average duration of product (days):"
-                                                                  HBox.hgrow="ALWAYS">
-                                                               <styleClass>
-                                                                   <String fx:value="large-label"/>
-                                                                   <String fx:value="bold"/>
-                                                               </styleClass>
-                                                           </Label>
-                                                           <Spinner fx:id="durationSpinner"
-                                                                    maxHeight="1.7976931348623157E308"
-                                                                    maxWidth="1.7976931348623157E308"
-                                                                    styleClass="large-label" HBox.hgrow="ALWAYS"/>
-                                                           <HBox alignment="CENTER" maxHeight="1.7976931348623157E308"
-                                                                 maxWidth="1.7976931348623157E308" spacing="5.0">
-                                                               <children>
-                                                                   <Button maxHeight="1.7976931348623157E308"
-                                                                           maxWidth="1.7976931348623157E308"
-                                                                           mnemonicParsing="false"
-                                                                           styleClass="large-label" text="Save item"
-                                                                           HBox.hgrow="ALWAYS">
-                                                                       <graphic>
-                                                                           <FontIcon iconLiteral="fltrmz-save-copy-24"
-                                                                                     iconSize="16"/>
-                                                                       </graphic>
-                                                                   </Button>
-                                                                   <Button maxHeight="1.7976931348623157E308"
-                                                                           maxWidth="1.7976931348623157E308"
-                                                                           mnemonicParsing="false"
-                                                                           styleClass="large-label"
-                                                                           text="Add item to cart" HBox.hgrow="ALWAYS">
-                                                                       <graphic>
-                                                                           <FontIcon iconLiteral="fltfal-cart-24"
-                                                                                     iconSize="16"/>
-                                                                       </graphic>
-                                                                   </Button>
-                                                               </children>
-                                                               <HBox.margin>
-                                                                   <Insets left="20.0"/>
-                                                               </HBox.margin>
-                                                           </HBox>
-                                                       </children>
-                                                   </HBox>
-                                       </children>
-                                           </VBox>
-                                           <VBox prefHeight="200.0" prefWidth="100.0">
-                                               <children>
-                                                   <Label maxWidth="1.7976931348623157E308" text="Existing products">
-                                                       <styleClass>
-                                                           <String fx:value="xl-label"/>
-                                                           <String fx:value="bold"/>
-                                                       </styleClass>
+                                                   <HBox>
                                                        <VBox.margin>
                                                            <Insets bottom="5.0"/>
                                                        </VBox.margin>
+                                                       <children>
+                                                           <Label maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308"
+                                                                  text="Existing products" HBox.hgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="xl-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <Button fx:id="createButton"
+                                                                   maxHeight="1.7976931348623157E308"
+                                                                   maxWidth="1.7976931348623157E308"
+                                                                   mnemonicParsing="false" styleClass="large-label"
+                                                                   text="New product" HBox.hgrow="SOMETIMES">
+                                                               <graphic>
+                                                                   <FontIcon iconLiteral="fltfal-add-circle-24"
+                                                                             iconSize="16"/>
+                                                               </graphic>
+                                                           </Button>
+                                                       </children>
+                                                   </HBox>
+                                                   <ListView fx:id="existingProductList"
+                                                             maxHeight="1.7976931348623157E308"
+                                                             styleClass="product-list" VBox.vgrow="ALWAYS"/>
+                                                   <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308"
+                                                          maxWidth="1.7976931348623157E308" styleClass="large-label"
+                                                          text="Click on the product to view more info on pricing">
+                                                       <VBox.margin>
+                                                           <Insets top="5.0"/>
+                                                       </VBox.margin>
                                                    </Label>
-                                                   <TableView fx:id="existingProductTable" prefHeight="200.0"
-                                                              prefWidth="200.0">
-                                                       <columns>
-                                                           <TableColumn editable="false" prefWidth="137.0"
-                                                                        sortable="false" text="Product"/>
-                                                           <TableColumn editable="false" prefWidth="112.0"
-                                                                        sortable="false" text="Price per package"/>
-                                                           <TableColumn editable="false" prefWidth="142.0"
-                                                                        sortable="false" text="Units in Package"/>
-                                                           <TableColumn editable="false" prefWidth="142.0"
-                                                                        sortable="false" text="Unit Name"/>
-                                                           <TableColumn editable="false" prefWidth="142.0"
-                                                                        sortable="false" text="Price per Unit"/>
-                                                           <TableColumn editable="false" prefWidth="142.0"
-                                                                        sortable="false" text="Duration in Days"/>
-                                                           <TableColumn editable="false" prefWidth="142.0"
-                                                                        sortable="false" text="Price per Day"/>
-                                                       </columns>
-                                                       <columnResizePolicy>
-                                                           <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-                                                       </columnResizePolicy>
-                                                   </TableView>
                                                </children>
                                            </VBox>
                                        </children>
@@ -343,6 +221,151 @@
                                                    <Insets/>
                                                </VBox.margin>
                                            </HBox>
+                                           <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                                                 spacing="20.0" VBox.vgrow="ALWAYS">
+                                               <children>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308" spacing="5.0"
+                                                         HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <HBox alignment="CENTER_LEFT"
+                                                                 maxWidth="1.7976931348623157E308">
+                                                               <children>
+                                                                   <Label maxHeight="1.7976931348623157E308"
+                                                                          maxWidth="1.7976931348623157E308"
+                                                                          styleClass="header" text="Products"
+                                                                          HBox.hgrow="ALWAYS"/>
+                                                               </children>
+                                                           </HBox>
+                                                           <ListView fx:id="pickableProductList"
+                                                                     maxHeight="1.7976931348623157E308"
+                                                                     maxWidth="1.7976931348623157E308"
+                                                                     styleClass="product-list" VBox.vgrow="ALWAYS"/>
+                                                       </children>
+                                                   </VBox>
+                                                   <VBox alignment="CENTER" maxWidth="1.7976931348623157E308"
+                                                         HBox.hgrow="SOMETIMES">
+                                                       <children>
+                                                           <FontIcon iconLiteral="fltfal-arrow-right-24" iconSize="24"/>
+                                                       </children>
+                                                   </VBox>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308" spacing="5.0"
+                                                         HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <HBox alignment="CENTER_LEFT"
+                                                                 maxWidth="1.7976931348623157E308">
+                                                               <children>
+                                                                   <Label maxHeight="1.7976931348623157E308"
+                                                                          maxWidth="1.7976931348623157E308"
+                                                                          styleClass="header" text="Shopping cart"
+                                                                          HBox.hgrow="ALWAYS"/>
+                                                               </children>
+                                                           </HBox>
+                                                           <ListView fx:id="cartItemList1"
+                                                                     maxHeight="1.7976931348623157E308"
+                                                                     maxWidth="1.7976931348623157E308"
+                                                                     styleClass="product-list" VBox.vgrow="ALWAYS"/>
+                                                       </children>
+                                                   </VBox>
+                                               </children>
+                                           </HBox>
+                                       </children>
+                                       <padding>
+                                           <Insets top="10.0"/>
+                                       </padding>
+                                   </VBox>
+                               </content>
+                               <styleClass>
+                                   <String fx:value="large"/>
+                                   <String fx:value="large-label"/>
+                               </styleClass>
+                           </Tab>
+                           <Tab closable="false" text="Dish">
+                               <content>
+                                   <StackPane maxHeight="1.7976931348623157E308">
+                                       <children>
+                                           <VBox maxHeight="1.7976931348623157E308" spacing="20.0" visible="false">
+                                       <children>
+                                           <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0">
+                                               <children>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308"
+                                                         styleClass="rounded-container" HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <Label alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="Dish total"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="flair-generic"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <Label fx:id="cartTotalLabel1" alignment="CENTER"
+                                                                  maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="0.00€"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="xl-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                       </children>
+                                                       <HBox.margin>
+                                                           <Insets/>
+                                                       </HBox.margin>
+                                                   </VBox>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308"
+                                                         styleClass="rounded-container" HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <Label alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="Cart total"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="flair-generic"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <Label fx:id="cartTotalLabel11" alignment="CENTER"
+                                                                  maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="0.00€"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="xl-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                       </children>
+                                                   </VBox>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308"
+                                                         styleClass="rounded-container" HBox.hgrow="ALWAYS">
+                                                       <children>
+                                                           <Label alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308"
+                                                                  text="Dish price per time of use" VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="large-label"/>
+                                                                   <String fx:value="flair-generic"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                           <Label fx:id="cartPerUnitOfTimeLabel1" alignment="CENTER"
+                                                                  maxHeight="1.7976931348623157E308"
+                                                                  maxWidth="1.7976931348623157E308" text="0.00€"
+                                                                  VBox.vgrow="ALWAYS">
+                                                               <styleClass>
+                                                                   <String fx:value="xl-label"/>
+                                                                   <String fx:value="bold"/>
+                                                               </styleClass>
+                                                           </Label>
+                                                       </children>
+                                                   </VBox>
+                                               </children>
+                                               <VBox.margin>
+                                                   <Insets/>
+                                               </VBox.margin>
+                                           </HBox>
                                            <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
                                                  spacing="5.0" VBox.vgrow="ALWAYS">
                                                <children>
@@ -350,12 +373,12 @@
                                                        <children>
                                                            <Label maxHeight="1.7976931348623157E308"
                                                                   maxWidth="1.7976931348623157E308" styleClass="header"
-                                                                  text="Shopping cart" HBox.hgrow="ALWAYS"/>
-                                                           <Button fx:id="addCartItemButton"
+                                                                  text="Dish ingredients" HBox.hgrow="ALWAYS"/>
+                                                           <Button fx:id="addCartItemButton1"
                                                                    maxHeight="1.7976931348623157E308"
                                                                    maxWidth="1.7976931348623157E308"
                                                                    mnemonicParsing="false" styleClass="medium-label"
-                                                                   text="Add product" HBox.hgrow="SOMETIMES">
+                                                                   text="Add ingredient" HBox.hgrow="SOMETIMES">
                                                                <graphic>
                                                                    <FontIcon iconLiteral="fltfal-add-circle-24"
                                                                              iconSize="14"/>
@@ -363,15 +386,55 @@
                                                            </Button>
                                                        </children>
                                                    </HBox>
-                                                   <ListView fx:id="cartItemList" maxHeight="1.7976931348623157E308"
+                                                   <ListView fx:id="ingredientList" maxHeight="1.7976931348623157E308"
                                                              maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS"/>
                                                </children>
                                            </VBox>
                                        </children>
+                                               <padding>
+                                                   <Insets top="10.0"/>
+                                               </padding>
+                                           </VBox>
+                                           <VBox maxHeight="1.7976931348623157E308" spacing="20.0">
+                                               <children>
+                                                   <VBox maxHeight="1.7976931348623157E308"
+                                                         maxWidth="1.7976931348623157E308" spacing="5.0"
+                                                         VBox.vgrow="ALWAYS">
+                                                       <children>
+                                                           <HBox alignment="CENTER_LEFT"
+                                                                 maxWidth="1.7976931348623157E308">
+                                                               <children>
+                                                                   <Label maxHeight="1.7976931348623157E308"
+                                                                          maxWidth="1.7976931348623157E308"
+                                                                          styleClass="header"
+                                                                          text="Load an existing dish..."
+                                                                          HBox.hgrow="ALWAYS"/>
+                                                                   <Button fx:id="addCartItemButton11"
+                                                                           maxHeight="1.7976931348623157E308"
+                                                                           maxWidth="1.7976931348623157E308"
+                                                                           mnemonicParsing="false"
+                                                                           styleClass="medium-label" text="New dish"
+                                                                           HBox.hgrow="SOMETIMES">
+                                                                       <graphic>
+                                                                           <FontIcon iconLiteral="fltfal-add-circle-24"
+                                                                                     iconSize="14"/>
+                                                                       </graphic>
+                                                                   </Button>
+                                                               </children>
+                                                           </HBox>
+                                                           <ListView fx:id="ingredientList1"
+                                                                     maxHeight="1.7976931348623157E308"
+                                                                     maxWidth="1.7976931348623157E308"
+                                                                     VBox.vgrow="ALWAYS"/>
+                                                       </children>
+                                                   </VBox>
+                                       </children>
                                        <padding>
                                            <Insets top="10.0"/>
                                        </padding>
-                                   </VBox>
+                                           </VBox>
+                                       </children>
+                                   </StackPane>
                                </content>
                                <styleClass>
                                    <String fx:value="large"/>

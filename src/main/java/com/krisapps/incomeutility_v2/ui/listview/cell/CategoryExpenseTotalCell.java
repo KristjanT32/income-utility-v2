@@ -6,7 +6,7 @@ import com.krisapps.incomeutility_v2.types.data.CategorySummary;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
-import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
@@ -67,7 +67,7 @@ public class CategoryExpenseTotalCell extends ListCell<CategorySummary> {
             categoryNameLabel.setText(item.getCategoryName());
             entryCountLabel.setText("Transactions in this category: " + item.getTransactionCount());
 
-            totalLabel.setText(DataManager.Formatting.formatMoney(item.sumTransactions(), parent.getCurrencyConfig()));
+            totalLabel.setText(Formatting.formatMoney(item.sumTransactions(), parent.getCurrencyConfig()));
 
             categoryNameLabel.setStyle("-fx-text-fill: black");
             entryCountLabel.setStyle("-fx-text-fill: black");

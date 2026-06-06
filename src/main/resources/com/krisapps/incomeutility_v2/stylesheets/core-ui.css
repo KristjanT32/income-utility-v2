@@ -15,6 +15,10 @@
     -fx-padding: 1px;
 }
 
+.rounded-container.bold {
+    -fx-font-weight: bold;
+}
+
 .rounded-container-secondary {
     -fx-border-color: "lightgray";
     -fx-border-width: 1px;
@@ -318,8 +322,73 @@
     -fx-border-color: #802d2d;
 }
 
+.button.positive {
+    -fx-background-color: #39e157;
+    -fx-border-color: #39e157;
+}
+
+.button.positive:hover {
+    -fx-background-color: #30bf4b;
+    -fx-border-color: #30bf4b;
+}
+
+.button.positive:pressed {
+    -fx-background-color: #279a3a;
+    -fx-border-color: #279a3a;
+}
+
 .button:pressed {
     -fx-background-color: #787878;
+}
+
+/* </editor-fold> */
+
+/* <editor-fold desc="Toggle Button"> */
+.toggle-button {
+    -fx-background-color: #d3d3d3;
+    -fx-background-radius: 10px;
+
+    -fx-border-radius: 10px;
+    -fx-border-color: #d3d3d3;
+    -fx-border-width: 1px;
+    -fx-border-style: solid;
+    -fx-text-fill: black;
+}
+
+.toggle-button.bold {
+    -fx-font-weight: bold;
+}
+
+.toggle-button:selected {
+    -fx-background-color: #888888;
+}
+
+.toggle-button:hover {
+    -fx-background-color: #c3c3c3;
+}
+
+.toggle-button:selected:hover {
+    -fx-background-color: #717171;
+}
+
+.toggle-button.blue {
+    -fx-background-color: #7691ff;
+    -fx-border-color: #7691ff;
+}
+
+.toggle-button.blue:selected {
+    -fx-background-color: #ff768f;
+    -fx-border-color: #ff768f;
+}
+
+.toggle-button.blue:hover {
+    -fx-background-color: #647bd8;
+    -fx-border-color: #647bd8;
+}
+
+.toggle-button.blue:selected:hover {
+    -fx-background-color: #ca5e72;
+    -fx-border-color: #ca5e72;
 }
 
 /* </editor-fold> */

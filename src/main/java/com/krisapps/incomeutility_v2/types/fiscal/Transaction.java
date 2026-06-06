@@ -4,6 +4,7 @@ import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.*;
@@ -168,9 +169,9 @@ public class Transaction {
     public String formatAmount(DataManager dataManager, boolean absolute) {
         Optional<Account> source = dataManager.getAccount(this.sourceAccountId);
         if (source.isPresent()) {
-            return DataManager.Formatting.formatMoney(absolute ? Math.abs(this.amount) : this.amount, source.get().getCurrencyConfig().getCurrencySymbol(), source.get().getCurrencyConfig().isCurrencySymbolPrefix());
+            return Formatting.formatMoney(absolute ? Math.abs(this.amount) : this.amount, source.get().getCurrencyConfig().getCurrencySymbol(), source.get().getCurrencyConfig().isCurrencySymbolPrefix());
         } else {
-            return DataManager.Formatting.formatMoney(absolute ? Math.abs(this.amount) : this.amount, CurrencyConfig.DEFAULT.getCurrencySymbol(), CurrencyConfig.DEFAULT.isCurrencySymbolPrefix());
+            return Formatting.formatMoney(absolute ? Math.abs(this.amount) : this.amount, CurrencyConfig.DEFAULT.getCurrencySymbol(), CurrencyConfig.DEFAULT.isCurrencySymbolPrefix());
         }
     }
 

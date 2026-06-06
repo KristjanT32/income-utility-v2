@@ -7,8 +7,8 @@ import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
@@ -92,7 +92,7 @@ public class EditableTransactionCell extends ListCell<Transaction> {
         categorySelector.setConverter(new StringConverter<String>() {
             @Override
             public String toString(String s) {
-                return DataManager.Formatting.humanize(s);
+                return Formatting.humanize(s);
             }
 
             @Override
@@ -218,7 +218,7 @@ public class EditableTransactionCell extends ListCell<Transaction> {
 
         updating = true;
         try {
-            amountField.setText(DataManager.Formatting.formatMoney(
+            amountField.setText(Formatting.formatMoney(
                     transaction.getAbsoluteAmount(),
                     parent.getCurrencyConfig()
             ));
@@ -231,7 +231,7 @@ public class EditableTransactionCell extends ListCell<Transaction> {
 
             commentField.setText(transaction.getComment());
             dateSelector.setValue(transaction.getTimestamp().toLocalDate());
-            timeField.setText(DataManager.Formatting.formatLocalTime(transaction.getTimestamp().toLocalTime()));
+            timeField.setText(Formatting.formatLocalTime(transaction.getTimestamp().toLocalTime()));
         } finally {
             updating = false;
         }

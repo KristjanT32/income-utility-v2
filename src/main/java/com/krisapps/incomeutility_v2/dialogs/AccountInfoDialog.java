@@ -3,6 +3,7 @@ package com.krisapps.incomeutility_v2.dialogs;
 import com.krisapps.incomeutility_v2.dialogs.generic.LoadingDialog;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import com.krisapps.incomeutility_v2.util.services.TransactionService;
@@ -77,8 +78,8 @@ public class AccountInfoDialog extends IncomeUtilityDialog<Void>{
     private void refreshUI(Account account) {
         nameLabel.setText(account.getName());
         typeLabel.setText(account.getType().getDisplayName());
-        initialBalanceLabel.setText(DataManager.Formatting.formatMoney(account.getInitialBalance(), account.getCurrencyConfig()));
-        currentBalanceLabel.setText(DataManager.Formatting.formatMoney(fiscal.getCurrentBalance(account), account.getCurrencyConfig()));
+        initialBalanceLabel.setText(Formatting.formatMoney(account.getInitialBalance(), account.getCurrencyConfig()));
+        currentBalanceLabel.setText(Formatting.formatMoney(fiscal.getCurrentBalance(account), account.getCurrencyConfig()));
         totalTransactionsLabel.setText(String.valueOf(fiscal.getTransactions(account).size()));
     }
 }

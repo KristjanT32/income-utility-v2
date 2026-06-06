@@ -7,6 +7,7 @@ import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.misc.Formats;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -100,12 +101,12 @@ public class EditTransactionDialog extends IncomeUtilityDialog<Transaction> {
         refreshCategorySelector();
 
         transactionTypeSelector.setValue(outputTransaction.getType());
-        categorySelector.setValue(DataManager.Formatting.capitalize(outputTransaction.getCategory().name()));
+        categorySelector.setValue(Formatting.capitalize(outputTransaction.getCategory().name()));
         customCategoryField.setText(outputTransaction.getCustomCategory());
         dateSelector.setValue(outputTransaction.getTimestamp().toLocalDate());
         timeField.setText(outputTransaction.getTimestamp().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         commentField.setText(outputTransaction.getComment());
-        amountField.setText(DataManager.Formatting.formatMoney(outputTransaction.getAbsoluteAmount()));
+        amountField.setText(Formatting.formatMoney(outputTransaction.getAbsoluteAmount()));
 
         HashSet<Account> accounts = data.getAccounts();
         switch (outputTransaction.getType()) {
@@ -136,7 +137,7 @@ public class EditTransactionDialog extends IncomeUtilityDialog<Transaction> {
         categorySelector.setConverter(new StringConverter<String>() {
             @Override
             public String toString(String s) {
-                return DataManager.Formatting.humanize(s);
+                return Formatting.humanize(s);
             }
 
             @Override

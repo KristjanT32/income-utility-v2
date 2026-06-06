@@ -113,9 +113,9 @@ public abstract class SubUtility {
             window.getScene().setOnKeyPressed((keyEvent) -> {
                 if (keyEvent.getCode().equals(KeyCode.F1)) {
                     commandPrompt.setVisible(!commandPrompt.isVisible());
+                    commandPromptField.setText("");
                     if (commandPrompt.isVisible()) {
                         commandPromptField.requestFocus();
-                        commandPromptField.setText("");
                     }
                 }
                 if (keyEvent.getCode().equals(KeyCode.ESCAPE)) {

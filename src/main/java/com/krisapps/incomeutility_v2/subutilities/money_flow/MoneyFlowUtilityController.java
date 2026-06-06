@@ -14,6 +14,7 @@ import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import com.krisapps.incomeutility_v2.util.misc.Formats;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
@@ -311,22 +312,22 @@ public class MoneyFlowUtilityController extends SubUtilityController {
         accountSelector.requestLayout();
 
         if (selectedAccount != null && selectedDate != null) {
-            startingBalanceLabel.setText(DataManager.Formatting.formatMoney(
+            startingBalanceLabel.setText(Formatting.formatMoney(
                     fiscal.getStartingBalance(selectedAccount, selectedDate),
                     selectedAccount.getCurrencyConfig().getCurrencySymbol(),
                     selectedAccount.getCurrencyConfig().isCurrencySymbolPrefix()
             ));
-            inflowLabel.setText(DataManager.Formatting.formatMoney(
+            inflowLabel.setText(Formatting.formatMoney(
                     fiscal.getInflow(selectedAccount, selectedDate),
                     selectedAccount.getCurrencyConfig().getCurrencySymbol(),
                     selectedAccount.getCurrencyConfig().isCurrencySymbolPrefix()
             ));
-            outflowLabel.setText(DataManager.Formatting.formatMoney(
+            outflowLabel.setText(Formatting.formatMoney(
                     fiscal.getOutflow(selectedAccount, selectedDate),
                     selectedAccount.getCurrencyConfig().getCurrencySymbol(),
                     selectedAccount.getCurrencyConfig().isCurrencySymbolPrefix()
             ));
-            currentBalanceLabel.setText(DataManager.Formatting.formatMoney(
+            currentBalanceLabel.setText(Formatting.formatMoney(
                     fiscal.getCurrentBalance(selectedAccount),
                     selectedAccount.getCurrencyConfig().getCurrencySymbol(),
                     selectedAccount.getCurrencyConfig().isCurrencySymbolPrefix()
@@ -335,7 +336,7 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             double change = fiscal.getChange(selectedAccount, selectedDate);
             changeLabel.getStyleClass().removeAll("green-positive", "red-negative");
             changeLabel.getStyleClass().add((change > 0 ? "green-positive" : change < 0 ? "red-negative" : ""));
-            changeLabel.setText(DataManager.Formatting.formatMoney(
+            changeLabel.setText(Formatting.formatMoney(
                     change,
                     selectedAccount.getCurrencyConfig().getCurrencySymbol(),
                     selectedAccount.getCurrencyConfig().isCurrencySymbolPrefix()

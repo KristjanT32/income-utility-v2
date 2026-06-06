@@ -10,6 +10,9 @@ import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
+import com.krisapps.incomeutility_v2.types.pricer.Dish;
+import com.krisapps.incomeutility_v2.types.pricer.DishIngredient;
+import com.krisapps.incomeutility_v2.types.pricer.Product;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.misc.LocalDateTimeTypeAdapter;
@@ -26,11 +29,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidParameterException;
 import java.sql.*;
-import java.text.DecimalFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.*;
-import java.time.format.DateTimeFormatter;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.Date;
 import java.util.logging.Level;
@@ -76,8 +77,20 @@ public class DataManager {
         }
     }
 
+    public static void log(String msg, String modulePrefix) {
+        if (msg.toLowerCase().contains("failed") || msg.toLowerCase().contains("error") || msg.toLowerCase().contains("fail") || msg.toLowerCase().contains("couldn't") || msg.toLowerCase().contains("could not")) {
+            System.out.println(String.format("[%s IncomeUtility/ERROR] [%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), modulePrefix) + msg);
+        } else {
+            System.out.println(String.format("[%s IncomeUtility/INFO] [%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), modulePrefix) + msg);
+        }
+    }
+
     public static void log(String msg, Level level) {
         System.out.println(String.format("[%s IncomeUtility/%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), level.getName()) + msg);
+    }
+
+    public static void log(String msg, String modulePrefix, Level level) {
+        System.out.println(String.format("[%s IncomeUtility/%s] [%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), level.getName(), modulePrefix) + msg);
     }
 
     public void initialize() {
@@ -101,6 +114,10 @@ public class DataManager {
             }
 
         }
+    }
+
+    public void reinitializeCurrentDatabase() {
+        initializeDatabase(currentConnection);
     }
 
     private void initializeDatabase(Connection currentConnection) {
@@ -147,6 +164,40 @@ public class DataManager {
                     	PRIMARY KEY("id" AUTOINCREMENT),
                     	CONSTRAINT "category_fk" FOREIGN KEY("customCategoryId") REFERENCES "transaction_categories"("id")
                     )
+                    """);
+
+            statement.execute("""
+                    CREATE TABLE "products" (
+                    	"id"	INTEGER NOT NULL,
+                    	"name"	TEXT NOT NULL UNIQUE,
+                    	"price"	REAL NOT NULL,
+                    	"durationOfUseInDays"	REAL NOT NULL DEFAULT 1,
+                    	"unitsPerProduct"	REAL NOT NULL,
+                    	"smallestUnit"	REAL DEFAULT 0.5,
+                    	"unitSingular"	TEXT NOT NULL DEFAULT 'gram',
+                    	"unitPlural"	TEXT DEFAULT 'grams',
+                    	PRIMARY KEY("id" AUTOINCREMENT)
+                    )
+                    """);
+
+            statement.execute("""
+                    CREATE TABLE "dishes" (
+                    	"id"	INTEGER NOT NULL,
+                    	"name"	TEXT NOT NULL DEFAULT 'New Dish' UNIQUE,
+                    	PRIMARY KEY("id" AUTOINCREMENT)
+                    )
+                    """);
+
+            statement.execute("""
+                    CREATE TABLE "dish_ingredients" (
+                     	"relationId"	INTEGER NOT NULL,
+                     	"productId"	INTEGER NOT NULL,
+                     	"dishId"	INTEGER NOT NULL,
+                     	"quantity"	REAL NOT NULL DEFAULT 1,
+                     	PRIMARY KEY("relationId" AUTOINCREMENT),
+                     	FOREIGN KEY("dishId") REFERENCES "dishes"("id"),
+                     	FOREIGN KEY("productId") REFERENCES "products"("id")
+                     )
                     """);
             statement.execute("PRAGMA user_version = 1");
             log("Database successfully initialized!");
@@ -213,6 +264,7 @@ public class DataManager {
 
     /**
      * Loads configuration data from the disk.
+     *
      * @return The loaded data.
      */
     public ConfigurationData getConfigurationData() {
@@ -287,7 +339,7 @@ public class DataManager {
 
     //<editor-fold desc="Data access">
 
-    public static Transaction mapResultSetToTransaction(ResultSet row) throws SQLException {
+    public Transaction mapResultSetToTransaction(ResultSet row) throws SQLException {
         UUID uuid = UUID.fromString(row.getString("uuid"));
         TransactionType type = TransactionType.valueOf(row.getString("type"));
         String cashewTransactionId = row.getString("cashewTransactionId");
@@ -325,6 +377,37 @@ public class DataManager {
             );
         }
         return t;
+    }
+
+    public Product mapResultSetToProduct(ResultSet row) throws SQLException {
+        try {
+            return new Product(
+                    row.getInt("id"),
+                    row.getString("name"),
+                    row.getDouble("price"),
+                    row.getDouble("durationOfUseInDays"),
+                    row.getDouble("unitsPerProduct"),
+                    row.getDouble("smallestUnit"),
+                    row.getString("unitSingular"),
+                    row.getString("unitPlural")
+            );
+        } catch (SQLException e) {
+            log("Failed to map the supplied ResultSet to a Product record!");
+            return null;
+        }
+    }
+
+    public Dish mapResultSetToDish(ResultSet row, List<DishIngredient> ingredients) throws SQLException {
+        try {
+            return new Dish(
+                    row.getInt("id"),
+                    row.getString("name"),
+                    ingredients
+            );
+        } catch (SQLException e) {
+            log("Failed to map the supplied ResultSet to a Dish record!");
+            return null;
+        }
     }
 
     public HashSet<Account> getAccounts() {
@@ -568,6 +651,102 @@ public class DataManager {
         return new ArrayList<>();
     }
 
+    public ArrayList<Product> getProducts() {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM products;");
+
+            ResultSet response = stmt.executeQuery();
+            ArrayList<Product> products = new ArrayList<>();
+            while (response.next()) {
+                products.add(mapResultSetToProduct(response));
+            }
+
+            return products;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying products. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return new ArrayList<>();
+    }
+
+    public Optional<Product> getProduct(int id) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM products WHERE id = ?;");
+            stmt.setInt(1, id);
+
+            ResultSet response = stmt.executeQuery();
+            if (response.next()) {
+                return Optional.of(mapResultSetToProduct(response));
+            } else {
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying products. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Dish> getDish(int id) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM dishes WHERE id = ?;");
+            stmt.setInt(1, id);
+
+            ResultSet response = stmt.executeQuery();
+            if (response.next()) {
+                return Optional.of(mapResultSetToDish(response, getDishIngredients(id)));
+            } else {
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying products. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return Optional.empty();
+    }
+
+    public List<DishIngredient> getDishIngredients(int dishId) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM dish_ingredients WHERE dishId = ?;");
+            stmt.setInt(1, dishId);
+
+            ResultSet response = stmt.executeQuery();
+            List<DishIngredient> out = new ArrayList<>();
+            while (response.next()) {
+                Optional<Product> product = getProduct(response.getInt("productId"));
+                if (product.isEmpty()) {
+                    log("Invalid dish ingredient entry found: relation ID #" + response.getInt("relationId") + " - invalid product ID!");
+                    continue;
+                }
+
+                out.add(new DishIngredient(
+                        response.getInt("relationId"),
+                        response.getInt("dishId"),
+                        product.get(),
+                        response.getDouble("quantity")
+                ));
+            }
+
+            return out;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying dish ingredients. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return new ArrayList<>();
+    }
+
     public boolean customTransactionCategoryExists(String category) {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
@@ -654,23 +833,7 @@ public class DataManager {
     }
 
     public boolean accountExists(Account account) {
-        if (currentConnection == null) {
-            currentConnection = getDatabaseConnection();
-        }
-
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "SELECT COUNT(*) FROM accounts WHERE uuid = ?;"
-            );
-            statement.setString(1, account.getId().toString());
-
-            ResultSet set = statement.executeQuery();
-
-            return set.getInt(1) > 0;
-        } catch (SQLException e) {
-            PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking account data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
-        }
-        return false;
+        return accountExists(account.getId());
     }
 
     public boolean accountExists(UUID accountId) {
@@ -693,9 +856,59 @@ public class DataManager {
         return false;
     }
 
+    public boolean productExists(Product product) {
+        return productExists(product.id());
+    }
+
+    public boolean productExists(int id) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "SELECT COUNT(*) FROM products WHERE id = ?;"
+            );
+            statement.setInt(1, id);
+
+            ResultSet set = statement.executeQuery();
+            return set.getInt(1) > 0;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking product data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return false;
+    }
+
+    public boolean dishExists(Dish dish) {
+        return dishExists(dish.id());
+    }
+
+    public boolean dishExists(int id) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "SELECT COUNT(*) FROM dishes WHERE id = ?;"
+            );
+            statement.setInt(1, id);
+
+            ResultSet set = statement.executeQuery();
+            return set.getInt(1) > 0;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking dish data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return false;
+    }
+
     public Optional<UUID> getLastActiveAccount() {
         ConfigurationData d = getConfigurationData();
         return Optional.ofNullable(d.getLastActiveAccountId());
+    }
+
+    public CurrencyConfig getPricerCurrencyConfiguration() {
+        return configurationData.getPricerCurrencyConfiguration();
     }
 
     //</editor-fold>
@@ -996,6 +1209,278 @@ public class DataManager {
 
     }
 
+    public void addProduct(Product product) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "INSERT INTO products (name, price, durationOfUseInDays, unitsPerProduct, smallestUnit, unitSingular, unitPlural) VALUES (?, ?, ?, ?, ?, ?, ?);"
+            );
+
+            statement.setString(1, product.name());
+            statement.setDouble(2, product.price());
+            statement.setDouble(3, product.durationOfUse());
+            statement.setDouble(4, product.unitsPerProduct());
+            statement.setDouble(5, product.smallestUnit());
+            statement.setString(6, product.unitSingular());
+            statement.setString(7, product.unitPlural());
+            statement.execute();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing product data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void updateProduct(int id, Product data) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    """
+                            UPDATE products SET
+                                                name = ?,
+                                                price = ?,
+                                                durationOfUseInDays = ?,
+                                                unitsPerProduct = ?,
+                                                smallestUnit = ?,
+                                                unitSingular = ?,
+                                                unitPlural = ?
+                            WHERE id = ?;
+                            """
+            );
+
+            statement.setString(1, data.name());
+            statement.setDouble(2, data.price());
+            statement.setDouble(3, data.durationOfUse());
+            statement.setDouble(4, data.unitsPerProduct());
+            statement.setDouble(5, data.smallestUnit());
+            statement.setString(6, data.unitSingular());
+            statement.setString(7, data.unitPlural());
+            statement.setInt(8, id);
+            statement.execute();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while updating product data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void deleteProduct(int id) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            // Delete all ingredient entries this product is a part of
+            PreparedStatement ingredientsStatement = currentConnection.prepareStatement(
+                    "DELETE FROM dish_ingredients WHERE productId = ?"
+            );
+            ingredientsStatement.setInt(1, id);
+            ingredientsStatement.execute();
+
+            // Delete the actual product
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "DELETE FROM products WHERE id = ?"
+            );
+            statement.setInt(1, id);
+            statement.execute();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while deleting product data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void addDishIngredient(DishIngredient ingredient) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "INSERT INTO dish_ingredients (dishId, productId, quantity) VALUES (?, ?, ?);"
+            );
+
+            statement.setInt(1, ingredient.dishId());
+            statement.setInt(2, ingredient.product().id());
+            statement.setDouble(3, ingredient.quantity());
+            statement.execute();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing dish ingredient data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void updateDishIngredient(int relationId, DishIngredient ingredient) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "UPDATE dish_ingredients SET dishId = ?, productId = ?, quantity = ? WHERE relationId = ?;"
+            );
+
+            statement.setInt(1, ingredient.dishId());
+            statement.setInt(2, ingredient.product().id());
+            statement.setDouble(3, ingredient.quantity());
+            statement.setInt(4, relationId);
+            statement.execute();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing dish ingredient data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void deleteDishIngredient(int relationId) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "DELETE FROM dish_ingredients WHERE relationId = ?"
+            );
+            statement.setInt(1, relationId);
+            statement.execute();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while deleting dish ingredient data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    private void addDishIngredients(int dishId, List<DishIngredient> ingredients) {
+        if (dishId == -1) {
+            throw new InvalidParameterException("Cannot push ingredients to a non-existent dish!");
+        }
+
+        if (ingredients.isEmpty()) return;
+
+        for (DishIngredient ingredient : ingredients) {
+            addDishIngredient(new DishIngredient(
+                    -1,
+                    dishId,
+                    ingredient.product(),
+                    ingredient.quantity()
+            ));
+        }
+    }
+
+    private void updateDishIngredients(int dishId, List<DishIngredient> ingredients) {
+        if (ingredients.isEmpty()) return;
+        if (dishId == -1) {
+            throw new InvalidParameterException("Cannot update dish ingredients for a non-existent dish!");
+        }
+
+        for (DishIngredient ingredient : ingredients) {
+            if (ingredient.relationId() == -1) {
+                log("Cannot update ingredient '" + ingredient + "' - relation ID is invalid!");
+                continue;
+            }
+
+            if (ingredient.product() == null) {
+                log("Cannot update ingredient '" + ingredient + "' - product is invalid!");
+                continue;
+            }
+
+            updateDishIngredient(ingredient.relationId(), new DishIngredient(
+                    ingredient.relationId(),
+                    dishId,
+                    ingredient.product(),
+                    ingredient.quantity()
+            ));
+        }
+    }
+
+    private void deleteDishIngredients(List<DishIngredient> ingredients) {
+        for (DishIngredient ingredient : ingredients) {
+            if (ingredient.relationId() == -1) {
+                log("Cannot delete dish ingredient '" + ingredient + "' - relation ID is invalid!");
+                continue;
+            }
+
+            deleteDishIngredient(ingredient.relationId());
+        }
+    }
+
+    public void addDish(Dish dish) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        int generatedDishId = -1;
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "INSERT INTO dishes (name) VALUES (?);",
+                    Statement.RETURN_GENERATED_KEYS
+            );
+
+            statement.setString(1, dish.name());
+            statement.executeUpdate();
+
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    generatedDishId = generatedKeys.getInt(1);
+                } else {
+                    throw new SQLException("Couldn't obtain the ID, as dish creation failed!");
+                }
+            }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing dish data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            return;
+        }
+
+        addDishIngredients(generatedDishId, dish.ingredients());
+    }
+
+    /**
+     * Updates dish data for the dish at the supplied ID to match the supplied data.
+     * <br>
+     * This method also doesn't update the dish ingredients list. For this, use {@link DataManager#addDishIngredient(DishIngredient)}, {@link DataManager#updateDishIngredient(int, DishIngredient)} and {@link DataManager#deleteDishIngredient(int)}.
+     *
+     * @param id   The ID of the dish to update.
+     * @param data The data to apply to the dish.
+     */
+    public void updateDish(int id, Dish data) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    """
+                            UPDATE dishes SET
+                                                name = ?,
+                            WHERE id = ?;
+                            """
+            );
+
+            statement.setString(1, data.name());
+            statement.setDouble(2, id);
+            statement.execute();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while updating dish data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void deleteDish(int id) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            // Delete related ingredient entries first
+            PreparedStatement ingredientStatement = currentConnection.prepareStatement("DELETE FROM dish_ingredients WHERE dishId = ?");
+            ingredientStatement.setInt(1, id);
+            ingredientStatement.execute();
+
+            // Delete the dish
+            PreparedStatement statement = currentConnection.prepareStatement(
+                    "DELETE FROM dishes WHERE id = ?"
+            );
+            statement.setInt(1, id);
+            statement.execute();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while deleting dish data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
 
     /**
      * Updates the saved ID of the last open account.
@@ -1009,8 +1494,12 @@ public class DataManager {
         }
         configurationData.setLastActiveAccountId(account.getId());
     }
-    //</editor-fold>
 
+    /**
+     * Updates the saved database path.
+     *
+     * @param location The path of a SQLite database file.
+     */
     public void updateDatabaseLocation(Path location) {
         if (location == null) return;
         if (configurationData == null) {
@@ -1019,151 +1508,35 @@ public class DataManager {
         configurationData.setDatabaseLocation(location);
     }
 
-    /**
-     * Contains various methods for formatting data.
-     */
-    public static class Formatting {
-
-        public static DecimalFormat decimalFormatter = new DecimalFormat("#.##");
-
-        public static String generateDurationString(Date start, Date current, boolean showZeros, boolean withWords) {
-            Instant startInstant = start.toInstant();
-            Instant endInstant = current.toInstant();
-
-            Duration dur = Duration.between(startInstant, endInstant);
-
-            long days = Math.abs(dur.toDays());
-            long hours = Math.abs(dur.minusDays(days).toHours());
-            long minutes = Math.abs(dur.minusDays(days).minusHours(hours).toMinutes());
-            long seconds = Math.abs(dur.minusDays(days).minusHours(hours).minusMinutes(minutes).toSeconds());
-
-            if (!showZeros) {
-                if (withWords) {
-                    return (days > 0 ? (int) days + " days, " : "") + (hours > 0 ? (int) hours + " hours, " : "") + (minutes > 0 ? (int) minutes + " minutes, " : "") + (seconds > 0 ? (int) seconds + " seconds" : "");
-                } else {
-                    return (days > 0 ? (int) days + ":" : "") + (hours > 0 ? (int) hours + ":" : "") + (minutes > 0 ? (int) minutes + ":" : "") + (seconds > 0 ? (int) seconds + ":" : "");
-                }
-            } else {
-                if (withWords) {
-                    return String.format("%s hours, %s minutes and %s seconds", (int) hours, (int) minutes, (int) seconds);
-                } else {
-                    return String.format("%s:%s:%s", formatTimeUnit((int) hours), formatTimeUnit((int) minutes), formatTimeUnit((int) seconds));
-                }
-            }
+    public void updatePricerCurrencyConfiguration(CurrencyConfig config) {
+        if (config == null) return;
+        if (configurationData == null) {
+            initialize();
         }
 
-        public static String formatDate(Date date, boolean withTime) {
-
-            if (date == null) {
-                return "N/A";
-            }
-
-            DateTimeFormatter dateOnly = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            DateTimeFormatter dateAndTime = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-
-            if (withTime) {
-                return dateAndTime.format(LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
-            } else {
-                return dateOnly.format(LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
-            }
-        }
-
-        public static String formatLocalDate(LocalDate date) {
-
-            if (date == null) {
-                return "N/A";
-            }
-
-            DateTimeFormatter dateOnly = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            return dateOnly.format(date);
-        }
-
-        public static String formatMoney(double money, String symbol, boolean symbolIsPrefix) {
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            if (symbolIsPrefix) {
-                return symbol + decimalFormat.format(money);
-            } else {
-                return decimalFormat.format(money) + symbol;
-            }
-        }
-
-        public static String formatMoney(double money, CurrencyConfig config) {
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            if (config.isCurrencySymbolPrefix()) {
-                return config.getCurrencySymbol() + decimalFormat.format(money);
-            } else {
-                return decimalFormat.format(money) + config.getCurrencySymbol();
-            }
-        }
-
-        public static String formatMoney(double money) {
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            return decimalFormat.format(money);
-        }
-
-
-        public static String formatTimeUnit(int unit) {
-            return unit <= 9
-                    ? "0" + unit
-                    : String.valueOf(unit);
-        }
-
-        public static String formatTime(Date date) {
-            if (date == null) {
-                return "N/A";
-            }
-            return DateTimeFormatter.ofPattern("HH:mm:ss").format(LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()));
-        }
-
-        public static String formatLocalTime(LocalTime time) {
-
-            if (time == null) {
-                return "N/A";
-            }
-
-            return DateTimeFormatter.ofPattern("HH:mm:ss").format(time);
-        }
-
-        public static String capitalize(String str) {
-            if (str.isEmpty()) {
-                return str;
-            }
-
-            return Character.toString(str.charAt(0)).toUpperCase() + str.toLowerCase().substring(1);
-        }
-
-        /**
-         * Replaces underscores with spaces, trims, then capitalizes the input string.
-         *
-         * @param str The input string
-         * @return A string with underscores replaced with spaces and the first letter capitalized with no trailing spaces.
-         */
-        public static String humanize(String str) {
-            String s = str.toLowerCase();
-            s = s.trim();
-            s = s.replace('_', ' ');
-
-            return capitalize(s);
-        }
-
-        public static String getNumberSuffix(int number) {
-            return switch (String.valueOf(number).charAt(String.valueOf(number).length() - 1)) {
-                case 1 -> "st";
-                case 2 -> "nd";
-                case 3 -> "rd";
-                default -> "th";
-            };
-        }
-
-        public Date dateFromJSON(String date) {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-            try {
-                return format.parse(date);
-            } catch (ParseException e) {
-                log("Failed to parse a date from '" + date + "'");
-                return null;
-            }
-        }
+        configurationData.setPricerCurrencyConfiguration(config);
     }
+
+    public void updatePricerCurrencySymbol(String symbol) {
+        if (symbol == null || symbol.isEmpty()) return;
+        if (configurationData == null) {
+            initialize();
+        }
+
+        CurrencyConfig current = configurationData.getPricerCurrencyConfiguration();
+        current.setCurrencySymbol(symbol);
+        configurationData.setPricerCurrencyConfiguration(current);
+    }
+
+    public void updatePricerCurrencyIsPrefix(boolean isPrefixed) {
+        if (configurationData == null) {
+            initialize();
+        }
+
+        CurrencyConfig current = configurationData.getPricerCurrencyConfiguration();
+        current.setCurrencySymbolPrefix(isPrefixed);
+        configurationData.setPricerCurrencyConfiguration(current);
+    }
+    //</editor-fold>
 
 }

@@ -25,6 +25,7 @@ module com.krisapps.incomeutility_v2 {
     exports com.krisapps.incomeutility_v2;
     exports com.krisapps.incomeutility_v2.types.transaction;
     exports com.krisapps.incomeutility_v2.types.fiscal;
+    exports com.krisapps.incomeutility_v2.types.pricer;
     exports com.krisapps.incomeutility_v2.util;
     exports com.krisapps.incomeutility_v2.types.data;
     opens com.krisapps.incomeutility_v2.types.data to com.google.gson;

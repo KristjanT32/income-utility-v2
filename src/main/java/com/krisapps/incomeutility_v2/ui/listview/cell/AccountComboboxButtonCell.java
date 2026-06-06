@@ -2,7 +2,7 @@ package com.krisapps.incomeutility_v2.ui.listview.cell;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
-import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -42,7 +42,7 @@ public class AccountComboboxButtonCell extends ComboBoxListCell<Account> {
         super.updateItem(account, empty);
         nameLabel.setText(!empty ? account.getName() : "");
         balanceLabel.setText(!empty ?
-                (DataManager.Formatting.formatMoney(FiscalService.getInstance().getCurrentBalance(account),
+                (Formatting.formatMoney(FiscalService.getInstance().getCurrentBalance(account),
                         account.getCurrencyConfig().getCurrencySymbol(),
                         account.getCurrencyConfig().isCurrencySymbolPrefix()))
                 : "");

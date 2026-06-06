@@ -118,6 +118,55 @@
                                         <String fx:value="large-label" />
                                     </styleClass>
                                 </Tab>
+                                <Tab closable="false" text="Pricer">
+                                    <content>
+                                        <VBox spacing="20.0">
+                                            <padding>
+                                                <Insets top="10.0"/>
+                                            </padding>
+                                            <children>
+                                                <VBox>
+                                                    <children>
+                                                        <Label maxWidth="1.7976931348623157E308" text="Currency">
+                                                            <styleClass>
+                                                                <String fx:value="large-label"/>
+                                                                <String fx:value="bold"/>
+                                                            </styleClass>
+                                                        </Label>
+                                                        <Label maxWidth="1.7976931348623157E308"
+                                                               styleClass="medium-label"
+                                                               text="The currency settings to use when displaying product information in Pricer"/>
+                                                        <HBox spacing="5.0">
+                                                            <children>
+                                                                <TextField fx:id="pricerCurrencyField"
+                                                                           maxHeight="1.7976931348623157E308"
+                                                                           maxWidth="1.7976931348623157E308"
+                                                                           HBox.hgrow="ALWAYS"/>
+                                                                <ToggleButton fx:id="pricerCurrencyToggle"
+                                                                              maxHeight="1.7976931348623157E308"
+                                                                              maxWidth="1.7976931348623157E308"
+                                                                              minWidth="200.0" mnemonicParsing="false"
+                                                                              text="Suffixed" HBox.hgrow="SOMETIMES">
+                                                                    <styleClass>
+                                                                        <String fx:value="blue"/>
+                                                                        <String fx:value="bold"/>
+                                                                    </styleClass>
+                                                                </ToggleButton>
+                                                            </children>
+                                                            <VBox.margin>
+                                                                <Insets top="5.0"/>
+                                                            </VBox.margin>
+                                                        </HBox>
+                                                    </children>
+                                                </VBox>
+                                            </children>
+                                        </VBox>
+                                    </content>
+                                    <styleClass>
+                                        <String fx:value="large"/>
+                                        <String fx:value="large-label"/>
+                                    </styleClass>
+                                </Tab>
                             </tabs>
                         </TabPane>
                     </children>

@@ -34,6 +34,21 @@
     -fx-border-color: gray;
 }
 
+.transaction-list {
+    -fx-padding: 5px;
+}
+
+.category-expense-breakdown-list {
+    -fx-padding: 5px;
+}
+
+.product-list {
+    -fx-padding: 5px;
+}
+
+/* <editor-fold desc="Utility cell"> */
+
+
 .utility-cell {
     -fx-border-width: 1px;
     -fx-border-color: gray;
@@ -49,6 +64,10 @@
     -fx-border-width: 1px;
 }
 
+/* </editor-fold> */
+
+/* <editor-fold desc="Account cell"> */
+
 .account-cell {
     -fx-border-width: 1px;
     -fx-border-color: gray;
@@ -63,8 +82,20 @@
     -fx-border-width: 1px;
 }
 
-.transaction-list {
-    -fx-padding: 5px;
+/* </editor-fold> */
+
+/* <editor-fold desc="Transaction cell"> */
+
+.transaction-cell.inflow {
+    -fx-background-color: #99ef99;
+}
+
+.transaction-cell.outflow {
+    -fx-background-color: #ec9696;
+}
+
+.transaction-cell.transfer {
+    -fx-background-color: #93d3ea;
 }
 
 .transaction-list .list-cell:filled, .transaction-cell {
@@ -78,7 +109,9 @@
     -fx-border-color: black;
 }
 
+/* </editor-fold> */
 
+/* <editor-fold desc="Custom category cell"> */
 .custom-category-cell {
     -fx-border-radius: 10px;
     -fx-background-radius: 10px;
@@ -97,16 +130,36 @@
     -fx-border-color: black;
 }
 
-.transaction-cell.inflow {
-    -fx-background-color: #99ef99;
+/* </editor-fold> */
+
+/* <editor-fold desc="Product cell"> */
+.product-cell {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
 }
 
-.transaction-cell.outflow {
-    -fx-background-color: #ec9696;
+.product-list .list-cell:filled, .product-cell {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 2px;
 }
 
-.transaction-cell.transfer {
-    -fx-background-color: #93d3ea;
+.product-list .list-cell:selected, .product-list .list-cell:focused {
+    -fx-border-color: black;
+}
+
+/* </editor-fold> */
+
+/* <editor-fold desc="Category expense total cell"> */
+
+.category-expense-total-cell {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 5px;
 }
 
 .category-expense-breakdown-list .list-cell:filled {
@@ -116,20 +169,11 @@
     -fx-padding: 0;
 }
 
-.category-expense-breakdown-list {
-    -fx-padding: 5px;
-}
-
-.category-expense-total-cell {
-    -fx-border-radius: 10px;
-    -fx-background-radius: 10px;
-    -fx-border-color: transparent;
-    -fx-padding: 5px;
-}
-
 .category-expense-breakdown-list .list-cell:selected {
     -fx-border-color: black;
 }
+
+/* </editor-fold> */
 
 .leftmost-container {
     -fx-background-color: #cacaca;
@@ -144,7 +188,7 @@
     -fx-background-color: #cacaca;
 }
 
-/** Flairs for transaction info **/
+/** <editor-fold desc="Flairs for transaction info"> **/
 .flair-account {
     -fx-background-color: #99dbef;
     -fx-background-radius: 10px;
@@ -191,3 +235,5 @@
     -fx-font-size: 16px;
     -fx-font-weight: bold;
 }
+
+/* </editor-fold> */

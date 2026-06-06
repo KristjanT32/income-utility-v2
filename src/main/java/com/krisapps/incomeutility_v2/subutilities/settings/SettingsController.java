@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -43,6 +44,12 @@ public class SettingsController extends SubUtilityController {
     @FXML
     private Button dbFilePicker;
 
+    @FXML
+    private ToggleButton pricerCurrencyToggle;
+
+    @FXML
+    private TextField pricerCurrencyField;
+
     private SubUtility self;
     private final DataManager dataman = DataManager.getInstance();
     private ConfigurationData currentData;
@@ -51,23 +58,20 @@ public class SettingsController extends SubUtilityController {
 
     @FXML
     public void initialize() {
+        currentData = dataman.getConfigurationData();
         initUI();
-        refreshGlobalSettings();
-        refreshMoneyFlowSettings();
     }
 
     @Override
     public void onStartup(SubUtility utility) {
         this.self = utility;
 
-        self.getInstance().getScene().setOnKeyPressed(event -> {
+        self.getInstance().getScene().addEventFilter(KeyEvent.KEY_PRESSED, (event) -> {
             if (event.getCode().equals(KeyCode.ESCAPE)) {
                 categoryList.getItems().removeIf(item -> item.getKey() == -1);
                 self.log("Cleared all pending category additions");
             }
         });
-
-        currentData = dataman.getConfigurationData();
     }
 
     @Override
@@ -78,6 +82,31 @@ public class SettingsController extends SubUtilityController {
     @Override
     public void onPromptCommand(String command, String[] args) {
         switch (command) {
+            case "initdb" -> {
+                Optional<ButtonType> response = PopupManager.showConfirmation("Are you sure you wish to reinitialize the database?",
+                        "Reinitializing will create all required tables and set them up.\n\nThis might be necessary if the schema changes.",
+                        new ButtonType("Reinitialize", ButtonBar.ButtonData.APPLY),
+                        new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                );
+
+                response.ifPresent(r -> {
+                    if (r.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                        dataman.reinitializeCurrentDatabase();
+                        PopupManager.showPopup("Initialization completed!", "The database was successfully re-initialized.", Alert.AlertType.INFORMATION);
+                    }
+                });
+            }
+            case "refresh" -> {
+                refreshGlobalSettings();
+                refreshMoneyFlowSettings();
+                refreshPricerSettings();
+            }
+
+            case "discard" -> {
+                currentData = null;
+                currentData = dataman.getConfigurationData();
+                PopupManager.showPopup("Changes discarded", "All pending changes have been discarded!", Alert.AlertType.INFORMATION);
+            }
             case "exit" -> self.stop();
         }
     }
@@ -190,8 +219,16 @@ public class SettingsController extends SubUtilityController {
             }
         });
 
-        dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
+        pricerCurrencyToggle.selectedProperty().addListener((obs, old, val) -> {
+            pricerCurrencyToggle.setText(val ? "Prefixed" : "Suffixed");
+            dataman.updatePricerCurrencyIsPrefix(val);
+        });
 
+        pricerCurrencyField.setOnAction(_ -> {
+            if (!pricerCurrencyField.getText().isEmpty()) {
+                dataman.updatePricerCurrencySymbol(pricerCurrencyField.getText().trim());
+            }
+        });
 
         VBox box = new VBox();
         HBox.setHgrow(box, Priority.ALWAYS);
@@ -208,14 +245,23 @@ public class SettingsController extends SubUtilityController {
         box.getChildren().add(l);
         box.getChildren().add(add);
         categoryList.setPlaceholder(box);
+
+        refreshGlobalSettings();
+        refreshMoneyFlowSettings();
+        refreshPricerSettings();
     }
 
     private void refreshGlobalSettings() {
-
+        dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
     }
 
     private void refreshMoneyFlowSettings() {
         refreshCategoryList();
+    }
+
+    private void refreshPricerSettings() {
+        pricerCurrencyField.setText(currentData.getPricerCurrencyConfiguration().getCurrencySymbol());
+        pricerCurrencyToggle.setSelected(currentData.getPricerCurrencyConfiguration().isCurrencySymbolPrefix());
     }
 
     private void addBlankCategory() {
