@@ -7,17 +7,17 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import java.lang.String?>
 <?import java.net.URL?>
-<VBox fx:id="rootPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="product-cell"
-      xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:id="rootPane" alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+      styleClass="product-cell" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-              VBox.vgrow="SOMETIMES">
+              VBox.vgrow="ALWAYS">
             <children>
-                <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="200.0"
-                      HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="5.0" HBox.hgrow="ALWAYS">
                     <children>
                         <Label fx:id="productNameLabel" maxHeight="1.7976931348623157E308"
-                               maxWidth="1.7976931348623157E308" text="Product Name">
+                               maxWidth="1.7976931348623157E308" text="A long product name, taking a lot of space"
+                               wrapText="true" HBox.hgrow="ALWAYS">
                             <font>
                                 <Font name="Segoe UI Bold" size="14.0"/>
                             </font>
@@ -26,43 +26,40 @@
                                 <String fx:value="bold"/>
                             </styleClass>
                         </Label>
-                        <Label fx:id="priceLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-                               styleClass="large-label" text="\$20.00">
-                            <font>
-                                <Font name="Segoe UI Bold" size="14.0"/>
-                            </font>
-                        </Label>
                     </children>
-                </VBox>
-                <Separator maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" visible="false"
-                           HBox.hgrow="ALWAYS"/>
-                <HBox fx:id="quantityControls" spacing="5.0">
+                    <HBox.margin>
+                        <Insets right="10.0"/>
+                    </HBox.margin>
+                </HBox>
+                <HBox alignment="CENTER_RIGHT" maxWidth="500.0" spacing="5.0" HBox.hgrow="ALWAYS">
                     <children>
-                        <Button fx:id="increaseQuantity" maxHeight="1.7976931348623157E308" minHeight="35.0"
-                                minWidth="35.0" mnemonicParsing="false" styleClass="positive">
-                            <graphic>
-                                <FontIcon iconLiteral="fltfal-add-24" iconSize="16"/>
-                            </graphic>
+                        <HBox fx:id="quantityControls" spacing="5.0">
+                            <children>
+                                <Button fx:id="increaseQuantity" maxHeight="1.7976931348623157E308" minHeight="35.0"
+                                        minWidth="35.0" mnemonicParsing="false" styleClass="positive">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fltfal-add-24" iconSize="16"/>
+                                    </graphic>
                         </Button>
-                        <TextField fx:id="quantityBox" alignment="CENTER" maxHeight="1.7976931348623157E308"
-                                   maxWidth="75.0" styleClass="medium" text="0" HBox.hgrow="SOMETIMES"/>
-                        <Button fx:id="decreaseQuantity" maxHeight="1.7976931348623157E308" minHeight="35.0"
-                                minWidth="35.0" mnemonicParsing="false" styleClass="destructive">
+                                <TextField fx:id="quantityBox" alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                           maxWidth="75.0" minWidth="50.0" styleClass="medium" text="0"
+                                           HBox.hgrow="SOMETIMES"/>
+                                <Button fx:id="decreaseQuantity" maxHeight="1.7976931348623157E308" minHeight="35.0"
+                                        minWidth="35.0" mnemonicParsing="false" styleClass="destructive">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fltfmz-minimize-24" iconSize="16"/>
+                                    </graphic>
+                        </Button>
+                            </children>
+                        </HBox>
+                        <Button fx:id="deleteButton" maxHeight="1.7976931348623157E308" minHeight="35.0" minWidth="35.0"
+                                mnemonicParsing="false" styleClass="destructive">
                             <graphic>
-                                <FontIcon iconLiteral="fltfmz-minimize-24" iconSize="16"/>
+                                <FontIcon iconLiteral="fltfal-delete-24" iconSize="16"/>
                             </graphic>
                         </Button>
                     </children>
                 </HBox>
-                <Button fx:id="deleteButton" maxHeight="1.7976931348623157E308" minHeight="35.0" minWidth="35.0"
-                        mnemonicParsing="false" styleClass="destructive">
-                    <graphic>
-                        <FontIcon iconLiteral="fltfal-delete-24" iconSize="16"/>
-                    </graphic>
-                    <HBox.margin>
-                        <Insets left="10.0"/>
-                    </HBox.margin>
-                </Button>
             </children>
         </HBox>
     </children>

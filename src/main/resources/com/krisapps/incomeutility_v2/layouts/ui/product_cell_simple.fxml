@@ -14,12 +14,11 @@
         <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
               VBox.vgrow="ALWAYS">
             <children>
-                <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-                      spacing="5.0" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="5.0" HBox.hgrow="ALWAYS">
                     <children>
                         <Label fx:id="productNameLabel" maxHeight="1.7976931348623157E308"
-                               maxWidth="1.7976931348623157E308" text="Product Name" wrapText="true"
-                               HBox.hgrow="ALWAYS">
+                               maxWidth="1.7976931348623157E308" text="A long product name, taking a lot of space"
+                               wrapText="true" HBox.hgrow="ALWAYS">
                             <font>
                                 <Font name="Segoe UI Bold" size="14.0"/>
                             </font>
@@ -28,25 +27,36 @@
                                 <String fx:value="bold"/>
                             </styleClass>
                         </Label>
-                        <Label fx:id="priceLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="150.0"
-                               text="\$0.00" HBox.hgrow="ALWAYS">
-                            <styleClass>
-                                <String fx:value="rounded-container"/>
-                                <String fx:value="large"/>
-                            </styleClass>
-                        </Label>
-                        <Label fx:id="quantityLabel" alignment="CENTER" maxHeight="1.7976931348623157E308"
-                               maxWidth="150.0" text="200g" HBox.hgrow="ALWAYS">
-                            <styleClass>
-                                <String fx:value="rounded-container"/>
-                                <String fx:value="large"/>
-                                <String fx:value="bold"/>
-                            </styleClass>
-                        </Label>
                     </children>
+                    <HBox.margin>
+                        <Insets right="10.0"/>
+                    </HBox.margin>
                 </HBox>
-                <HBox alignment="CENTER_RIGHT" maxWidth="500.0" spacing="5.0" HBox.hgrow="NEVER">
+                <HBox alignment="CENTER_RIGHT" maxWidth="500.0" spacing="5.0" HBox.hgrow="ALWAYS">
                     <children>
+                        <HBox alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308"
+                              maxWidth="1.7976931348623157E308" spacing="10.0" HBox.hgrow="ALWAYS">
+                            <HBox.margin>
+                                <Insets right="10.0"/>
+                            </HBox.margin>
+                            <children>
+                                <Label fx:id="priceLabel" alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                       maxWidth="100.0" minWidth="50.0" text="\$0.00" HBox.hgrow="ALWAYS">
+                                    <styleClass>
+                                        <String fx:value="xl-label"/>
+                                        <String fx:value="bold"/>
+                                    </styleClass>
+                        </Label>
+                                <Label fx:id="quantityLabel" alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                       maxWidth="100.0" minWidth="50.0" text="200g" HBox.hgrow="ALWAYS">
+                                    <styleClass>
+                                        <String fx:value="rounded-container"/>
+                                        <String fx:value="large"/>
+                                        <String fx:value="bold"/>
+                                    </styleClass>
+                        </Label>
+                            </children>
+                        </HBox>
                         <HBox fx:id="buttonBar" spacing="5.0">
                             <children>
                                 <Button fx:id="addButton" maxHeight="1.7976931348623157E308" mnemonicParsing="false"
@@ -58,9 +68,6 @@
                             </children>
                         </HBox>
                     </children>
-                    <HBox.margin>
-                        <Insets left="25.0"/>
-                    </HBox.margin>
                 </HBox>
             </children>
         </HBox>

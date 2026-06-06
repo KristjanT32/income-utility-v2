@@ -91,6 +91,28 @@ public class Formatting {
         return decimalFormat.format(money);
     }
 
+    /**
+     * Formats a money value with an imprecision symbol if it was rounded.
+     * If the value was rounded up, a "< " symbol is prepended.
+     * If the value was rounded down, a "~ " symbol is prepended.
+     *
+     * @param money  The money value to format.
+     * @param config The currency configuration.
+     * @return The formatted money string with an optional imprecision symbol.
+     */
+    public static String formatMoneyWithImprecision(double money, CurrencyConfig config) {
+        DecimalFormat df = new DecimalFormat("0.00");
+        String formattedMoney = formatMoney(money, config);
+        double roundedValue = Double.parseDouble(df.format(money).replace(",", "."));
+
+        if (roundedValue > money) {
+            return "< " + formattedMoney;
+        } else if (roundedValue < money) {
+            return "~ " + formattedMoney;
+        }
+        return formattedMoney;
+    }
+
     public static String formatTimeUnit(int unit) {
         return unit <= 9
                 ? "0" + unit

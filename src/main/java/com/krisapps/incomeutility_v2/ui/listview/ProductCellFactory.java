@@ -14,20 +14,22 @@ public class ProductCellFactory implements Callback<ListView<Product>, ListCell<
     private final Consumer<Product> onEditRequest;
     private final Consumer<Product> onDeleteRequest;
     private final CurrencyConfig currencyConfig;
-    private final boolean showAddButton;
-    private final boolean allowModify;
+    private final boolean canAdd;
+    private final boolean canEdit;
+    private final boolean canDelete;
 
-    public ProductCellFactory(Consumer<Product> onAddRequest, Consumer<Product> onEditRequest, Consumer<Product> onDeleteRequest, CurrencyConfig currencyConfig, boolean showAddButton, boolean allowModify) {
+    public ProductCellFactory(Consumer<Product> onAddRequest, Consumer<Product> onEditRequest, Consumer<Product> onDeleteRequest, CurrencyConfig currencyConfig, boolean canAdd, boolean canEdit, boolean canDelete) {
         this.onAddRequest = onAddRequest;
         this.onEditRequest = onEditRequest;
         this.onDeleteRequest = onDeleteRequest;
         this.currencyConfig = currencyConfig;
-        this.showAddButton = showAddButton;
-        this.allowModify = allowModify;
+        this.canAdd = canAdd;
+        this.canEdit = canEdit;
+        this.canDelete = canDelete;
     }
 
     @Override
     public ListCell<Product> call(ListView<Product> param) {
-        return new ProductCell(onAddRequest, onEditRequest, onDeleteRequest, currencyConfig, showAddButton, allowModify);
+        return new ProductCell(onAddRequest, onEditRequest, onDeleteRequest, currencyConfig, canAdd, canEdit, canDelete);
     }
 }

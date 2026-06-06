@@ -53,16 +53,18 @@ public class ProductCell extends ListCell<Product> {
     private final CurrencyConfig currencyConfig;
 
     private final boolean canAdd;
-    private final boolean canModify;
+    private final boolean canEdit;
+    private final boolean canDelete;
     private final BooleanExpression expression = hoverProperty().or(selectedProperty());
 
-    public ProductCell(Consumer<Product> onAddRequest, Consumer<Product> onEditRequest, Consumer<Product> onDeleteRequest, CurrencyConfig currencyConfig, boolean canAdd, boolean canModify) {
+    public ProductCell(Consumer<Product> onAddRequest, Consumer<Product> onEditRequest, Consumer<Product> onDeleteRequest, CurrencyConfig currencyConfig, boolean canAdd, boolean canEdit, boolean canDelete) {
         this.onAddRequest = onAddRequest;
         this.onEditRequest = onEditRequest;
         this.onDeleteRequest = onDeleteRequest;
         this.currencyConfig = currencyConfig;
         this.canAdd = canAdd;
-        this.canModify = canModify;
+        this.canEdit = canEdit;
+        this.canDelete = canDelete;
         loadFXML();
     }
 
@@ -73,10 +75,12 @@ public class ProductCell extends ListCell<Product> {
             rootPane = loader.load();
 
             addButton.setOnAction((e) -> {
+                if (!canAdd) return;
                 onAddRequest.accept(getItem());
             });
 
             editButton.setOnAction((e) -> {
+                if (!canEdit) return;
                 EditProductDialog dialog = new EditProductDialog(this.getItem());
                 Optional<Product> updated = dialog.showAndWait();
 
@@ -84,6 +88,7 @@ public class ProductCell extends ListCell<Product> {
             });
 
             deleteButton.setOnAction((e) -> {
+                if (!canDelete) return;
                 onDeleteRequest.accept(this.getItem());
             });
 
@@ -92,9 +97,8 @@ public class ProductCell extends ListCell<Product> {
             deleteButton.managedProperty().bind(deleteButton.visibleProperty());
 
             addButton.setVisible(canAdd);
-
-            editButton.setVisible(canModify);
-            deleteButton.setVisible(canModify);
+            editButton.setVisible(canEdit);
+            deleteButton.setVisible(canDelete);
 
             buttonBar.managedProperty().bind(buttonBar.visibleProperty());
             buttonBar.setVisible(isSelected());

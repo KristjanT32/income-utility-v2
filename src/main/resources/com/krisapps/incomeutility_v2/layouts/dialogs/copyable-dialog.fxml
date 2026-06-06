@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.*?>
+<?import java.net.URL?>
+<VBox maxHeight="200.0" maxWidth="500.0" minHeight="150.0" minWidth="400.0" spacing="10.0"
+      xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+    <children>
+        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
+            <children>
+                <Label fx:id="primaryLabel" alignment="TOP_LEFT" maxHeight="1.7976931348623157E308"
+                       maxWidth="1.7976931348623157E308" styleClass="title" text="Primary label">
+                    <VBox.margin>
+                        <Insets bottom="10.0"/>
+                    </VBox.margin>
+                </Label>
+                <TextArea fx:id="textArea" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS"/>
+            </children>
+            <VBox.margin>
+                <Insets/>
+            </VBox.margin>
+        </VBox>
+    </children>
+    <stylesheets>
+        <URL value="@../../stylesheets/core-ui.css"/>
+        <URL value="@../../stylesheets/main.css"/>
+    </stylesheets>
+</VBox>
