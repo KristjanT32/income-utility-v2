@@ -1,5 +1,6 @@
-package com.krisapps.incomeutility_v2.dialogs;
+package com.krisapps.incomeutility_v2.dialogs.generic;
 
+import com.krisapps.incomeutility_v2.dialogs.IncomeUtilityDialog;
 import javafx.fxml.FXML;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
