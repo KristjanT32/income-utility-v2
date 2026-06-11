@@ -21,15 +21,23 @@ This utility integrates nicely with Money In, Money Out. Fiscal Breakdown shows 
 
 Fiscal Breakdown also allows you to filter and sort most information, making it easy to find what you want and get a good understanding of your financial activity.
 
-## Pricer (W.I.P)
-This utility is a work-in-progress, but when ready, the goal is to provide a convenient way of justifying (or talking oneself out of) buying a product, based on its longevity. Right now, Pricer allows you to input the price,
-received quantity, as well as other, as of yet unused options, and calculates the price per unit along with the price per unit of time (day) for the supplied data.
+## Pricer
+This utility gives the user the ability to record products, view various pricing information (such as price per unit and price per day of use), plan shopping trips by adding recorded products to a cart, create dishes with the available products and more!
+
+* Product Database - you can add products you buy often to view their price info. Pricer shows you how much you pay per day of use of this product, which may help you decide whether this product is worth buying.
+* Shopping Cart planning - if you want, you can plan out your shopping trip from within Pricer's Cart function. You even get a useful shopping list generator button!
+* Dish Editor - you can create dishes by combining various products you've added to the database and view pricing info for these dishes.
 
 ## Subscriptions (W.I.P)
 This utility is currently unimplemented, but the goal is to provide the user a neat way of organizing their subscriptions, to make it easier to keep track of payments and/or spending. Ideally, the utility ought to
 integrate with Money In, Money Out, so subscription payments can be added automatically.
 
+## Pantry (W.I.P)
+This utility is planned to give the user a way of tracking inventory of their pantry (or any...uhh, storage type for that matter). The utility is also planned to integrate with both Pricer and Money In, Money Out, to allow for automatic shopping list creation, various statistics and more!
+
 ## Settings
-Settings isn't a utility per se, but it is also implemented as a separate utility - currently, you can change the data source from it, as well as manage custom transaction categories. This utility will be updated as more sub-utilities are added and more functionality is implemented.
+Settings isn't a utility per se, but it is also implemented as a separate utility - currently, you can change the data source from it, as well as manage custom transaction categories. 
+Settings also allows you to manage Pricer's currency settings.
+This utility will be updated as more sub-utilities are added and more functionality is implemented.
 
 
