@@ -87,6 +87,7 @@ public class SimpleProductCell extends ListCell<Product> {
             quantityLabel.setStyle("-fx-text-fill: black");
 
             setGraphic(rootPane);
+            rootPane.prefWidthProperty().bind(getListView().widthProperty().subtract(20));
         } else {
             setText(null);
             setGraphic(null);

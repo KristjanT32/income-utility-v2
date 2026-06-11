@@ -479,10 +479,10 @@ public class PricerController extends SubUtilityController {
                 );
                 servingPriceLabel.setText(
                         String.format("%s (%s)", Formatting.formatMoney(
-                                currentEditorDish.servingPrice(),
+                                currentEditorDish.servingPrice(dishServingSpinner.getValue()),
                                 currencyConfig
                         ), Formatting.formatMoney(
-                                currentEditorDish.servingPurchasePrice(),
+                                currentEditorDish.servingPurchasePrice(dishServingSpinner.getValue()),
                                 currencyConfig
                         ))
                 );

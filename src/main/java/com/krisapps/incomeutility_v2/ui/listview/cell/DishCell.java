@@ -106,7 +106,7 @@ public class DishCell extends ListCell<Dish> {
     protected void updateItem(Dish item, boolean empty) {
         super.updateItem(item, empty);
 
-        if (!empty) {
+        if (!empty && item != null) {
             dishNameLabel.setText(item.name());
             dishNameLabel.setStyle("-fx-text-fill: black");
 

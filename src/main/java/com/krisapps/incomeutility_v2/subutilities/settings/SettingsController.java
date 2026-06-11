@@ -96,6 +96,57 @@ public class SettingsController extends SubUtilityController {
                     }
                 });
             }
+            case "drop" -> {
+                DropdownDialog<String> tableNamePicker = new DropdownDialog<>("Choose which table to drop");
+                tableNamePicker.setPrimaryLabel("Drop a table");
+                tableNamePicker.setDescription("The drop utility command requires you to specify which table to drop.\nIf you wish to drop all tables, run the drop-all utility command.");
+                tableNamePicker.setItems(dataman.getTables());
+
+                Optional<String> tableToDrop = tableNamePicker.showAndWait();
+                tableToDrop.ifPresent(table -> {
+                    Optional<ButtonType> choice = PopupManager.showConfirmation("Drop table '" + table + "'?", "Are you sure you wish to drop the table '" + table + "'?\nThis will irrevocably delete all data in that table and require you to run 'initdb' afterwards.",
+                            new ButtonType("Drop table", ButtonBar.ButtonData.APPLY),
+                            new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                    );
+
+                    choice.ifPresent(b -> {
+                        if (b.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                            if (dataman.dropTable(table)) {
+                                PopupManager.showPopup("Table dropped", "The table '" + table + "' was dropped. Please run 'initdb' to reinitialize the database.", Alert.AlertType.INFORMATION);
+                            }
+                        }
+                    });
+                });
+            }
+            case "drop-all" -> {
+                Optional<ButtonType> choice = PopupManager.showConfirmation("Drop all tables?", "Are you absolutely and unshakably sure you wish to drop all tables?\nThis cannot be undone and will irrevocably delete all program data.",
+                        new ButtonType("Drop all tables", ButtonBar.ButtonData.APPLY),
+                        new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                );
+
+                choice.ifPresent(b -> {
+                    if (b.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                        if (dataman.dropAllTables()) {
+                            PopupManager.showPopup("Tables dropped", "All tables have been dropped.", Alert.AlertType.INFORMATION);
+                        }
+                    }
+                });
+            }
+            case "reset" -> {
+                Optional<ButtonType> choice = PopupManager.showConfirmation("Reset database", "Are you absolutely and unshakably sure you wish to reset the database?\nThis operation will drop all tables and reinitialize the database schema.",
+                        new ButtonType("Reset everything", ButtonBar.ButtonData.APPLY),
+                        new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                );
+
+                choice.ifPresent(b -> {
+                    if (b.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                        dataman.dropAllTables();
+                        dataman.reinitializeCurrentDatabase();
+                        PopupManager.showPopup("Application database reset", "The database was reset and initialized successfully.", Alert.AlertType.INFORMATION);
+                    }
+                });
+            }
+
             case "refresh" -> {
                 refreshGlobalSettings();
                 refreshMoneyFlowSettings();
