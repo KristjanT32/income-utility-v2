@@ -39,7 +39,7 @@
                                         <Insets bottom="5.0"/>
                                     </VBox.margin>
                                 </Label>
-                                <TextField fx:id="nameField"
+                                <TextField fx:id="storeNameField"
                                            promptText="Optional store name, or store names separated by commas"/>
                             </children>
                         </VBox>

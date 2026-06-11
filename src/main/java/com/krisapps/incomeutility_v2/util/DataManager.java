@@ -184,6 +184,7 @@ public class DataManager {
                     CREATE TABLE "dishes" (
                     	"id"	INTEGER NOT NULL,
                     	"name"	TEXT NOT NULL DEFAULT 'New Dish' UNIQUE,
+                    	"servings"	REAL NOT NULL DEFAULT 1,
                     	PRIMARY KEY("id" AUTOINCREMENT)
                     )
                     """);
@@ -402,6 +403,7 @@ public class DataManager {
             return new Dish(
                     row.getInt("id"),
                     row.getString("name"),
+                    row.getDouble("servings"),
                     ingredients
             );
         } catch (SQLException e) {
@@ -1428,11 +1430,12 @@ public class DataManager {
         int generatedDishId = -1;
         try {
             PreparedStatement statement = currentConnection.prepareStatement(
-                    "INSERT INTO dishes (name) VALUES (?);",
+                    "INSERT INTO dishes (name, servings) VALUES (?, ?);",
                     Statement.RETURN_GENERATED_KEYS
             );
 
             statement.setString(1, dish.name());
+            statement.setDouble(2, dish.servings());
             statement.executeUpdate();
 
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -1468,12 +1471,14 @@ public class DataManager {
                     """
                             UPDATE dishes SET
                                                 name = ?,
+                                                servings = ?
                             WHERE id = ?;
                             """
             );
 
             statement.setString(1, data.name());
-            statement.setDouble(2, id);
+            statement.setDouble(2, data.servings());
+            statement.setDouble(3, id);
             statement.execute();
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while updating dish data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);

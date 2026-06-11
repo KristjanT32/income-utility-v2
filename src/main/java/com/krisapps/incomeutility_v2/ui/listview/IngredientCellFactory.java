@@ -15,15 +15,17 @@ public class IngredientCellFactory implements Callback<ListView<DishIngredient>,
     private final BiConsumer<Product, Double> onQuantityChangeRequest;
     private final Consumer<Product> onDeleteRequest;
     private final CurrencyConfig currencyConfig;
+    private final boolean readOnly;
 
-    public IngredientCellFactory(BiConsumer<Product, Double> onQuantityChangeRequest, Consumer<Product> onDeleteRequest, CurrencyConfig currencyConfig) {
+    public IngredientCellFactory(BiConsumer<Product, Double> onQuantityChangeRequest, Consumer<Product> onDeleteRequest, CurrencyConfig currencyConfig, boolean readOnly) {
         this.onQuantityChangeRequest = onQuantityChangeRequest;
         this.onDeleteRequest = onDeleteRequest;
         this.currencyConfig = currencyConfig;
+        this.readOnly = readOnly;
     }
 
     @Override
     public ListCell<DishIngredient> call(ListView<DishIngredient> param) {
-        return new IngredientCell(onQuantityChangeRequest, onDeleteRequest, currencyConfig);
+        return new IngredientCell(onQuantityChangeRequest, onDeleteRequest, currencyConfig, readOnly);
     }
 }

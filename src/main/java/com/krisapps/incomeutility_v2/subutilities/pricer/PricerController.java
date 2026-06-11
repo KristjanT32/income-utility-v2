@@ -1,6 +1,7 @@
 package com.krisapps.incomeutility_v2.subutilities.pricer;
 
 import com.krisapps.incomeutility_v2.dialogs.AddProductDialog;
+import com.krisapps.incomeutility_v2.dialogs.DishDetailsDialog;
 import com.krisapps.incomeutility_v2.dialogs.IngredientPickerDialog;
 import com.krisapps.incomeutility_v2.dialogs.ShoppingListGeneratorDialog;
 import com.krisapps.incomeutility_v2.dialogs.generic.CopyTextDialog;
@@ -11,6 +12,7 @@ import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.pricer.Dish;
 import com.krisapps.incomeutility_v2.types.pricer.DishIngredient;
 import com.krisapps.incomeutility_v2.types.pricer.Product;
+import com.krisapps.incomeutility_v2.ui.listview.DishCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.IngredientCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.ProductCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.SimpleProductCellFactory;
@@ -19,6 +21,8 @@ import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
@@ -134,6 +138,7 @@ public class PricerController extends SubUtilityController {
     private final DataManager dataman = DataManager.getInstance();
 
     private DishEditorState dishEditorState = DishEditorState.SELECT_DISH;
+    private boolean editorHasChanges = false;
     private Dish currentEditorDish = null;
 
     private final LinkedList<Product> cart = new LinkedList<>();
@@ -141,6 +146,11 @@ public class PricerController extends SubUtilityController {
     @Override
     public void onStartup(SubUtility utility) {
         this.utility = utility;
+        this.utility.getInstance().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode().equals(KeyCode.ESCAPE)) {
+                closeEditor();
+            }
+        });
     }
 
     @Override
@@ -254,13 +264,16 @@ public class PricerController extends SubUtilityController {
             nameDialog.setDescription("To create a new dish, please supply the name using the field below.");
             nameDialog.setPrompt("New dish...");
             Optional<String> name = nameDialog.showAndWait();
-            if (name.isPresent()) {
+            if (name.isPresent() && !name.get().isEmpty()) {
                 dishEditorState = DishEditorState.DISH_CREATION;
                 currentEditorDish = new Dish(
                         -1,
                         name.get(),
+                        1,
                         new ArrayList<>()
                 );
+            } else {
+                PopupManager.showPopup("Name required", "A dish name is required to open the dish editor.", Alert.AlertType.ERROR);
             }
             refreshUI();
         });
@@ -274,6 +287,7 @@ public class PricerController extends SubUtilityController {
 
             if (ingredient.isPresent()) {
                 currentEditorDish.ingredients().add(ingredient.get());
+                editorHasChanges = true;
                 refreshDishEditor();
             }
         });
@@ -285,14 +299,39 @@ public class PricerController extends SubUtilityController {
         applyDishChangesButton.managedProperty().bind(applyDishChangesButton.visibleProperty());
         closeDishButton.managedProperty().bind(closeDishButton.visibleProperty());
 
-        dishServingSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(1, Double.MAX_VALUE, 1.0d, 1));
+        dishList.setCellFactory(new DishCellFactory(dish -> {
+            DishDetailsDialog detailsDialog = new DishDetailsDialog(dish, currencyConfig);
+            detailsDialog.showAndWait();
+        }, dish -> {
+            resetDishEditor();
+
+            currentEditorDish = dish;
+            dishEditorState = DishEditorState.DISH_EDITING;
+            refreshDishEditor();
+        }, dish -> {
+            Optional<ButtonType> choice = PopupManager.showConfirmation("Delete dish?", "Are you sure you wish to delete '" + dish.name() + "'?\n\nThis cannot be undone.",
+                    new ButtonType("Yes, delete", ButtonBar.ButtonData.APPLY), new ButtonType("No, leave it be", ButtonBar.ButtonData.CANCEL_CLOSE)
+            );
+
+            choice.ifPresent(c -> {
+                if (c.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                    dataman.deleteDish(dish.id());
+                    refreshUI();
+                }
+            });
+        }, currencyConfig, true, true, true));
+        dishList.getItems().setAll(dataman.getDishes());
+
+        dishServingSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(1, Double.MAX_VALUE, currentEditorDish == null ? 1.0d : currentEditorDish.servings(), 1));
         dishServingSpinner.valueProperty().addListener((obs, old, val) -> {
+            editorHasChanges = true;
             refreshDishEditor();
         });
 
         dishIngredientList.setCellFactory(new IngredientCellFactory((product, quantity) -> {
             currentEditorDish.ingredients().replaceAll(ing -> {
                 if (ing.product().id() == product.id()) {
+                    editorHasChanges = true;
                     return new DishIngredient(
                             ing.relationId(),
                             ing.dishId(),
@@ -306,11 +345,62 @@ public class PricerController extends SubUtilityController {
             refreshDishEditor();
         }, (product) -> {
             currentEditorDish.ingredients().removeIf(ing -> ing.product().id() == product.id());
+            editorHasChanges = true;
             refreshDishEditor();
-        }, currencyConfig));
+        }, currencyConfig, false));
 
         Tooltip servingPriceTip = new Tooltip("The price per a single serving of this dish.\nThe price in parentheses is the cart total per serving.");
         servingPriceLabel.setTooltip(servingPriceTip);
+
+        saveDishButton.setOnAction(_ -> {
+            if (!dishEditorState.equals(DishEditorState.DISH_CREATION)) {
+                DataManager.log("'Save' button clicked during invalid state (actual state: " + dishEditorState.name() + ", expected: DISH_CREATION)", "Dish Editor");
+                return;
+            }
+
+            Dish outputDish = new Dish(
+                    currentEditorDish.id(),
+                    currentEditorDish.name(),
+                    dishServingSpinner.getValue(),
+                    currentEditorDish.ingredients()
+            );
+
+            dataman.addDish(outputDish);
+            DataManager.log("New dish created: " + currentEditorDish.name(), "Dish Editor");
+
+            resetDishEditor();
+            dishEditorState = DishEditorState.SELECT_DISH;
+            refreshDishEditor();
+        });
+
+        applyDishChangesButton.setOnAction(_ -> {
+            if (!dishEditorState.equals(DishEditorState.DISH_EDITING)) {
+                DataManager.log("'Apply' button clicked during invalid state (actual state: " + dishEditorState.name() + ", expected: DISH_EDITING)", "Dish Editor");
+                return;
+            }
+
+            if (editorHasChanges) {
+                Dish outputDish = new Dish(
+                        currentEditorDish.id(),
+                        currentEditorDish.name(),
+                        dishServingSpinner.getValue(),
+                        currentEditorDish.ingredients()
+                );
+
+                dataman.updateDish(currentEditorDish.id(), outputDish);
+                for (DishIngredient ingredient : currentEditorDish.ingredients()) {
+                    dataman.updateDishIngredient(ingredient.relationId(), ingredient);
+                }
+
+                DataManager.log("Dish data updated: " + currentEditorDish.name() + " (id: " + currentEditorDish.id() + ")", "Dish Editor");
+            } else {
+                DataManager.log("Editor closed with no changes.", "Dish Editor");
+            }
+
+            resetDishEditor();
+            dishEditorState = DishEditorState.SELECT_DISH;
+            refreshDishEditor();
+        });
 
         refreshUI();
     }
@@ -363,23 +453,7 @@ public class PricerController extends SubUtilityController {
         applyDishChangesButton.setVisible(dishEditorState.equals(DishEditorState.DISH_EDITING));
 
         closeDishButton.setText(dishEditorState.equals(DishEditorState.DISH_CREATION) ? "Discard dish" : "Discard changes");
-        closeDishButton.setOnAction(_ -> {
-            if (dishEditorState.equals(DishEditorState.DISH_CREATION)) {
-                Optional<ButtonType> response = PopupManager.showConfirmation("Discard dish", "Are you sure you wish to discard this dish?\n\nThis cannot be undone.",
-                        new ButtonType("Yes, discard", ButtonBar.ButtonData.APPLY),
-                        new ButtonType("No, leave it be", ButtonBar.ButtonData.CANCEL_CLOSE)
-                );
-
-                if (response.isPresent()) {
-                    if (response.get().getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
-                        resetDishEditor();
-                        dishEditorState = DishEditorState.SELECT_DISH;
-                        refreshDishEditor();
-                    }
-                }
-            }
-        });
-
+        closeDishButton.setOnAction(_ -> closeEditor());
 
         switch (dishEditorState) {
             case SELECT_DISH -> {
@@ -389,14 +463,14 @@ public class PricerController extends SubUtilityController {
             case DISH_CREATION, DISH_EDITING -> {
                 dishIngredientList.getItems().setAll(currentEditorDish.ingredients());
                 dishNameLabel.setText(currentEditorDish.name());
-                double dishTotal = currentEditorDish.ingredients().stream().mapToDouble(ingredient -> ingredient.product().pricePerUnit() * ingredient.quantity()).sum();
+                double dishTotal = currentEditorDish.totalPrice();
                 dishTotalLabel.setText(
                         Formatting.formatMoney(
                                 dishTotal,
                                 currencyConfig
                         )
                 );
-                double dishProductsTotal = currentEditorDish.ingredients().stream().mapToDouble(ingredient -> Math.ceil(ingredient.quantity() / ingredient.product().unitsPerProduct()) * ingredient.product().price()).sum();
+                double dishProductsTotal = currentEditorDish.purchasePrice();
                 dishProductsTotalLabel.setText(
                         Formatting.formatMoney(
                                 dishProductsTotal,
@@ -405,13 +479,50 @@ public class PricerController extends SubUtilityController {
                 );
                 servingPriceLabel.setText(
                         String.format("%s (%s)", Formatting.formatMoney(
-                                dishTotal / dishServingSpinner.getValue(),
+                                currentEditorDish.servingPrice(),
                                 currencyConfig
                         ), Formatting.formatMoney(
-                                dishProductsTotal / dishServingSpinner.getValue(),
+                                currentEditorDish.servingPurchasePrice(),
                                 currencyConfig
                         ))
                 );
+            }
+        }
+    }
+
+    private void closeEditor() {
+        if (dishEditorState.equals(DishEditorState.DISH_CREATION)) {
+            Optional<ButtonType> response = PopupManager.showConfirmation("Discard dish", "Are you sure you wish to discard this dish?\n\nThis cannot be undone.",
+                    new ButtonType("Yes, discard", ButtonBar.ButtonData.APPLY),
+                    new ButtonType("No, leave it be", ButtonBar.ButtonData.CANCEL_CLOSE)
+            );
+
+            if (response.isPresent()) {
+                if (response.get().getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                    resetDishEditor();
+                    dishEditorState = DishEditorState.SELECT_DISH;
+                    refreshDishEditor();
+                }
+            }
+        } else if (dishEditorState.equals(DishEditorState.DISH_EDITING)) {
+            if (!editorHasChanges) {
+                resetDishEditor();
+                dishEditorState = DishEditorState.SELECT_DISH;
+                refreshDishEditor();
+                return;
+            }
+
+            Optional<ButtonType> response = PopupManager.showConfirmation("Discard changes?", "Are you sure you wish to discard all changes made to '" + currentEditorDish.name() + "'?\n\nThis cannot be undone.",
+                    new ButtonType("Yes, discard", ButtonBar.ButtonData.APPLY),
+                    new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+            );
+
+            if (response.isPresent()) {
+                if (response.get().getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                    resetDishEditor();
+                    dishEditorState = DishEditorState.SELECT_DISH;
+                    refreshDishEditor();
+                }
             }
         }
     }
@@ -424,6 +535,7 @@ public class PricerController extends SubUtilityController {
     }
 
     private void resetDishEditor() {
-        // TODO: Implement
+        currentEditorDish = null;
+        editorHasChanges = false;
     }
 }

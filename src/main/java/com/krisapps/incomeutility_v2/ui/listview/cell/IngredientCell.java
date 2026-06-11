@@ -39,11 +39,13 @@ public class IngredientCell extends ListCell<DishIngredient> {
     private final BiConsumer<Product, Double> onQuantityChangeRequest;
     private final Consumer<Product> onDeleteRequest;
     private final CurrencyConfig currencyConfig;
+    private final boolean readOnly;
 
-    public IngredientCell(BiConsumer<Product, Double> onQuantityChangeRequest, Consumer<Product> onDeleteRequest, CurrencyConfig currencyConfig) {
+    public IngredientCell(BiConsumer<Product, Double> onQuantityChangeRequest, Consumer<Product> onDeleteRequest, CurrencyConfig currencyConfig, boolean readOnly) {
         this.onQuantityChangeRequest = onQuantityChangeRequest;
         this.onDeleteRequest = onDeleteRequest;
         this.currencyConfig = currencyConfig;
+        this.readOnly = readOnly;
         loadFXML();
     }
 
@@ -62,6 +64,7 @@ public class IngredientCell extends ListCell<DishIngredient> {
             rootPane = loader.load();
 
             increaseQuantity.setOnMouseClicked(event -> {
+                if (readOnly) return;
                 if (event.isShiftDown()) {
                     onQuantityChangeRequest.accept(getItem().product(), getQuantity() + getItem().product().smallestUnit() * 10);
                 } else if (event.isControlDown()) {
@@ -70,8 +73,8 @@ public class IngredientCell extends ListCell<DishIngredient> {
                     onQuantityChangeRequest.accept(getItem().product(), getQuantity() + getItem().product().smallestUnit());
                 }
             });
-
             decreaseQuantity.setOnMouseClicked(event -> {
+                if (readOnly) return;
                 if (getQuantity() == 0) {
                     Optional<ButtonType> choice = PopupManager.showConfirmation("Remove product?", "Would you like to remove this product from the dish?",
                             new ButtonType("Yes, remove", ButtonBar.ButtonData.APPLY),
@@ -104,7 +107,20 @@ public class IngredientCell extends ListCell<DishIngredient> {
             Tooltip.install(increaseQuantity, increaseTooltip);
             Tooltip.install(decreaseQuantity, decreaseTooltip);
 
+            increaseQuantity.managedProperty().bind(increaseQuantity.visibleProperty());
+            decreaseQuantity.managedProperty().bind(decreaseQuantity.visibleProperty());
+            deleteButton.managedProperty().bind(deleteButton.visibleProperty());
+
+            increaseQuantity.setVisible(!readOnly);
+            decreaseQuantity.setVisible(!readOnly);
+            quantityBox.setEditable(!readOnly);
+            deleteButton.setVisible(!readOnly);
+
             quantityBox.setOnAction((e) -> {
+                if (readOnly) {
+                    e.consume();
+                    return;
+                }
                 onQuantityChangeRequest.accept(getItem().product(), getQuantity());
             });
 
@@ -125,6 +141,7 @@ public class IngredientCell extends ListCell<DishIngredient> {
             }));
 
             deleteButton.setOnAction((e) -> {
+                if (readOnly) return;
                 onDeleteRequest.accept(getItem().product());
             });
         } catch (IOException e) {
