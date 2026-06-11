@@ -100,9 +100,8 @@ public class DataManager {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
 
-            try {
-                Statement stmt = currentConnection.createStatement();
-                ResultSet rs = stmt.executeQuery("PRAGMA user_version");
+            try (Statement stmt = currentConnection.createStatement();
+                 ResultSet rs = stmt.executeQuery("PRAGMA user_version")) {
                 int version = rs.next() ? rs.getInt(1) : 0;
 
                 if (version == 0) {
@@ -121,8 +120,7 @@ public class DataManager {
     }
 
     private void initializeDatabase(Connection currentConnection) {
-        try {
-            Statement statement = currentConnection.createStatement();
+        try (Statement statement = currentConnection.createStatement()) {
 
             statement.execute("""
                     CREATE TABLE IF NOT EXISTS "accounts" (
@@ -167,7 +165,7 @@ public class DataManager {
                     """);
 
             statement.execute("""
-                    CREATE TABLE "products" (
+                    CREATE TABLE IF NOT EXISTS "products" (
                     	"id"	INTEGER NOT NULL,
                     	"name"	TEXT NOT NULL UNIQUE,
                     	"price"	REAL NOT NULL,
@@ -181,7 +179,7 @@ public class DataManager {
                     """);
 
             statement.execute("""
-                    CREATE TABLE "dishes" (
+                    CREATE TABLE IF NOT EXISTS "dishes" (
                     	"id"	INTEGER NOT NULL,
                     	"name"	TEXT NOT NULL DEFAULT 'New Dish' UNIQUE,
                     	"servings"	REAL NOT NULL DEFAULT 1,
@@ -190,7 +188,7 @@ public class DataManager {
                     """);
 
             statement.execute("""
-                    CREATE TABLE "dish_ingredients" (
+                    CREATE TABLE IF NOT EXISTS "dish_ingredients" (
                      	"relationId"	INTEGER NOT NULL,
                      	"productId"	INTEGER NOT NULL,
                      	"dishId"	INTEGER NOT NULL,
@@ -204,7 +202,6 @@ public class DataManager {
             log("Database successfully initialized!");
         } catch (SQLException e) {
             log("Failed to initialize database: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -337,6 +334,55 @@ public class DataManager {
     }
     //</editor-fold>
 
+    //<editor-fold desc="System data modification">
+
+    /**
+     * Drops the specified table.
+     * This operation cannot be undone.
+     *
+     * @param tableName The table to drop.
+     * @return <code>true</code> if the table was dropped, <code>false</code> otherwise.
+     */
+    public boolean dropTable(String tableName) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try (PreparedStatement statement = currentConnection.prepareStatement("DROP TABLE IF EXISTS " + tableName + ";")) {
+            statement.execute();
+            return true;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Couldn't drop table " + tableName, "Something went wrong when trying to drop table '" + tableName + "'. Error details: " + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Drops all tables in the database.
+     * This operation cannot be undone.
+     *
+     * @return <code>true</code> if the table was dropped, <code>false</code> otherwise.
+     */
+    public boolean dropAllTables() {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        for (String table : getTables()) {
+            try (PreparedStatement statement = currentConnection.prepareStatement("DROP TABLE " + table + ";")) {
+                statement.execute();
+            } catch (SQLException e) {
+                PopupManager.showPopup("Couldn't drop table '" + table + "'", "Something went wrong when trying to drop table '" + table + "'. Error details: " + e.getMessage(), Alert.AlertType.ERROR);
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    //</editor-fold>
+
 
     //<editor-fold desc="Data access">
 
@@ -412,15 +458,31 @@ public class DataManager {
         }
     }
 
+    public List<String> getTables() {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try (ResultSet response = currentConnection.getMetaData().getTables(null, null, "%", new String[]{"TABLE"})) {
+            ArrayList<String> tables = new ArrayList<>();
+            while (response.next()) {
+                tables.add(response.getString("table_name"));
+            }
+
+            return tables;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered when querying table data. Error details: " + e.getMessage(), Alert.AlertType.ERROR);
+            return new ArrayList<>();
+        }
+    }
+
     public HashSet<Account> getAccounts() {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM accounts;");
-
-            ResultSet response = stmt.executeQuery();
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM accounts;");
+             ResultSet response = stmt.executeQuery()) {
             HashSet<Account> out = new HashSet<>();
             while (response.next()) {
                 out.add(new Account(
@@ -452,29 +514,26 @@ public class DataManager {
             return Optional.empty();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM accounts WHERE uuid = ?;");
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM accounts WHERE uuid = ?;")) {
             stmt.setString(1, accountId.toString());
 
-
-            ResultSet response = stmt.executeQuery();
-            if (response.next()) {
-                return Optional.of(new Account(
-                        UUID.fromString(response.getString("uuid")),
-                        response.getString("name"),
-                        response.getDouble("initialBalance"),
-                        new CurrencyConfig(
-                                response.getString("currencySymbol"),
-                                response.getBoolean("currencyIsPrefixed")
-                        ),
-                        Account.Type.valueOf(response.getString("type")),
-                        response.getBoolean("isDefault")
-                ));
-            } else {
-                return Optional.empty();
+            try (ResultSet response = stmt.executeQuery()) {
+                if (response.next()) {
+                    return Optional.of(new Account(
+                            UUID.fromString(response.getString("uuid")),
+                            response.getString("name"),
+                            response.getDouble("initialBalance"),
+                            new CurrencyConfig(
+                                    response.getString("currencySymbol"),
+                                    response.getBoolean("currencyIsPrefixed")
+                            ),
+                            Account.Type.valueOf(response.getString("type")),
+                            response.getBoolean("isDefault")
+                    ));
+                } else {
+                    return Optional.empty();
+                }
             }
-
-
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying account data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
             e.printStackTrace();
@@ -509,10 +568,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id;");
-
-            ResultSet response = stmt.executeQuery();
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id;");
+             ResultSet response = stmt.executeQuery()) {
             HashMap<UUID, Transaction> out = new HashMap<>();
             while (response.next()) {
                 Transaction t = mapResultSetToTransaction(response);
@@ -535,17 +592,17 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE customCategoryId = ?;");
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE customCategoryId = ?;")) {
             stmt.setInt(1, id);
 
-            ResultSet response = stmt.executeQuery();
-            List<Transaction> out = new ArrayList<>();
-            while (response.next()) {
-                Transaction t = mapResultSetToTransaction(response);
-                out.add(t);
+            try (ResultSet response = stmt.executeQuery()) {
+                List<Transaction> out = new ArrayList<>();
+                while (response.next()) {
+                    Transaction t = mapResultSetToTransaction(response);
+                    out.add(t);
+                }
+                return out;
             }
-            return out;
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
             e.printStackTrace();
@@ -558,18 +615,18 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE (sourceAccountId = ? OR targetAccountId = ?);");
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE (sourceAccountId = ? OR targetAccountId = ?);")) {
             stmt.setString(1, accountId.toString());
             stmt.setString(2, accountId.toString());
 
-            ResultSet response = stmt.executeQuery();
-            List<Transaction> out = new ArrayList<>();
-            while (response.next()) {
-                Transaction t = mapResultSetToTransaction(response);
-                out.add(t);
+            try (ResultSet response = stmt.executeQuery()) {
+                List<Transaction> out = new ArrayList<>();
+                while (response.next()) {
+                    Transaction t = mapResultSetToTransaction(response);
+                    out.add(t);
+                }
+                return out;
             }
-            return out;
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
             e.printStackTrace();
@@ -586,18 +643,16 @@ public class DataManager {
             return Optional.empty();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE uuid = ?;");
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transactions JOIN transaction_categories AS categories ON customCategoryId = categories.id WHERE uuid = ?;")) {
             stmt.setString(1, transactionId.toString());
 
-            ResultSet response = stmt.executeQuery();
-            if (response.next()) {
-                return Optional.of(mapResultSetToTransaction(response));
-            } else {
-                return Optional.empty();
+            try (ResultSet response = stmt.executeQuery()) {
+                if (response.next()) {
+                    return Optional.of(mapResultSetToTransaction(response));
+                } else {
+                    return Optional.empty();
+                }
             }
-
-
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transaction data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
             e.printStackTrace();
@@ -610,10 +665,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT displayName FROM transaction_categories;");
-
-            ResultSet response = stmt.executeQuery();
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT displayName FROM transaction_categories;");
+             ResultSet response = stmt.executeQuery()) {
             ArrayList<String> categories = new ArrayList<>();
             while (response.next()) {
                 categories.add(response.getString("displayName"));
@@ -633,10 +686,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT id, displayName FROM transaction_categories;");
-
-            ResultSet response = stmt.executeQuery();
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT id, displayName FROM transaction_categories;");
+             ResultSet response = stmt.executeQuery()) {
             ArrayList<Pair<Integer, String>> categories = new ArrayList<>();
             while (response.next()) {
                 categories.add(new Pair<>(
@@ -658,10 +709,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM products;");
-
-            ResultSet response = stmt.executeQuery();
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM products;");
+             ResultSet response = stmt.executeQuery()) {
             ArrayList<Product> products = new ArrayList<>();
             while (response.next()) {
                 products.add(mapResultSetToProduct(response));
@@ -679,15 +728,15 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM products WHERE id = ?;");
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM products WHERE id = ?;")) {
             stmt.setInt(1, id);
 
-            ResultSet response = stmt.executeQuery();
-            if (response.next()) {
-                return Optional.of(mapResultSetToProduct(response));
-            } else {
-                return Optional.empty();
+            try (ResultSet response = stmt.executeQuery()) {
+                if (response.next()) {
+                    return Optional.of(mapResultSetToProduct(response));
+                } else {
+                    return Optional.empty();
+                }
             }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying products. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
@@ -700,15 +749,15 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM dishes WHERE id = ?;");
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM dishes WHERE id = ?;")) {
             stmt.setInt(1, id);
 
-            ResultSet response = stmt.executeQuery();
-            if (response.next()) {
-                return Optional.of(mapResultSetToDish(response, getDishIngredients(id)));
-            } else {
-                return Optional.empty();
+            try (ResultSet response = stmt.executeQuery()) {
+                if (response.next()) {
+                    return Optional.of(mapResultSetToDish(response, getDishIngredients(id)));
+                } else {
+                    return Optional.empty();
+                }
             }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying products. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
@@ -721,10 +770,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM dishes;");
-
-            ResultSet response = stmt.executeQuery();
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM dishes;");
+             ResultSet response = stmt.executeQuery()) {
             ArrayList<Dish> out = new ArrayList<>();
             while (response.next()) {
                 out.add(mapResultSetToDish(response, getDishIngredients(response.getInt("id"))));
@@ -742,28 +789,28 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM dish_ingredients WHERE dishId = ?;");
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM dish_ingredients WHERE dishId = ?;")) {
             stmt.setInt(1, dishId);
 
-            ResultSet response = stmt.executeQuery();
-            List<DishIngredient> out = new ArrayList<>();
-            while (response.next()) {
-                Optional<Product> product = getProduct(response.getInt("productId"));
-                if (product.isEmpty()) {
-                    log("Invalid dish ingredient entry found: relation ID #" + response.getInt("relationId") + " - invalid product ID!");
-                    continue;
+            try (ResultSet response = stmt.executeQuery()) {
+                List<DishIngredient> out = new ArrayList<>();
+                while (response.next()) {
+                    Optional<Product> product = getProduct(response.getInt("productId"));
+                    if (product.isEmpty()) {
+                        log("Invalid dish ingredient entry found: relation ID #" + response.getInt("relationId") + " - invalid product ID!");
+                        continue;
+                    }
+
+                    out.add(new DishIngredient(
+                            response.getInt("relationId"),
+                            response.getInt("dishId"),
+                            product.get(),
+                            response.getDouble("quantity")
+                    ));
                 }
 
-                out.add(new DishIngredient(
-                        response.getInt("relationId"),
-                        response.getInt("dishId"),
-                        product.get(),
-                        response.getDouble("quantity")
-                ));
+                return out;
             }
-
-            return out;
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying dish ingredients. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -775,16 +822,14 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "SELECT COUNT(*) FROM transaction_categories WHERE (displayName = ? or displayName LIKE ?);"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "SELECT COUNT(*) FROM transaction_categories WHERE (displayName = ? or displayName LIKE ?);")) {
             statement.setString(1, category);
             statement.setString(2, category);
 
-            ResultSet set = statement.executeQuery();
-
-            return set.getInt(1) > 0;
+            try (ResultSet set = statement.executeQuery()) {
+                return set.getInt(1) > 0;
+            }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -796,15 +841,13 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "SELECT COUNT(*) FROM transaction_categories WHERE id = ?;"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "SELECT COUNT(*) FROM transaction_categories WHERE id = ?;")) {
             statement.setInt(1, id);
 
-            ResultSet set = statement.executeQuery();
-
-            return set.getInt(1) > 0;
+            try (ResultSet set = statement.executeQuery()) {
+                return set.getInt(1) > 0;
+            }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -816,17 +859,15 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "SELECT COUNT(*) FROM transactions WHERE (sourceAccountId = ? OR targetAccountId = ?) AND uuid = ?"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "SELECT COUNT(*) FROM transactions WHERE (sourceAccountId = ? OR targetAccountId = ?) AND uuid = ?")) {
             statement.setString(1, source.getId().toString());
             statement.setString(2, source.getId().toString());
             statement.setString(3, t.getId().toString());
 
-            ResultSet set = statement.executeQuery();
-
-            return set.getInt(1) > 0;
+            try (ResultSet set = statement.executeQuery()) {
+                return set.getInt(1) > 0;
+            }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -838,17 +879,15 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "SELECT COUNT(*) FROM transactions WHERE (sourceAccountId = ? OR targetAccountId = ?) AND cashewTransactionId = ?"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "SELECT COUNT(*) FROM transactions WHERE (sourceAccountId = ? OR targetAccountId = ?) AND cashewTransactionId = ?")) {
             statement.setString(1, source.getId().toString());
             statement.setString(2, source.getId().toString());
             statement.setString(3, t.getCashewTransactionId());
 
-            ResultSet set = statement.executeQuery();
-
-            return set.getInt(1) > 0;
+            try (ResultSet set = statement.executeQuery()) {
+                return set.getInt(1) > 0;
+            }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -864,15 +903,13 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "SELECT COUNT(*) FROM accounts WHERE uuid = ?;"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "SELECT COUNT(*) FROM accounts WHERE uuid = ?;")) {
             statement.setString(1, accountId.toString());
 
-            ResultSet set = statement.executeQuery();
-
-            return set.getInt(1) > 0;
+            try (ResultSet set = statement.executeQuery()) {
+                return set.getInt(1) > 0;
+            }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking account data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -888,14 +925,13 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "SELECT COUNT(*) FROM products WHERE id = ?;"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "SELECT COUNT(*) FROM products WHERE id = ?;")) {
             statement.setInt(1, id);
 
-            ResultSet set = statement.executeQuery();
-            return set.getInt(1) > 0;
+            try (ResultSet set = statement.executeQuery()) {
+                return set.getInt(1) > 0;
+            }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking product data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -911,14 +947,13 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "SELECT COUNT(*) FROM dishes WHERE id = ?;"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "SELECT COUNT(*) FROM dishes WHERE id = ?;")) {
             statement.setInt(1, id);
 
-            ResultSet set = statement.executeQuery();
-            return set.getInt(1) > 0;
+            try (ResultSet set = statement.executeQuery()) {
+                return set.getInt(1) > 0;
+            }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking dish data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -942,10 +977,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "INSERT INTO accounts (uuid, name, initialBalance, type, isDefault, currencySymbol, currencyIsPrefixed) VALUES (?, ?, ?, ?, ?, ?, ?);"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "INSERT INTO accounts (uuid, name, initialBalance, type, isDefault, currencySymbol, currencyIsPrefixed) VALUES (?, ?, ?, ?, ?, ?, ?);")) {
 
             statement.setString(1, account.getId().toString());
             statement.setString(2, account.getName());
@@ -967,10 +1000,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "UPDATE accounts SET uuid = ?, name = ?,initialBalance = ?, type = ?, isDefault = ?, currencySymbol = ?, currencyIsPrefixed = ? WHERE uuid = ?;"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "UPDATE accounts SET uuid = ?, name = ?,initialBalance = ?, type = ?, isDefault = ?, currencySymbol = ?, currencyIsPrefixed = ? WHERE uuid = ?;")) {
             statement.setString(1, accountId.toString());
             statement.setString(2, data.getName());
             statement.setDouble(3, data.getInitialBalance());
@@ -992,10 +1023,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "DELETE FROM accounts WHERE uuid = ?;"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "DELETE FROM accounts WHERE uuid = ?;")) {
             statement.setString(1, accountId.toString());
 
             statement.execute();
@@ -1013,19 +1042,22 @@ public class DataManager {
         try {
 
             if (!customTransactionCategoryExists(category)) {
-                PreparedStatement statement = currentConnection.prepareStatement(
-                        "INSERT INTO transaction_categories (displayName) VALUES (?);"
-                );
+                try (PreparedStatement statement = currentConnection.prepareStatement(
+                        "INSERT INTO transaction_categories (displayName) VALUES (?);")) {
 
-                statement.setString(1, category);
-                statement.execute();
+                    statement.setString(1, category);
+                    statement.execute();
+                }
             }
 
-            PreparedStatement idQuery = currentConnection.prepareStatement("SELECT id FROM transaction_categories WHERE displayName = ? OR displayName LIKE ?;");
-            idQuery.setString(1, category);
-            idQuery.setString(2, category);
+            try (PreparedStatement idQuery = currentConnection.prepareStatement("SELECT id FROM transaction_categories WHERE displayName = ? OR displayName LIKE ?;")) {
+                idQuery.setString(1, category);
+                idQuery.setString(2, category);
 
-            return idQuery.executeQuery().getInt(1);
+                try (ResultSet rs = idQuery.executeQuery()) {
+                    return rs.next() ? rs.getInt(1) : -1;
+                }
+            }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
             return -1;
@@ -1039,13 +1071,13 @@ public class DataManager {
 
         try {
             if (customTransactionCategoryExists(id)) {
-                PreparedStatement statement = currentConnection.prepareStatement(
-                        "UPDATE transaction_categories SET displayName = ? WHERE id = ?;"
-                );
+                try (PreparedStatement statement = currentConnection.prepareStatement(
+                        "UPDATE transaction_categories SET displayName = ? WHERE id = ?;")) {
 
-                statement.setString(1, newValue);
-                statement.setInt(2, id);
-                statement.execute();
+                    statement.setString(1, newValue);
+                    statement.setInt(2, id);
+                    statement.execute();
+                }
             }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while updating custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
@@ -1057,10 +1089,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "DELETE FROM transaction_categories WHERE displayName = ? OR displayName LIKE ?;"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "DELETE FROM transaction_categories WHERE displayName = ? OR displayName LIKE ?;")) {
             statement.setString(1, category);
             statement.setString(2, category);
 
@@ -1076,10 +1106,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "DELETE FROM transaction_categories WHERE id = ?;"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "DELETE FROM transaction_categories WHERE id = ?;")) {
             statement.setInt(1, id);
             statement.execute();
         } catch (SQLException e) {
@@ -1096,8 +1124,7 @@ public class DataManager {
             throw new InvalidParameterException("Invalid replacement ID - " + newId + " does not correspond to any custom transaction categories!");
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement("UPDATE transactions SET customCategoryId = ? WHERE customCategoryId = ?;");
+        try (PreparedStatement statement = currentConnection.prepareStatement("UPDATE transactions SET customCategoryId = ? WHERE customCategoryId = ?;")) {
             statement.setInt(1, newId);
             statement.setInt(2, oldId);
             statement.execute();
@@ -1119,39 +1146,39 @@ public class DataManager {
         try {
             if (CashewTransaction.isImported(transaction)) {
                 CashewTransaction cashew = (CashewTransaction) transaction;
-                PreparedStatement statement = currentConnection.prepareStatement(
+                try (PreparedStatement statement = currentConnection.prepareStatement(
                         "INSERT INTO transactions (uuid, cashewTransactionId, type, amount, sourceAccountId, targetAccountId, cashewSourceAccountId, cashewTargetAccountId, category, customCategoryId, comment, timestamp)" +
-                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                );
-                statement.setString(1, cashew.getId().toString());
-                statement.setString(2, cashew.getCashewTransactionId());
-                statement.setString(3, cashew.getType().name());
-                statement.setDouble(4, cashew.getAmount());
-                statement.setString(5, cashew.getSourceAccountId() != null ? cashew.getSourceAccountId().toString() : null);
-                statement.setString(6, cashew.getTargetAccountId() != null ? cashew.getTargetAccountId().toString() : null);
-                statement.setString(7, cashew.getCashewSourceAccount());
-                statement.setString(8, cashew.getCashewTargetAccount());
-                statement.setString(9, cashew.getCategory().name());
-                statement.setInt(10, customCategoryId == -1 ? 0 : customCategoryId);
-                statement.setString(11, cashew.getComment());
-                statement.setString(12, Timestamp.valueOf(cashew.getTimestamp()).toString());
-                statement.execute();
+                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    statement.setString(1, cashew.getId().toString());
+                    statement.setString(2, cashew.getCashewTransactionId());
+                    statement.setString(3, cashew.getType().name());
+                    statement.setDouble(4, cashew.getAmount());
+                    statement.setString(5, cashew.getSourceAccountId() != null ? cashew.getSourceAccountId().toString() : null);
+                    statement.setString(6, cashew.getTargetAccountId() != null ? cashew.getTargetAccountId().toString() : null);
+                    statement.setString(7, cashew.getCashewSourceAccount());
+                    statement.setString(8, cashew.getCashewTargetAccount());
+                    statement.setString(9, cashew.getCategory().name());
+                    statement.setInt(10, customCategoryId == -1 ? 0 : customCategoryId);
+                    statement.setString(11, cashew.getComment());
+                    statement.setString(12, Timestamp.valueOf(cashew.getTimestamp()).toString());
+                    statement.execute();
+                }
             } else {
-                PreparedStatement statement = currentConnection.prepareStatement(
+                try (PreparedStatement statement = currentConnection.prepareStatement(
                         "INSERT INTO transactions (uuid, type, amount, sourceAccountId, targetAccountId, category, customCategoryId, comment, timestamp)" +
-                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                );
+                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
 
-                statement.setString(1, transaction.getId().toString());
-                statement.setString(2, transaction.getType().name());
-                statement.setDouble(3, transaction.getAmount());
-                statement.setString(4, transaction.getSourceAccountId() != null ? transaction.getSourceAccountId().toString() : null);
-                statement.setString(5, transaction.getTargetAccountId() != null ? transaction.getTargetAccountId().toString() : null);
-                statement.setString(6, transaction.getCategory().name());
-                statement.setInt(7, customCategoryId == -1 ? 0 : customCategoryId);
-                statement.setString(8, transaction.getComment());
-                statement.setString(9, Timestamp.valueOf(transaction.getTimestamp()).toString());
-                statement.execute();
+                    statement.setString(1, transaction.getId().toString());
+                    statement.setString(2, transaction.getType().name());
+                    statement.setDouble(3, transaction.getAmount());
+                    statement.setString(4, transaction.getSourceAccountId() != null ? transaction.getSourceAccountId().toString() : null);
+                    statement.setString(5, transaction.getTargetAccountId() != null ? transaction.getTargetAccountId().toString() : null);
+                    statement.setString(6, transaction.getCategory().name());
+                    statement.setInt(7, customCategoryId == -1 ? 0 : customCategoryId);
+                    statement.setString(8, transaction.getComment());
+                    statement.setString(9, Timestamp.valueOf(transaction.getTimestamp()).toString());
+                    statement.execute();
+                }
             }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing transaction data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
@@ -1171,40 +1198,40 @@ public class DataManager {
         try {
             if (CashewTransaction.isImported(data)) {
                 CashewTransaction cashew = (CashewTransaction) data;
-                PreparedStatement statement = currentConnection.prepareStatement(
-                        "UPDATE transactions SET uuid = ?, cashewTransactionId = ?, type = ?, amount = ?, sourceAccountId = ?, targetAccountId = ?, cashewSourceAccountId = ?, cashewTargetAccountId = ?, category = ?, customCategoryId = ?, comment = ?, timestamp = ? WHERE uuid = ?;"
-                );
-                statement.setString(1, cashew.getId().toString());
-                statement.setString(2, cashew.getCashewTransactionId());
-                statement.setString(3, cashew.getType().name());
-                statement.setDouble(4, cashew.getAmount());
-                statement.setString(5, cashew.getSourceAccountId() != null ? cashew.getSourceAccountId().toString() : null);
-                statement.setString(6, cashew.getTargetAccountId() != null ? cashew.getTargetAccountId().toString() : null);
-                statement.setString(7, cashew.getCashewSourceAccount());
-                statement.setString(8, cashew.getCashewTargetAccount());
-                statement.setString(9, cashew.getCategory().name());
-                statement.setInt(10, customCategoryId == -1 ? 0 : customCategoryId);
-                statement.setString(11, cashew.getComment());
-                statement.setString(12, Timestamp.valueOf(cashew.getTimestamp()).toString());
-                statement.setString(13, transactionId.toString());
-                statement.execute();
+                try (PreparedStatement statement = currentConnection.prepareStatement(
+                        "UPDATE transactions SET uuid = ?, cashewTransactionId = ?, type = ?, amount = ?, sourceAccountId = ?, targetAccountId = ?, cashewSourceAccountId = ?, cashewTargetAccountId = ?, category = ?, customCategoryId = ?, comment = ?, timestamp = ? WHERE uuid = ?;")) {
+                    statement.setString(1, cashew.getId().toString());
+                    statement.setString(2, cashew.getCashewTransactionId());
+                    statement.setString(3, cashew.getType().name());
+                    statement.setDouble(4, cashew.getAmount());
+                    statement.setString(5, cashew.getSourceAccountId() != null ? cashew.getSourceAccountId().toString() : null);
+                    statement.setString(6, cashew.getTargetAccountId() != null ? cashew.getTargetAccountId().toString() : null);
+                    statement.setString(7, cashew.getCashewSourceAccount());
+                    statement.setString(8, cashew.getCashewTargetAccount());
+                    statement.setString(9, cashew.getCategory().name());
+                    statement.setInt(10, customCategoryId == -1 ? 0 : customCategoryId);
+                    statement.setString(11, cashew.getComment());
+                    statement.setString(12, Timestamp.valueOf(cashew.getTimestamp()).toString());
+                    statement.setString(13, transactionId.toString());
+                    statement.execute();
+                }
 
             } else {
-                PreparedStatement statement = currentConnection.prepareStatement(
-                        "UPDATE transactions SET uuid = ?, type = ?, amount = ?, sourceAccountId = ?, targetAccountId = ?, category = ?, customCategoryId = ?, comment = ?, timestamp = ? WHERE uuid = ?;"
-                );
+                try (PreparedStatement statement = currentConnection.prepareStatement(
+                        "UPDATE transactions SET uuid = ?, type = ?, amount = ?, sourceAccountId = ?, targetAccountId = ?, category = ?, customCategoryId = ?, comment = ?, timestamp = ? WHERE uuid = ?;")) {
 
-                statement.setString(1, data.getId().toString());
-                statement.setString(2, data.getType().name());
-                statement.setDouble(3, data.getAmount());
-                statement.setString(4, data.getSourceAccountId() != null ? data.getSourceAccountId().toString() : null);
-                statement.setString(5, data.getTargetAccountId() != null ? data.getTargetAccountId().toString() : null);
-                statement.setString(6, data.getCategory().name());
-                statement.setInt(7, customCategoryId == -1 ? 0 : customCategoryId);
-                statement.setString(8, data.getComment());
-                statement.setString(9, Timestamp.valueOf(data.getTimestamp()).toString());
-                statement.setString(10, transactionId.toString());
-                statement.execute();
+                    statement.setString(1, data.getId().toString());
+                    statement.setString(2, data.getType().name());
+                    statement.setDouble(3, data.getAmount());
+                    statement.setString(4, data.getSourceAccountId() != null ? data.getSourceAccountId().toString() : null);
+                    statement.setString(5, data.getTargetAccountId() != null ? data.getTargetAccountId().toString() : null);
+                    statement.setString(6, data.getCategory().name());
+                    statement.setInt(7, customCategoryId == -1 ? 0 : customCategoryId);
+                    statement.setString(8, data.getComment());
+                    statement.setString(9, Timestamp.valueOf(data.getTimestamp()).toString());
+                    statement.setString(10, transactionId.toString());
+                    statement.execute();
+                }
 
             }
         } catch (SQLException e) {
@@ -1219,10 +1246,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "DELETE FROM transactions WHERE uuid = ?"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "DELETE FROM transactions WHERE uuid = ?")) {
             statement.setString(1, transactionId.toString());
             statement.execute();
 
@@ -1237,10 +1262,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "INSERT INTO products (name, price, durationOfUseInDays, unitsPerProduct, smallestUnit, unitSingular, unitPlural) VALUES (?, ?, ?, ?, ?, ?, ?);"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "INSERT INTO products (name, price, durationOfUseInDays, unitsPerProduct, smallestUnit, unitSingular, unitPlural) VALUES (?, ?, ?, ?, ?, ?, ?);")) {
 
             statement.setString(1, product.name());
             statement.setDouble(2, product.price());
@@ -1260,8 +1283,7 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
+        try (PreparedStatement statement = currentConnection.prepareStatement(
                     """
                             UPDATE products SET
                                                 name = ?,
@@ -1272,8 +1294,7 @@ public class DataManager {
                                                 unitSingular = ?,
                                                 unitPlural = ?
                             WHERE id = ?;
-                            """
-            );
+                            """)) {
 
             statement.setString(1, data.name());
             statement.setDouble(2, data.price());
@@ -1296,18 +1317,18 @@ public class DataManager {
 
         try {
             // Delete all ingredient entries this product is a part of
-            PreparedStatement ingredientsStatement = currentConnection.prepareStatement(
-                    "DELETE FROM dish_ingredients WHERE productId = ?"
-            );
-            ingredientsStatement.setInt(1, id);
-            ingredientsStatement.execute();
+            try (PreparedStatement ingredientsStatement = currentConnection.prepareStatement(
+                    "DELETE FROM dish_ingredients WHERE productId = ?")) {
+                ingredientsStatement.setInt(1, id);
+                ingredientsStatement.execute();
+            }
 
             // Delete the actual product
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "DELETE FROM products WHERE id = ?"
-            );
-            statement.setInt(1, id);
-            statement.execute();
+            try (PreparedStatement statement = currentConnection.prepareStatement(
+                    "DELETE FROM products WHERE id = ?")) {
+                statement.setInt(1, id);
+                statement.execute();
+            }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while deleting product data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -1318,10 +1339,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "INSERT INTO dish_ingredients (dishId, productId, quantity) VALUES (?, ?, ?);"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "INSERT INTO dish_ingredients (dishId, productId, quantity) VALUES (?, ?, ?);")) {
 
             statement.setInt(1, ingredient.dishId());
             statement.setInt(2, ingredient.product().id());
@@ -1337,10 +1356,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "UPDATE dish_ingredients SET dishId = ?, productId = ?, quantity = ? WHERE relationId = ?;"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "UPDATE dish_ingredients SET dishId = ?, productId = ?, quantity = ? WHERE relationId = ?;")) {
 
             statement.setInt(1, ingredient.dishId());
             statement.setInt(2, ingredient.product().id());
@@ -1357,10 +1374,8 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "DELETE FROM dish_ingredients WHERE relationId = ?"
-            );
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "DELETE FROM dish_ingredients WHERE relationId = ?")) {
             statement.setInt(1, relationId);
             statement.execute();
         } catch (SQLException e) {
@@ -1428,11 +1443,9 @@ public class DataManager {
         }
 
         int generatedDishId = -1;
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
+        try (PreparedStatement statement = currentConnection.prepareStatement(
                     "INSERT INTO dishes (name, servings) VALUES (?, ?);",
-                    Statement.RETURN_GENERATED_KEYS
-            );
+                Statement.RETURN_GENERATED_KEYS)) {
 
             statement.setString(1, dish.name());
             statement.setDouble(2, dish.servings());
@@ -1466,15 +1479,13 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try {
-            PreparedStatement statement = currentConnection.prepareStatement(
+        try (PreparedStatement statement = currentConnection.prepareStatement(
                     """
                             UPDATE dishes SET
                                                 name = ?,
                                                 servings = ?
                             WHERE id = ?;
-                            """
-            );
+                            """)) {
 
             statement.setString(1, data.name());
             statement.setDouble(2, data.servings());
@@ -1492,16 +1503,17 @@ public class DataManager {
 
         try {
             // Delete related ingredient entries first
-            PreparedStatement ingredientStatement = currentConnection.prepareStatement("DELETE FROM dish_ingredients WHERE dishId = ?");
-            ingredientStatement.setInt(1, id);
-            ingredientStatement.execute();
+            try (PreparedStatement ingredientStatement = currentConnection.prepareStatement("DELETE FROM dish_ingredients WHERE dishId = ?")) {
+                ingredientStatement.setInt(1, id);
+                ingredientStatement.execute();
+            }
 
             // Delete the dish
-            PreparedStatement statement = currentConnection.prepareStatement(
-                    "DELETE FROM dishes WHERE id = ?"
-            );
-            statement.setInt(1, id);
-            statement.execute();
+            try (PreparedStatement statement = currentConnection.prepareStatement(
+                    "DELETE FROM dishes WHERE id = ?")) {
+                statement.setInt(1, id);
+                statement.execute();
+            }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while deleting dish data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }

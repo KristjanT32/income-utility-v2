@@ -20,7 +20,15 @@ public record Dish(int id, String name, double servings, List<DishIngredient> in
         return totalPrice() / servings();
     }
 
+    public Double servingPrice(double servings) {
+        return totalPrice() / servings;
+    }
+
     public Double servingPurchasePrice() {
         return purchasePrice() / servings();
+    }
+
+    public Double servingPurchasePrice(double servings) {
+        return purchasePrice() / servings;
     }
 }

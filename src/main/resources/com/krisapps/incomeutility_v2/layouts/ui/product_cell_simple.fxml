@@ -14,7 +14,7 @@
         <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
               VBox.vgrow="ALWAYS">
             <children>
-                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="5.0" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="5.0" translateY="2.0" HBox.hgrow="ALWAYS">
                     <children>
                         <Label fx:id="productNameLabel" maxHeight="1.7976931348623157E308"
                                maxWidth="1.7976931348623157E308" text="A long product name, taking a lot of space"
@@ -32,7 +32,8 @@
                         <Insets right="10.0"/>
                     </HBox.margin>
                 </HBox>
-                <HBox alignment="CENTER_RIGHT" maxWidth="500.0" spacing="5.0" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" minWidth="200.0" spacing="5.0"
+                      HBox.hgrow="ALWAYS">
                     <children>
                         <HBox alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308"
                               maxWidth="1.7976931348623157E308" spacing="10.0" HBox.hgrow="ALWAYS">
@@ -40,8 +41,9 @@
                                 <Insets right="10.0"/>
                             </HBox.margin>
                             <children>
-                                <Label fx:id="priceLabel" alignment="CENTER" maxHeight="1.7976931348623157E308"
-                                       maxWidth="100.0" minWidth="50.0" text="\$0.00" HBox.hgrow="ALWAYS">
+                                <Label fx:id="priceLabel" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308"
+                                       maxWidth="1.7976931348623157E308" minWidth="50.0" text="\$0.00"
+                                       HBox.hgrow="ALWAYS">
                                     <styleClass>
                                         <String fx:value="xl-label"/>
                                         <String fx:value="bold"/>

@@ -5,6 +5,6 @@ import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
 
 public class BreakdownUtility extends SubUtility {
     public BreakdownUtility() {
-        super(SubUtilityType.BREAKDOWN, "layouts/windows/breakdown.fxml", "fiscal_breakdown_96.png", new BreakdownController(), 1100, 670, true);
+        super(SubUtilityType.BREAKDOWN, "layouts/windows/breakdown.fxml", "fiscal_breakdown_96.png", new BreakdownController(), 1100, 720, true);
     }
 }

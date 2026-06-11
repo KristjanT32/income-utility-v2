@@ -96,6 +96,9 @@ public class ProductCell extends ListCell<Product> {
             editButton.managedProperty().bind(editButton.visibleProperty());
             deleteButton.managedProperty().bind(deleteButton.visibleProperty());
 
+            durationLabel.managedProperty().bind(durationLabel.visibleProperty());
+            quantityLabel.managedProperty().bind(quantityLabel.visibleProperty());
+
             addButton.setVisible(canAdd);
             editButton.setVisible(canEdit);
             deleteButton.setVisible(canDelete);
@@ -104,6 +107,8 @@ public class ProductCell extends ListCell<Product> {
             buttonBar.setVisible(isSelected());
             expression.addListener(((obs, old, val) -> {
                 buttonBar.setVisible(val);
+                durationLabel.setVisible(!val);
+                quantityLabel.setVisible(!val);
             }));
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -128,6 +133,7 @@ public class ProductCell extends ListCell<Product> {
             durationLabel.setStyle("-fx-text-fill: black");
 
             setGraphic(rootPane);
+            rootPane.prefWidthProperty().bind(getListView().widthProperty().subtract(20));
         } else {
             setText(null);
             setGraphic(null);
