@@ -714,6 +714,27 @@ public class DataManager {
         return Optional.empty();
     }
 
+    public List<Dish> getDishes() {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try {
+            PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM dishes;");
+
+            ResultSet response = stmt.executeQuery();
+            ArrayList<Dish> out = new ArrayList<>();
+            while (response.next()) {
+                out.add(mapResultSetToDish(response, getDishIngredients(response.getInt("id"))));
+            }
+
+            return out;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying dishes. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return new ArrayList<>();
+    }
+
     public List<DishIngredient> getDishIngredients(int dishId) {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();

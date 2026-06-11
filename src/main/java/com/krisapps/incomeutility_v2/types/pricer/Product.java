@@ -11,6 +11,10 @@ public record Product(int id, String name, Double price, Double durationOfUse, D
         return String.format("%s %s", quantity, quantity == 1 ? unitSingular : unitPlural);
     }
 
+    public String quantityString(double quantity) {
+        return String.format("%s %s", quantity, quantity == 1.0d ? unitSingular : unitPlural);
+    }
+
     public double pricePerUnit() {
         return price / unitsPerProduct;
     }

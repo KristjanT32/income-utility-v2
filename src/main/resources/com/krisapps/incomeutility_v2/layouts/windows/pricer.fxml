@@ -85,6 +85,9 @@
                                                        </children>
                                                    </VBox>
                                                </children>
+                                               <VBox.margin>
+                                                   <Insets bottom="50.0"/>
+                                               </VBox.margin>
                                            </HBox>
                                            <VBox maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
                                                <children>
@@ -247,7 +250,7 @@
                                                    </VBox>
                                                </children>
                                                <VBox.margin>
-                                                   <Insets bottom="40.0"/>
+                                                   <Insets bottom="50.0"/>
                                                </VBox.margin>
                                            </HBox>
                                            <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
@@ -334,8 +337,26 @@
                                <content>
                                    <StackPane maxHeight="1.7976931348623157E308">
                                        <children>
-                                           <VBox maxHeight="1.7976931348623157E308" spacing="20.0" visible="false">
+                                           <VBox fx:id="dishEditor" maxHeight="1.7976931348623157E308" spacing="10.0">
                                        <children>
+                                           <HBox alignment="CENTER_RIGHT">
+                                               <children>
+                                                   <Label fx:id="dishNameLabel" maxWidth="1.7976931348623157E308"
+                                                          text="Dish name (editing)" HBox.hgrow="ALWAYS">
+                                                       <styleClass>
+                                                           <String fx:value="xl-label"/>
+                                                           <String fx:value="bold"/>
+                                                       </styleClass>
+                                                   </Label>
+                                                   <Button fx:id="unused" mnemonicParsing="false"
+                                                           styleClass="large-label" text="Generate shopping list..."
+                                                           visible="false">
+                                                       <graphic>
+                                                           <FontIcon iconLiteral="fltfmz-task-list-24" iconSize="16"/>
+                                                       </graphic>
+                                                   </Button>
+                                               </children>
+                                           </HBox>
                                            <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0">
                                                <children>
                                                    <VBox maxHeight="1.7976931348623157E308"
@@ -350,7 +371,7 @@
                                                                    <String fx:value="flair-generic"/>
                                                                </styleClass>
                                                            </Label>
-                                                           <Label fx:id="cartTotalLabel1" alignment="CENTER"
+                                                           <Label fx:id="dishTotalLabel" alignment="CENTER"
                                                                   maxHeight="1.7976931348623157E308"
                                                                   maxWidth="1.7976931348623157E308" text="0.00€"
                                                                   VBox.vgrow="ALWAYS">
@@ -376,7 +397,7 @@
                                                                    <String fx:value="flair-generic"/>
                                                                </styleClass>
                                                            </Label>
-                                                           <Label fx:id="cartTotalLabel11" alignment="CENTER"
+                                                           <Label fx:id="dishProductsTotalLabel" alignment="CENTER"
                                                                   maxHeight="1.7976931348623157E308"
                                                                   maxWidth="1.7976931348623157E308" text="0.00€"
                                                                   VBox.vgrow="ALWAYS">
@@ -393,13 +414,13 @@
                                                        <children>
                                                            <Label alignment="CENTER" maxHeight="1.7976931348623157E308"
                                                                   maxWidth="1.7976931348623157E308"
-                                                                  text="Dish price per time of use" VBox.vgrow="ALWAYS">
+                                                                  text="Price per serving" VBox.vgrow="ALWAYS">
                                                                <styleClass>
                                                                    <String fx:value="large-label"/>
                                                                    <String fx:value="flair-generic"/>
                                                                </styleClass>
                                                            </Label>
-                                                           <Label fx:id="cartPerUnitOfTimeLabel1" alignment="CENTER"
+                                                           <Label fx:id="servingPriceLabel" alignment="CENTER"
                                                                   maxHeight="1.7976931348623157E308"
                                                                   maxWidth="1.7976931348623157E308" text="0.00€"
                                                                   VBox.vgrow="ALWAYS">
@@ -412,7 +433,7 @@
                                                    </VBox>
                                                </children>
                                                <VBox.margin>
-                                                   <Insets/>
+                                                   <Insets bottom="50.0"/>
                                                </VBox.margin>
                                            </HBox>
                                            <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
@@ -423,7 +444,27 @@
                                                            <Label maxHeight="1.7976931348623157E308"
                                                                   maxWidth="1.7976931348623157E308" styleClass="header"
                                                                   text="Dish ingredients" HBox.hgrow="ALWAYS"/>
-                                                           <Button fx:id="addCartItemButton1"
+                                                           <HBox alignment="CENTER_RIGHT"
+                                                                 maxWidth="1.7976931348623157E308">
+                                                               <children>
+                                                                   <Label maxHeight="1.7976931348623157E308"
+                                                                          text="Servings:">
+                                                                       <HBox.margin>
+                                                                           <Insets right="5.0"/>
+                                                                       </HBox.margin>
+                                                                       <styleClass>
+                                                                           <String fx:value="large-label"/>
+                                                                           <String fx:value="bold"/>
+                                                                       </styleClass>
+                                                                   </Label>
+                                                                   <Spinner fx:id="dishServingSpinner" editable="true"
+                                                                            maxWidth="1.7976931348623157E308"/>
+                                                               </children>
+                                                               <HBox.margin>
+                                                                   <Insets right="20.0"/>
+                                                               </HBox.margin>
+                                                           </HBox>
+                                                           <Button fx:id="addIngredientButton"
                                                                    maxHeight="1.7976931348623157E308"
                                                                    maxWidth="1.7976931348623157E308"
                                                                    mnemonicParsing="false" styleClass="medium-label"
@@ -435,16 +476,47 @@
                                                            </Button>
                                                        </children>
                                                    </HBox>
-                                                   <ListView fx:id="ingredientList" maxHeight="1.7976931348623157E308"
-                                                             maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS"/>
+                                                   <ListView fx:id="dishIngredientList"
+                                                             maxHeight="1.7976931348623157E308"
+                                                             maxWidth="1.7976931348623157E308"
+                                                             styleClass="ingredient-list" VBox.vgrow="ALWAYS"/>
+                                                   <HBox spacing="20.0">
+                                                       <children>
+                                                           <Button fx:id="saveDishButton"
+                                                                   maxWidth="1.7976931348623157E308" minHeight="35.0"
+                                                                   mnemonicParsing="false" styleClass="large-label"
+                                                                   text="Save dish" HBox.hgrow="ALWAYS">
+                                                               <graphic>
+                                                                   <FontIcon iconLiteral="fltfmz-save-copy-24"
+                                                                             iconSize="16"/>
+                                                               </graphic>
+                                                           </Button>
+                                                           <Button fx:id="applyDishChangesButton"
+                                                                   maxWidth="1.7976931348623157E308" minHeight="35.0"
+                                                                   mnemonicParsing="false" styleClass="large-label"
+                                                                   text="Apply changes" HBox.hgrow="ALWAYS">
+                                                               <graphic>
+                                                                   <FontIcon iconLiteral="fltfmz-save-24"
+                                                                             iconSize="16"/>
+                                                               </graphic>
+                                                           </Button>
+                                                           <Button fx:id="closeDishButton"
+                                                                   maxWidth="1.7976931348623157E308" minHeight="35.0"
+                                                                   mnemonicParsing="false" styleClass="large-label"
+                                                                   text="Close dish" HBox.hgrow="ALWAYS">
+                                                               <graphic>
+                                                                   <FontIcon iconLiteral="fltral-dismiss-24"
+                                                                             iconSize="16"/>
+                                                               </graphic>
+                                                           </Button>
+                                                       </children>
+                                                   </HBox>
                                                </children>
                                            </VBox>
                                        </children>
-                                               <padding>
-                                                   <Insets top="10.0"/>
-                                               </padding>
                                            </VBox>
-                                           <VBox maxHeight="1.7976931348623157E308" spacing="20.0">
+                                           <VBox fx:id="dishSelection" maxHeight="1.7976931348623157E308" spacing="20.0"
+                                                 visible="false">
                                                <children>
                                                    <VBox maxHeight="1.7976931348623157E308"
                                                          maxWidth="1.7976931348623157E308" spacing="5.0"
@@ -458,7 +530,7 @@
                                                                           styleClass="header"
                                                                           text="Load an existing dish..."
                                                                           HBox.hgrow="ALWAYS"/>
-                                                                   <Button fx:id="addCartItemButton11"
+                                                                   <Button fx:id="createDishButton"
                                                                            maxHeight="1.7976931348623157E308"
                                                                            maxWidth="1.7976931348623157E308"
                                                                            mnemonicParsing="false"
@@ -471,8 +543,7 @@
                                                                    </Button>
                                                                </children>
                                                            </HBox>
-                                                           <ListView fx:id="ingredientList1"
-                                                                     maxHeight="1.7976931348623157E308"
+                                                           <ListView fx:id="dishList" maxHeight="1.7976931348623157E308"
                                                                      maxWidth="1.7976931348623157E308"
                                                                      VBox.vgrow="ALWAYS"/>
                                                        </children>
@@ -483,6 +554,9 @@
                                        </padding>
                                            </VBox>
                                        </children>
+                                       <padding>
+                                           <Insets top="10.0"/>
+                                       </padding>
                                    </StackPane>
                                </content>
                                <styleClass>

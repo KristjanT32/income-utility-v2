@@ -1,12 +1,17 @@
 package com.krisapps.incomeutility_v2.subutilities.pricer;
 
 import com.krisapps.incomeutility_v2.dialogs.AddProductDialog;
-import com.krisapps.incomeutility_v2.dialogs.CopyTextDialog;
+import com.krisapps.incomeutility_v2.dialogs.IngredientPickerDialog;
 import com.krisapps.incomeutility_v2.dialogs.ShoppingListGeneratorDialog;
+import com.krisapps.incomeutility_v2.dialogs.generic.CopyTextDialog;
+import com.krisapps.incomeutility_v2.dialogs.generic.InputDialog;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
+import com.krisapps.incomeutility_v2.types.pricer.Dish;
+import com.krisapps.incomeutility_v2.types.pricer.DishIngredient;
 import com.krisapps.incomeutility_v2.types.pricer.Product;
+import com.krisapps.incomeutility_v2.ui.listview.IngredientCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.ProductCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.SimpleProductCellFactory;
 import com.krisapps.incomeutility_v2.util.DataManager;
@@ -14,11 +19,19 @@ import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Optional;
 
 public class PricerController extends SubUtilityController {
+
+    private enum DishEditorState {
+        SELECT_DISH,
+        DISH_CREATION,
+        DISH_EDITING
+    }
 
     @FXML
     private Label pricerPerUnitLabel;
@@ -74,9 +87,54 @@ public class PricerController extends SubUtilityController {
     @FXML
     private ListView<Product> cartList;
 
+    @FXML
+    private ListView<DishIngredient> dishIngredientList;
+
+    @FXML
+    private ListView<Dish> dishList;
+
+    @FXML
+    private Button saveDishButton;
+
+    @FXML
+    private Button applyDishChangesButton;
+
+    @FXML
+    private Button closeDishButton;
+
+    @FXML
+    private Button addIngredientButton;
+
+    @FXML
+    private Button createDishButton;
+
+    @FXML
+    private Spinner<Double> dishServingSpinner;
+
+    @FXML
+    private Label dishTotalLabel;
+
+    @FXML
+    private Label dishProductsTotalLabel;
+
+    @FXML
+    private Label servingPriceLabel;
+
+    @FXML
+    private Label dishNameLabel;
+
+    @FXML
+    private VBox dishEditor;
+
+    @FXML
+    private VBox dishSelection;
+
     private SubUtility utility;
     private CurrencyConfig currencyConfig;
     private final DataManager dataman = DataManager.getInstance();
+
+    private DishEditorState dishEditorState = DishEditorState.SELECT_DISH;
+    private Dish currentEditorDish = null;
 
     private final LinkedList<Product> cart = new LinkedList<>();
 
@@ -156,6 +214,14 @@ public class PricerController extends SubUtilityController {
         existingProductList.setPlaceholder(l);
         pickableProductList.setPlaceholder(l);
 
+        Label dishPlaceholder = new Label("No dishes have been created yet.");
+        dishPlaceholder.getStyleClass().add("medium-label");
+        dishList.setPlaceholder(dishPlaceholder);
+
+        Label ingredientsPlaceholder = new Label("No ingredients have been added yet.");
+        ingredientsPlaceholder.getStyleClass().add("medium-label");
+        dishIngredientList.setPlaceholder(ingredientsPlaceholder);
+
         createButton.setOnAction(_ -> {
             AddProductDialog dialog = new AddProductDialog();
             Optional<Product> product = dialog.showAndWait();
@@ -167,6 +233,11 @@ public class PricerController extends SubUtilityController {
         });
 
         generateShoppingListButton.setOnAction(_ -> {
+            if (cart.isEmpty()) {
+                PopupManager.showPopup("Shopping cart is empty", "Add some products to your cart first, to generate a shopping list.", Alert.AlertType.ERROR);
+                return;
+            }
+
             ShoppingListGeneratorDialog dialog = new ShoppingListGeneratorDialog(cart, currencyConfig);
             Optional<String> list = dialog.showAndWait();
             if (list.isPresent()) {
@@ -176,6 +247,70 @@ public class PricerController extends SubUtilityController {
                 textDialog.showAndWait();
             }
         });
+
+        createDishButton.setOnAction(_ -> {
+            InputDialog nameDialog = new InputDialog("New dish");
+            nameDialog.setPrimaryLabel("What would you like to call your dish?");
+            nameDialog.setDescription("To create a new dish, please supply the name using the field below.");
+            nameDialog.setPrompt("New dish...");
+            Optional<String> name = nameDialog.showAndWait();
+            if (name.isPresent()) {
+                dishEditorState = DishEditorState.DISH_CREATION;
+                currentEditorDish = new Dish(
+                        -1,
+                        name.get(),
+                        new ArrayList<>()
+                );
+            }
+            refreshUI();
+        });
+
+        addIngredientButton.setOnAction(_ -> {
+            IngredientPickerDialog dialog = new IngredientPickerDialog(
+                    dataman.getProducts().stream().filter(p -> currentEditorDish.ingredients().stream().map(DishIngredient::product).distinct().noneMatch(existing -> existing.id() == p.id())).toList(),
+                    currentEditorDish != null ? currentEditorDish.id() : -1
+            );
+            Optional<DishIngredient> ingredient = dialog.showAndWait();
+
+            if (ingredient.isPresent()) {
+                currentEditorDish.ingredients().add(ingredient.get());
+                refreshDishEditor();
+            }
+        });
+
+        dishEditor.managedProperty().bind(dishEditor.visibleProperty());
+        dishSelection.managedProperty().bind(dishSelection.visibleProperty());
+
+        saveDishButton.managedProperty().bind(saveDishButton.visibleProperty());
+        applyDishChangesButton.managedProperty().bind(applyDishChangesButton.visibleProperty());
+        closeDishButton.managedProperty().bind(closeDishButton.visibleProperty());
+
+        dishServingSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(1, Double.MAX_VALUE, 1.0d, 1));
+        dishServingSpinner.valueProperty().addListener((obs, old, val) -> {
+            refreshDishEditor();
+        });
+
+        dishIngredientList.setCellFactory(new IngredientCellFactory((product, quantity) -> {
+            currentEditorDish.ingredients().replaceAll(ing -> {
+                if (ing.product().id() == product.id()) {
+                    return new DishIngredient(
+                            ing.relationId(),
+                            ing.dishId(),
+                            product,
+                            quantity
+                    );
+                } else {
+                    return ing;
+                }
+            });
+            refreshDishEditor();
+        }, (product) -> {
+            currentEditorDish.ingredients().removeIf(ing -> ing.product().id() == product.id());
+            refreshDishEditor();
+        }, currencyConfig));
+
+        Tooltip servingPriceTip = new Tooltip("The price per a single serving of this dish.\nThe price in parentheses is the cart total per serving.");
+        servingPriceLabel.setTooltip(servingPriceTip);
 
         refreshUI();
     }
@@ -220,9 +355,75 @@ public class PricerController extends SubUtilityController {
         pickableProductList.getItems().setAll(DataManager.getInstance().getProducts());
     }
 
+    private void refreshDishEditor() {
+        dishEditor.setVisible(dishEditorState.equals(DishEditorState.DISH_CREATION) || dishEditorState.equals(DishEditorState.DISH_EDITING));
+        dishSelection.setVisible(dishEditorState.equals(DishEditorState.SELECT_DISH));
+
+        saveDishButton.setVisible(dishEditorState.equals(DishEditorState.DISH_CREATION));
+        applyDishChangesButton.setVisible(dishEditorState.equals(DishEditorState.DISH_EDITING));
+
+        closeDishButton.setText(dishEditorState.equals(DishEditorState.DISH_CREATION) ? "Discard dish" : "Discard changes");
+        closeDishButton.setOnAction(_ -> {
+            if (dishEditorState.equals(DishEditorState.DISH_CREATION)) {
+                Optional<ButtonType> response = PopupManager.showConfirmation("Discard dish", "Are you sure you wish to discard this dish?\n\nThis cannot be undone.",
+                        new ButtonType("Yes, discard", ButtonBar.ButtonData.APPLY),
+                        new ButtonType("No, leave it be", ButtonBar.ButtonData.CANCEL_CLOSE)
+                );
+
+                if (response.isPresent()) {
+                    if (response.get().getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                        resetDishEditor();
+                        dishEditorState = DishEditorState.SELECT_DISH;
+                        refreshDishEditor();
+                    }
+                }
+            }
+        });
+
+
+        switch (dishEditorState) {
+            case SELECT_DISH -> {
+                dishList.getItems().clear();
+                dishList.getItems().setAll(dataman.getDishes());
+            }
+            case DISH_CREATION, DISH_EDITING -> {
+                dishIngredientList.getItems().setAll(currentEditorDish.ingredients());
+                dishNameLabel.setText(currentEditorDish.name());
+                double dishTotal = currentEditorDish.ingredients().stream().mapToDouble(ingredient -> ingredient.product().pricePerUnit() * ingredient.quantity()).sum();
+                dishTotalLabel.setText(
+                        Formatting.formatMoney(
+                                dishTotal,
+                                currencyConfig
+                        )
+                );
+                double dishProductsTotal = currentEditorDish.ingredients().stream().mapToDouble(ingredient -> Math.ceil(ingredient.quantity() / ingredient.product().unitsPerProduct()) * ingredient.product().price()).sum();
+                dishProductsTotalLabel.setText(
+                        Formatting.formatMoney(
+                                dishProductsTotal,
+                                currencyConfig
+                        )
+                );
+                servingPriceLabel.setText(
+                        String.format("%s (%s)", Formatting.formatMoney(
+                                dishTotal / dishServingSpinner.getValue(),
+                                currencyConfig
+                        ), Formatting.formatMoney(
+                                dishProductsTotal / dishServingSpinner.getValue(),
+                                currencyConfig
+                        ))
+                );
+            }
+        }
+    }
+
     private void refreshUI() {
         refreshCartList();
         refreshExistingProductList();
         refreshPickableProductList();
+        refreshDishEditor();
+    }
+
+    private void resetDishEditor() {
+        // TODO: Implement
     }
 }

@@ -153,6 +153,27 @@
 
 /* </editor-fold> */
 
+/* <editor-fold desc="Ingredient cell"> */
+.ingredient-cell {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.ingredient-list .list-cell:filled, .ingredient-cell {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 2px;
+}
+
+.ingredient-list .list-cell:selected, .ingredient-cell .list-cell:focused {
+    -fx-border-color: black;
+}
+
+/* </editor-fold> */
+
 /* <editor-fold desc="Category expense total cell"> */
 
 .category-expense-total-cell {
