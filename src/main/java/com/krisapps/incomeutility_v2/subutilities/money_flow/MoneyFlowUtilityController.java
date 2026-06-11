@@ -31,10 +31,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Optional;
+import java.time.format.TextStyle;
+import java.util.*;
 
 /* Controller class for the Money In Money Out utility */
 public class MoneyFlowUtilityController extends SubUtilityController {
@@ -94,6 +92,9 @@ public class MoneyFlowUtilityController extends SubUtilityController {
 
     @FXML
     private Label commandPromptLabel;
+
+    @FXML
+    private Label dateTitle;
     //</editor-fold>
 
     private Account selectedAccount;
@@ -331,6 +332,13 @@ public class MoneyFlowUtilityController extends SubUtilityController {
                     fiscal.getCurrentBalance(selectedAccount),
                     selectedAccount.getCurrencyConfig().getCurrencySymbol(),
                     selectedAccount.getCurrencyConfig().isCurrencySymbolPrefix()
+            ));
+
+            dateTitle.setText("%s, %s %s %s".formatted(
+                    selectedDate.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.getDefault()),
+                    selectedDate.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()),
+                    selectedDate.getDayOfMonth() + Formatting.getNumberSuffix(selectedDate.getDayOfMonth()),
+                    Objects.equals(selectedDate, LocalDate.now()) ? "(Today)" : Objects.equals(selectedDate, LocalDate.now().minusDays(1)) ? "(Yesterday)" : ""
             ));
 
             double change = fiscal.getChange(selectedAccount, selectedDate);

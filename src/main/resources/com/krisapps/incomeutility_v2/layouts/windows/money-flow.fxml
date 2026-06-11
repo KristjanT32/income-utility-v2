@@ -180,6 +180,15 @@
                      </VBox.margin>
                   </HBox>
                   <Separator maxHeight="75.0" minHeight="25.0" orientation="VERTICAL" visible="false" VBox.vgrow="ALWAYS" />
+                  <Label fx:id="dateTitle" maxWidth="1.7976931348623157E308" text="Tuesday, June 9th">
+                     <VBox.margin>
+                        <Insets bottom="5.0"/>
+                     </VBox.margin>
+                     <styleClass>
+                        <String fx:value="large-label"/>
+                        <String fx:value="bold"/>
+                     </styleClass>
+                  </Label>
                   <VBox maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
                      <children>
                         <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="5.0">
@@ -195,8 +204,8 @@
                                     <FontIcon iconLiteral="fltfal-arrow-right-24" iconSize="16" />
                                  </graphic>
                               </Button>
-                               <Button fx:id="resetDateButton" maxHeight="1.7976931348623157E308"
-                                       mnemonicParsing="false">
+                              <Button fx:id="resetDateButton" maxHeight="1.7976931348623157E308"
+                                      mnemonicParsing="false">
                                  <graphic>
                                     <FontIcon iconLiteral="fltfal-calendar-24" iconSize="16" />
                                  </graphic>
