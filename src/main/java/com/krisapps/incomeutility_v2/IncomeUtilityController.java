@@ -4,6 +4,7 @@ import com.krisapps.incomeutility_v2.dialogs.AccountInfoDialog;
 import com.krisapps.incomeutility_v2.dialogs.AddAccountWizard;
 import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
 import com.krisapps.incomeutility_v2.dialogs.generic.DropdownDialog;
+import com.krisapps.incomeutility_v2.dialogs.generic.LoadingDialog;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
@@ -63,7 +64,6 @@ public class IncomeUtilityController {
     public void initialize() {
         IncomeUtilityApplication.updateTitle("Starting application...", true);
         data.initialize();
-
 
         registerHandlers();
         refreshAccountView();
@@ -177,7 +177,13 @@ public class IncomeUtilityController {
 
         ImportFromCashewDialog dialog = new ImportFromCashewDialog(account.get());
         Optional<Pair<Account, ArrayList<CashewTransaction>>> imported = dialog.showAndWait();
-        imported.ifPresent(accountArrayListPair -> TransactionService.getInstance().pushTransactionsTo(accountArrayListPair.getKey(), accountArrayListPair.getValue()));
+
+        LoadingDialog pushDialog = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
+        pushDialog.setPrimaryLabel("Hold on");
+        pushDialog.setSecondaryLabel("Saving imported transactions");
+        pushDialog.show("Just a second", () -> {
+            imported.ifPresent(accountArrayListPair -> TransactionService.getInstance().pushTransactionsTo(accountArrayListPair.getKey(), accountArrayListPair.getValue()));
+        });
     }
 
     private void addAccountNode(Node node) {

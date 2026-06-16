@@ -12,6 +12,7 @@ module com.krisapps.incomeutility_v2 {
     requires javafx.base;
     requires java.sql;
     requires jdk.jshell;
+    requires java.management;
 
     opens com.krisapps.incomeutility_v2 to javafx.fxml;
     opens com.krisapps.incomeutility_v2.subutilities.money_flow to javafx.fxml;

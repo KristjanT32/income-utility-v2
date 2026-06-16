@@ -45,6 +45,7 @@ public class TransactionService {
 
     /**
      * Retrieves the transaction with the supplied ID.
+     *
      * @param id The ID of the transaction to retrieve
      * @return An Optional with the requested {@link Transaction}, or an empty Optional, if no such transaction exists.
      */
@@ -169,7 +170,8 @@ public class TransactionService {
 
     /**
      * Pushes the supplied transactions to the supplied account's transaction registry.
-     * @param account The account with which the transactions should be associated.
+     *
+     * @param account      The account with which the transactions should be associated.
      * @param transactions A list of transactions to push.
      * @return The number of transactions pushed to the account.
      */
@@ -199,6 +201,7 @@ public class TransactionService {
     /**
      * Deletes all transactions for the supplied account.
      * All transfers will be converted to either deposits or withdrawals.
+     *
      * @param account The account whose transactions to delete.
      */
     public void deleteTransactionsFor(Account account) {
@@ -208,7 +211,7 @@ public class TransactionService {
         }
 
         Collection<Transaction> transactions = new ArrayList<>(data.getAllTransactions().values().stream().toList());
-        for (Transaction t: transactions) {
+        for (Transaction t : transactions) {
             if (t.isRelated(account.getId())) {
                 if (t.getType().equals(TransactionType.TRANSFER)) {
                     log("Converting transfer #" + t.getId());
@@ -227,8 +230,9 @@ public class TransactionService {
      * Converts the supplied transfer transaction to either a deposit or withdrawal, based on the supplied account.
      * If the transfer originates from the supplied account, it will be converted to a deposit to the target account.
      * If the target of the transfer is the supplied account, it will be converted to a withdrawal from the source account.
+     *
      * @param origin The account which is either the source or the target of the supplied transfer.
-     * @param t The transfer transaction.
+     * @param t      The transfer transaction.
      * @return The converted transaction.
      */
     public Transaction convertTransfer(Account origin, Transaction t) {
@@ -262,7 +266,8 @@ public class TransactionService {
 
     /**
      * Checks if the supplied transaction exists.
-     * @param account The account whose transaction is supplied
+     *
+     * @param account     The account whose transaction is supplied
      * @param transaction The transaction to check
      * @return <code>true</code> if the supplied transaction exists, <code>false</code> otherwise.
      */
@@ -272,12 +277,17 @@ public class TransactionService {
 
     /**
      * Checks if the supplied imported transaction exists.
-     * @param account The account whose transaction is supplied
+     *
+     * @param account     The account whose transaction is supplied
      * @param transaction The imported transaction to check
      * @return <code>true</code> if the supplied imported transaction exists, <code>false</code> otherwise.
      */
     public boolean importedTransactionExists(Account account, CashewTransaction transaction) {
-        return data.importedTransactionExists(account, transaction);
+        if (transaction.hasPairedTransaction()) {
+            return data.importedTransactionExists(account, transaction) || data.pairedTransactionExists(transaction.getCashewPairedTransactionId());
+        } else {
+            return data.importedTransactionExists(account, transaction);
+        }
     }
 
     private void log(String msg) {

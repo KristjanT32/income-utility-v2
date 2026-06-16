@@ -152,31 +152,30 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                 refreshUI();
             }
 
-            if (importedTransactions.isEmpty()) {
-                PopupManager.showPopup("No transactions found", "No transactions matched the specified criteria.", Alert.AlertType.INFORMATION);
-                return;
+            if (!importedTransactions.isEmpty()) {
+                PopupManager.showChoicePopup(
+                        "Conversion complete",
+                        "All selected (%s) transactions have been converted into the local format.\n\nProceed with import?".formatted(importedTransactions.size()),
+                        new ButtonType("Yes, import all", ButtonBar.ButtonData.APPLY),
+                        new ButtonType("Review transactions", ButtonBar.ButtonData.OTHER),
+                        new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                ).ifPresent(response -> {
+                    switch (response.getButtonData()) {
+                        case APPLY -> {
+                            importTransactions(false);
+                            close();
+                        }
+                        case OTHER -> {
+                            importTransactions(true);
+                        }
+                        default -> {
+
+                        }
+                    }
+                });
+            } else {
+                PopupManager.showPopup("Nothing to import", "Income Utility found no new transactions to import.\nIf you believe this is a mistake, you can try importing transactions for a different account.", Alert.AlertType.INFORMATION);
             }
-
-            PopupManager.showChoicePopup(
-                    "Conversion complete",
-                    "All selected (%s) transactions have been converted into the local format.\n\nProceed with import?".formatted(importedTransactions.size()),
-                    new ButtonType("Yes, import all", ButtonBar.ButtonData.APPLY),
-                    new ButtonType("Review transactions", ButtonBar.ButtonData.OTHER),
-                    new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
-            ).ifPresent(response -> {
-                switch (response.getButtonData()) {
-                    case APPLY -> {
-                        importTransactions(false);
-                        close();
-                    }
-                    case OTHER -> {
-                        importTransactions(true);
-                    }
-                    default -> {
-
-                    }
-                }
-            });
         });
 
         reviewButton.setOnAction((ev) -> {
@@ -199,9 +198,9 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
     }
 
     private void importTransactions(boolean thenReview) {
-        DataManager.log("Beginning to import transactions");
+        DataManager.log("Beginning to import transactions", "Cashew");
         performImport();
-        DataManager.log("Import completed.");
+        DataManager.log("Transactions ready for import.", "Cashew");
 
         if (thenReview) {
             reviewTransactions();
@@ -246,7 +245,7 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                         t.setSourceAccountId(uuid);
                     }, () -> {
                         excludedTransactions.add(t.getId());
-                        DataManager.log("Excluding transaction #" + t.getId() + " (no account mapping provided)");
+                        DataManager.log("Excluding transaction #" + t.getId() + " (no account mapping provided)", "Cashew");
                     });
                 }
                 if (accountMappings.containsKey(t.getCashewTargetAccount())) {
@@ -265,7 +264,7 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                         t.setTargetAccountId(uuid);
                     }, () -> {
                         excludedTransactions.add(t.getId());
-                        DataManager.log("Excluding transaction #" + t.getId() + " (no account mapping provided)");
+                        DataManager.log("Excluding transaction #" + t.getId() + " (no account mapping provided)", "Cashew");
                     });
                 }
             } else {
@@ -285,15 +284,21 @@ public class ImportFromCashewDialog extends IncomeUtilityDialog<Pair<Account, Ar
                         t.setTargetAccountId(uuid);
                     }, () -> {
                         excludedTransactions.add(t.getId());
-                        DataManager.log("Excluding transaction #" + t.getId() + " (no account mapping provided)");
+                        DataManager.log("Excluding transaction #" + t.getId() + " (no account mapping provided)", "Cashew");
                     });
                 }
             }
         }
 
-        DataManager.log("Processing excluded transactions...");
-        importedTransactions.removeIf(t -> excludedTransactions.contains(t.getId()));
-        DataManager.log("Done.");
+        DataManager.log("Processing excluded transactions...", "Cashew");
+        importedTransactions.removeIf(t -> {
+            if (excludedTransactions.contains(t.getId())) {
+                DataManager.log("[-] Excluding '" + t.getId() + "'");
+            }
+            return excludedTransactions.contains(t.getId());
+        });
+
+        DataManager.log("Done.", "Cashew");
     }
 
     public void refreshUI() {
