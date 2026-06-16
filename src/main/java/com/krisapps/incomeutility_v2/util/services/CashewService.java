@@ -22,12 +22,14 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Optional;
 
 public class CashewService {
 
     private static CashewService instance;
+    private static final DataManager data = DataManager.getInstance();
     private File file = null;
 
     private CashewService() {
@@ -40,7 +42,7 @@ public class CashewService {
         }
         return instance;
     }
-    
+
     private void log(String msg) {
         DataManager.log("[Cashew] " + msg);
     }
@@ -122,6 +124,7 @@ public class CashewService {
 
     /**
      * Converts the date in the database to a {@link LocalDateTime} object.
+     *
      * @param epochSeconds The date in epoch seconds from the database.
      * @return A LocalDateTime object equal to the supplied epoch seconds.
      */
@@ -144,8 +147,12 @@ public class CashewService {
         transaction.setCategory(TransactionCategory.CUSTOM);
         transaction.setCustomCategory(row.getString("category_name"));
 
-        if (row.getString("paired_transaction_fk") != null) {
+        boolean isPaired = row.getString("paired_transaction_fk") != null;
+        if (isPaired) {
+            String pairedTransactionId = row.getString("paired_transaction_fk");
+
             transaction.setType(TransactionType.TRANSFER);
+            transaction.setCashewPairedTransactionId(pairedTransactionId);
 
             if (row.getDouble("amount") > 0) {
                 transaction.setCashewSourceAccount(getWalletFromTransaction(row.getString("paired_transaction_fk")));
@@ -167,6 +174,7 @@ public class CashewService {
 
     /**
      * Retrieves a list of all Cashew wallets.
+     *
      * @return A list of {@link CashewAccount} objects representing Cashew wallets.
      */
     public ArrayList<CashewAccount> getWallets() {
@@ -234,15 +242,16 @@ public class CashewService {
      * - If both date arguments are null, all transactions of the supplied account will be returned.
      * </p>
      *
-     * @param account            The Cashew account whose transactions to return.
-     * @param filteringMode      The filtering mode to apply to the supplied dates.
-     * @param startDateInclusive The start date of the inclusive range of transactions. May be null.
-     * @param endDateInclusive   The end of the inclusive range of transactions. May be null.
+     * @param account                  The Cashew account whose transactions to return.
+     * @param filteringMode            The filtering mode to apply to the supplied dates.
+     * @param startDateInclusive       The start date of the inclusive range of transactions. May be null.
+     * @param endDateInclusive         The end of the inclusive range of transactions. May be null.
      * @param importFutureTransactions Whether to include future transactions in the results.
      * @return A list of transactions matching the supplied criteria.
      */
     public ArrayList<CashewTransaction> getTransactions(CashewAccount account, DateFilteringMode filteringMode, @Nullable LocalDate startDateInclusive, @Nullable LocalDate endDateInclusive, boolean importFutureTransactions) {
         ArrayList<CashewTransaction> transactions = new ArrayList<>();
+
         try {
             Connection connection = DriverManager.getConnection("jdbc:sqlite:" + file.getPath());
             LoadingDialog dialog = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
@@ -253,27 +262,27 @@ public class CashewService {
                     PreparedStatement statement = null;
                     switch (filteringMode) {
                         case NONE -> {
-                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ?");
+                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE (transactions.wallet_fk = ?)");
                             statement.setString(1, account.id());
                         }
                         case RANGE -> {
-                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND (DATETIME(date_created, 'unixepoch') BETWEEN DATETIME(? / 1000, 'unixepoch', 'localtime') AND DATETIME(? / 1000, 'unixepoch'))");
+                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE (transactions.wallet_fk = ?) AND (DATETIME(date_created, 'unixepoch') BETWEEN DATETIME(? / 1000, 'unixepoch', 'localtime') AND DATETIME(? / 1000, 'unixepoch'))");
                             statement.setString(1, account.id());
                             statement.setLong(2, startDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
                             statement.setLong(3, endDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
                         }
                         case ALL_BEFORE -> {
-                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND DATETIME(date_created, 'unixepoch') <= DATETIME(? / 1000, 'unixepoch', 'localtime')");
+                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE (transactions.wallet_fk = ?) AND DATETIME(date_created, 'unixepoch') <= DATETIME(? / 1000, 'unixepoch', 'localtime')");
                             statement.setString(1, account.id());
                             statement.setLong(2, endDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
                         }
                         case ALL_AFTER -> {
-                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND DATETIME(date_created, 'unixepoch') >= DATETIME(? / 1000, 'unixepoch', 'localtime')");
+                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE (transactions.wallet_fk = ?) AND DATETIME(date_created, 'unixepoch') >= DATETIME(? / 1000, 'unixepoch', 'localtime')");
                             statement.setString(1, account.id());
                             statement.setLong(2, startDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
                         }
                         case ALL_ON -> {
-                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE transactions.wallet_fk = ? AND DATE(date_created, 'unixepoch') = DATE(? / 1000, 'unixepoch', 'localtime')");
+                            statement = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE (transactions.wallet_fk = ?) AND DATE(date_created, 'unixepoch') = DATE(? / 1000, 'unixepoch', 'localtime')");
                             statement.setString(1, account.id());
                             statement.setLong(2, startDateInclusive.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
                         }
@@ -294,9 +303,17 @@ public class CashewService {
                             log("Transaction is a recurrent charge (charge no. " + results.getString("transaction_pk").split("::")[2] + ")");
                         }
 
+                        if (data.pairedTransactionExists(results.getString("transaction_pk"))) {
+                            dialog.setSecondaryLabel("Skipping imported transaction #" + transactionCount);
+                            log("Skipping transaction: " + results.getString("transaction_pk") + " (already imported)");
+                            continue;
+                        }
+
                         if (shouldImport) {
                             dialog.setSecondaryLabel("Importing transaction #" + transactionCount++);
-                            transactions.add(mapToTransaction(results));
+
+                            CashewTransaction out = mapToTransaction(results);
+                            transactions.add(out);
                         } else {
                             dialog.setSecondaryLabel("Skipping future #" + transactionCount);
                             log("Skipping transaction: " + results.getString("transaction_pk") + " (future transaction)");
@@ -309,6 +326,43 @@ public class CashewService {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return transactions;
+
+        log("Processing potential transfers...");
+        ArrayList<CashewTransaction> updated = new ArrayList<>();
+        LoadingDialog processingDialog = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
+        processingDialog.setPrimaryLabel("Processing imported transactions for " + account.displayName());
+        processingDialog.setSecondaryLabel("Converting transfers...");
+        processingDialog.show("Please wait", () -> {
+            for (CashewTransaction t : transactions) {
+                if (t.hasPairedTransaction()) {
+                    log("Skipping already converted transfer: " + t.getType() + "(" + t.getCashewTransactionId() + ")");
+                    log("Transfer details: " + t.getAbsoluteAmount() + " on " + t.getTimestamp().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+                    updated.add(t);
+                } else {
+                    /* If recorded transaction has no paired_transaction_fk */
+                    Connection connection = null;
+                    try {
+                        connection = DriverManager.getConnection("jdbc:sqlite:" + file.getPath());
+
+                        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM transactions JOIN (SELECT name AS category_name, category_pk AS category_pk FROM categories) ON transactions.category_fk = category_pk WHERE paired_transaction_fk = ?")) {
+                            stmt.setString(1, t.getCashewTransactionId());
+
+                            ResultSet res = stmt.executeQuery();
+                            if (res.next()) {
+                                CashewTransaction converted = mapToTransaction(res);
+                                updated.add(converted);
+                                log("Converted transaction #" + t.getCashewTransactionId() + " to a transfer (paired transaction found)");
+                            } else {
+                                // Transaction was not paired, so we just copy it.
+                                updated.add(t);
+                            }
+                        }
+                    } catch (SQLException e) {
+                    }
+                }
+            }
+        });
+
+        return updated;
     }
 }

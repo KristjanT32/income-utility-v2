@@ -5,17 +5,20 @@ import com.krisapps.incomeutility_v2.util.DataManager;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 public class ConfigurationData {
     private UUID lastActiveAccountId;
     private String databaseLocation;
     private CurrencyConfig pricerCurrencyConfiguration;
+    private String logFileLocation;
 
     public ConfigurationData() {
         this.lastActiveAccountId = null;
         this.databaseLocation = Path.of(DataManager.getDataDirectory() + File.separator + "data.db").toString();
         this.pricerCurrencyConfiguration = CurrencyConfig.DEFAULT;
+        this.logFileLocation = Paths.get(DataManager.getDataDirectory() + File.separator + "utility.log").toString();
     }
 
     public UUID getLastActiveAccountId() {
@@ -44,5 +47,13 @@ public class ConfigurationData {
 
     public void setPricerCurrencyConfiguration(CurrencyConfig pricerCurrencyConfiguration) {
         this.pricerCurrencyConfiguration = pricerCurrencyConfiguration;
+    }
+
+    public Path getLogFileLocation() {
+        return Path.of(logFileLocation);
+    }
+
+    public void setLogFileLocation(Path logFileLocation) {
+        this.logFileLocation = logFileLocation.toString();
     }
 }

@@ -4,6 +4,7 @@ import com.krisapps.incomeutility_v2.dialogs.AddMultipleTransactionsDialog;
 import com.krisapps.incomeutility_v2.dialogs.AddSingleTransactionDialog;
 import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
 import com.krisapps.incomeutility_v2.dialogs.generic.InputDialog;
+import com.krisapps.incomeutility_v2.dialogs.generic.LoadingDialog;
 import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
@@ -19,6 +20,7 @@ import com.krisapps.incomeutility_v2.util.PopupManager;
 import com.krisapps.incomeutility_v2.util.misc.Formats;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import com.krisapps.incomeutility_v2.util.services.TransactionService;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -33,6 +35,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.time.format.TextStyle;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /* Controller class for the Money In Money Out utility */
 public class MoneyFlowUtilityController extends SubUtilityController {
@@ -130,7 +133,8 @@ public class MoneyFlowUtilityController extends SubUtilityController {
                 }
 
                 if (args[0].equals("transactions")) {
-                    PopupManager.showListDialog("Transactions", "Transactions", new ArrayList<>(data.getAllTransactions().values()), new TransactionCellFactory(selectedAccount, (transaction) -> {}));
+                    PopupManager.showListDialog("Transactions", "Transactions", new ArrayList<>(data.getAllTransactions().values()), new TransactionCellFactory(selectedAccount, (transaction) -> {
+                    }));
                 }
             }
             case "date" -> {
@@ -149,6 +153,13 @@ public class MoneyFlowUtilityController extends SubUtilityController {
                 }
                 datePicker.setValue(LocalDate.parse(args[0], Formats.DATE_FORMATTER));
             }
+
+            case "print-all" -> {
+                data.getAllTransactions().forEach((id, t) -> {
+                    System.out.println(id);
+                });
+            }
+
             case "first-transaction" -> {
                 selectDateOfFirstTransaction();
             }
@@ -162,7 +173,8 @@ public class MoneyFlowUtilityController extends SubUtilityController {
             case "migration" -> data.migrateJSONDataToSQL();
             case "refresh" -> refreshUI();
             case "exit" -> utility.stop();
-            default -> PopupManager.showPopup("Unknown utility command", "'" + command + "' is not a valid utility command.", Alert.AlertType.ERROR);
+            default ->
+                    PopupManager.showPopup("Unknown utility command", "'" + command + "' is not a valid utility command.", Alert.AlertType.ERROR);
         }
     }
 
@@ -410,12 +422,21 @@ public class MoneyFlowUtilityController extends SubUtilityController {
         Optional<Pair<Account, ArrayList<CashewTransaction>>> response = dlg.showAndWait();
 
         response.ifPresent(importedTransactions -> {
-            int imported = transactor.pushTransactionsTo(importedTransactions.getKey(), importedTransactions.getValue());
+            AtomicInteger importCount = new AtomicInteger(0);
 
-            refreshTransactionList();
-            refreshUI();
-            refreshAccountSelector();
-            PopupManager.showPopup("Import completed!", "Successfully imported %s new transactions of %s selected from Cashew.".formatted(imported, importedTransactions.getValue().size()), Alert.AlertType.INFORMATION);
+
+            LoadingDialog pushDialog = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
+            pushDialog.setPrimaryLabel("Hold on");
+            pushDialog.setSecondaryLabel("Saving imported transactions");
+            pushDialog.show("Just a second", () -> {
+                importCount.set(transactor.pushTransactionsTo(importedTransactions.getKey(), importedTransactions.getValue()));
+                Platform.runLater(() -> {
+                    refreshTransactionList();
+                    refreshUI();
+                    refreshAccountSelector();
+                });
+            });
+            PopupManager.showPopup("Import completed!", "Successfully imported %s new transactions of %s selected from Cashew.".formatted(importCount, importedTransactions.getValue().size()), Alert.AlertType.INFORMATION);
         });
     }
 }

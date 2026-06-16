@@ -3,6 +3,7 @@ package com.krisapps.incomeutility_v2.dialogs;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
+import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
@@ -49,6 +50,18 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
     private HBox transferPanel;
     @FXML
     private FontIcon typeIcon;
+
+    @FXML
+    private Label idLabel;
+
+    @FXML
+    private Label cashewIdLabel;
+
+    @FXML
+    private VBox pairedInfoBox;
+
+    @FXML
+    private Label pairedIdLabel;
 
     @FXML
     private Button editButton;
@@ -152,5 +165,13 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
         timeLabel.setText(Formatting.formatLocalTime(transaction.getTimestamp().toLocalTime()));
         commentLabel.setText(transaction.getComment().isEmpty() ? "No comments added." : transaction.getComment());
         categoryLabel.setText(transaction.getCategory().equals(TransactionCategory.CUSTOM) ? transaction.getCustomCategory() : Formatting.humanize(transaction.getCategory().name()));
+
+        CashewTransaction asCashew = ((CashewTransaction) transaction);
+        idLabel.setText(transaction.getId().toString() + " (Local)");
+        cashewIdLabel.setText(asCashew.getCashewTransactionId() + " (Cashew)");
+
+        pairedInfoBox.managedProperty().bind(pairedInfoBox.visibleProperty());
+        pairedInfoBox.setVisible(asCashew.hasPairedTransaction());
+        pairedIdLabel.setText(asCashew.getCashewPairedTransactionId());
     }
 }

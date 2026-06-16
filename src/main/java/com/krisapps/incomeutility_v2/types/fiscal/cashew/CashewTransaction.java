@@ -12,6 +12,7 @@ public class CashewTransaction extends Transaction {
     private String cashewTransactionId = null;
     private String cashewSourceAccount = null;
     private String cashewTargetAccount = null;
+    private String cashewPairedTransactionId = null;
 
     public CashewTransaction(TransactionType type, double amount, UUID account, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, String cashewTransactionId) {
         super(type, amount, account, timestamp, category, customCategory, comment, null);
@@ -28,6 +29,14 @@ public class CashewTransaction extends Transaction {
         this.cashewTransactionId = cashewTransactionId;
         this.cashewSourceAccount = cashewSourceAccount;
         this.cashewTargetAccount = cashewTargetAccount;
+    }
+
+    public CashewTransaction(TransactionType type, double amount, UUID from, UUID to, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, UUID id, String cashewTransactionId, String cashewSourceAccount, String cashewTargetAccount, String cashewPairedTransactionId) {
+        super(type, amount, from, to, timestamp, category, customCategory, comment, id);
+        this.cashewTransactionId = cashewTransactionId;
+        this.cashewSourceAccount = cashewSourceAccount;
+        this.cashewTargetAccount = cashewTargetAccount;
+        this.cashewPairedTransactionId = cashewPairedTransactionId;
     }
 
     public CashewTransaction(String cashewTransactionId) {
@@ -49,6 +58,24 @@ public class CashewTransaction extends Transaction {
                 cashewTransactionId,
                 cashewSourceAccount,
                 cashewTargetAccount
+        );
+    }
+
+    public static CashewTransaction of(Transaction t, String cashewTransactionId, String cashewSourceAccount, String cashewTargetAccount, String cashewPairedTransactionId) {
+        return new CashewTransaction(
+                t.getType(),
+                t.getAmount(),
+                t.getSourceAccountId(),
+                t.getTargetAccountId(),
+                t.getTimestamp(),
+                t.getCategory(),
+                t.getCustomCategory(),
+                t.getComment(),
+                t.getId(),
+                cashewTransactionId,
+                cashewSourceAccount,
+                cashewTargetAccount,
+                cashewPairedTransactionId
         );
     }
 
@@ -80,6 +107,14 @@ public class CashewTransaction extends Transaction {
         this.cashewTargetAccount = cashewTargetAccount;
     }
 
+    public String getCashewPairedTransactionId() {
+        return cashewPairedTransactionId;
+    }
+
+    public void setCashewPairedTransactionId(String cashewPairedTransactionId) {
+        this.cashewPairedTransactionId = cashewPairedTransactionId;
+    }
+
     @Override
     public CashewTransaction copy() {
         return new CashewTransaction(
@@ -94,7 +129,12 @@ public class CashewTransaction extends Transaction {
             this.getId(),
             this.cashewTransactionId,
             this.cashewSourceAccount,
-            this.cashewTargetAccount
+                this.cashewTargetAccount,
+                this.cashewPairedTransactionId
         );
+    }
+
+    public boolean hasPairedTransaction() {
+        return this.cashewPairedTransactionId != null;
     }
 }

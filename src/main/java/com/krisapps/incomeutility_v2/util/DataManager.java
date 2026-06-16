@@ -29,11 +29,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidParameterException;
 import java.sql.*;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.Date;
 import java.util.logging.Level;
 
 @SuppressWarnings("ConstantConditions")
@@ -54,6 +52,8 @@ public class DataManager {
     private ConfigurationData configurationData;
     private Connection currentConnection;
 
+    public static Logging logger = Logging.getInstance();
+
     private DataManager() {
         this.configFile = Path.of(DATA_DIRECTORY_PATH.toString(), "config.json").toFile();
     }
@@ -71,31 +71,32 @@ public class DataManager {
 
     public static void log(String msg) {
         if (msg.toLowerCase().contains("failed") || msg.toLowerCase().contains("error") || msg.toLowerCase().contains("fail") || msg.toLowerCase().contains("couldn't") || msg.toLowerCase().contains("could not")) {
-            System.out.println(String.format("[%s IncomeUtility/ERROR]: ", Formatting.formatDate(Date.from(Instant.now()), true)) + msg);
+            logger.log(msg, Level.SEVERE);
         } else {
-            System.out.println(String.format("[%s IncomeUtility/INFO]: ", Formatting.formatDate(Date.from(Instant.now()), true)) + msg);
+            logger.log(msg, Level.INFO);
         }
     }
 
     public static void log(String msg, String modulePrefix) {
         if (msg.toLowerCase().contains("failed") || msg.toLowerCase().contains("error") || msg.toLowerCase().contains("fail") || msg.toLowerCase().contains("couldn't") || msg.toLowerCase().contains("could not")) {
-            System.out.println(String.format("[%s IncomeUtility/ERROR] [%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), modulePrefix) + msg);
+            logger.log(msg, modulePrefix, Level.SEVERE);
         } else {
-            System.out.println(String.format("[%s IncomeUtility/INFO] [%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), modulePrefix) + msg);
+            logger.log(msg, modulePrefix, Level.INFO);
         }
     }
 
     public static void log(String msg, Level level) {
-        System.out.println(String.format("[%s IncomeUtility/%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), level.getName()) + msg);
+        logger.log(msg, level);
     }
 
     public static void log(String msg, String modulePrefix, Level level) {
-        System.out.println(String.format("[%s IncomeUtility/%s] [%s]: ", Formatting.formatDate(Date.from(Instant.now()), true), level.getName(), modulePrefix) + msg);
+        logger.log(msg, modulePrefix, level);
     }
 
     public void initialize() {
         loadConfigurationData();
         databaseFilePath = configurationData.getDatabaseLocation();
+        logger.initialize(configurationData.getLogFileLocation());
 
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
@@ -110,6 +111,7 @@ public class DataManager {
 
             } catch (SQLException e) {
                 log("Failed to check database state. Error: " + e.getMessage());
+                logger.logStackTrace(e);
             }
 
         }
@@ -145,23 +147,24 @@ public class DataManager {
                     """);
 
             statement.execute("""
-                    CREATE TABLE IF NOT EXISTS "transactions" (
-                    	"id"	INTEGER NOT NULL,
-                    	"uuid"	TEXT NOT NULL UNIQUE,
-                    	"cashewTransactionId"	TEXT,
-                    	"type"	TEXT NOT NULL,
-                    	"amount"	REAL NOT NULL,
-                    	"sourceAccountId"	TEXT,
-                    	"targetAccountId"	TEXT,
-                    	"cashewSourceAccountId"	TEXT,
-                    	"cashewTargetAccountId"	TEXT,
-                    	"category"	TEXT NOT NULL,
-                    	"customCategoryId"	INTEGER,
-                    	"comment"	TEXT,
-                    	"timestamp"	TEXT NOT NULL,
-                    	PRIMARY KEY("id" AUTOINCREMENT),
-                    	CONSTRAINT "category_fk" FOREIGN KEY("customCategoryId") REFERENCES "transaction_categories"("id")
-                    )
+                    CREATE TABLE "transactions" (
+                     	"id"	INTEGER NOT NULL,
+                     	"uuid"	TEXT NOT NULL UNIQUE,
+                     	"cashewTransactionId"	TEXT,
+                     	"type"	TEXT NOT NULL,
+                     	"amount"	REAL NOT NULL,
+                     	"sourceAccountId"	TEXT,
+                     	"targetAccountId"	TEXT,
+                     	"cashewSourceAccountId"	TEXT,
+                     	"cashewTargetAccountId"	TEXT,
+                     	"cashewPairedTransactionId"	TEXT,
+                     	"category"	TEXT NOT NULL,
+                     	"customCategoryId"	INTEGER,
+                     	"comment"	TEXT,
+                     	"timestamp"	TEXT NOT NULL,
+                     	PRIMARY KEY("id" AUTOINCREMENT),
+                     	CONSTRAINT "category_fk" FOREIGN KEY("customCategoryId") REFERENCES "transaction_categories"("id")
+                     )
                     """);
 
             statement.execute("""
@@ -202,6 +205,7 @@ public class DataManager {
             log("Database successfully initialized!");
         } catch (SQLException e) {
             log("Failed to initialize database: " + e.getMessage());
+            logger.logStackTrace(e);
         }
     }
 
@@ -312,10 +316,11 @@ public class DataManager {
 
     private Connection getDatabaseConnection() {
         try {
-            log("Database connection ready!");
+            logger.debug("Database connection ready!");
             return DriverManager.getConnection("jdbc:sqlite:" + databaseFilePath);
         } catch (SQLException e) {
             Platform.runLater(() -> PopupManager.showPopup("Database initialization error!", "The following error was encountered when initializing the database:\n" + e.getMessage(), Alert.AlertType.ERROR));
+            log("");
         }
         return null;
     }
@@ -330,6 +335,7 @@ public class DataManager {
             MigrationService.shutdown();
         } catch (FileNotFoundException e) {
             PopupManager.showPopup("Migration unavailable!", "Automatic migration from the default data file is not available right now, as data.json couldn't be found.", Alert.AlertType.ERROR);
+            logger.logStackTrace(e);
         }
     }
     //</editor-fold>
@@ -385,7 +391,6 @@ public class DataManager {
 
 
     //<editor-fold desc="Data access">
-
     public Transaction mapResultSetToTransaction(ResultSet row) throws SQLException {
         UUID uuid = UUID.fromString(row.getString("uuid"));
         TransactionType type = TransactionType.valueOf(row.getString("type"));
@@ -420,7 +425,8 @@ public class DataManager {
                     t,
                     cashewTransactionId,
                     row.getString("cashewSourceAccountId"),
-                    row.getString("cashewTargetAccountId")
+                    row.getString("cashewTargetAccountId"),
+                    row.getString("cashewPairedTransactionId")
             );
         }
         return t;
@@ -660,6 +666,39 @@ public class DataManager {
         return Optional.empty();
     }
 
+    /**
+     * Retrieves the paired transaction ID for the transaction with the supplied ID.
+     *
+     * @param transactionId The transaction whose paired transaction to look up.
+     * @param findParent    If <code>true</code>, will look up the parent transaction for the supplied ID. If <code>false</code>, will find the paired transaction, treating the supplied ID as the parent transaction.
+     * @return The ID of the paired transaction, or an empty Optional.
+     */
+    public Optional<String> getPairedTransaction(String transactionId, boolean findParent) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        if (transactionId == null) {
+            return Optional.empty();
+        }
+
+        try (PreparedStatement stmt = currentConnection.prepareStatement(findParent ? "SELECT * FROM transactions WHERE (cashewPairedTransactionId = ?);" : "SELECT * FROM transactions WHERE (cashewTransactionId = ?);")) {
+            stmt.setString(1, transactionId);
+
+            try (ResultSet response = stmt.executeQuery()) {
+                if (response.next()) {
+                    return Optional.of(findParent ? response.getString("cashewTransactionId") : response.getString("cashewPairedTransactionId"));
+                } else {
+                    return Optional.empty();
+                }
+            }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transaction data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
     public ArrayList<String> getCustomTransactionCategories() {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
@@ -850,6 +889,25 @@ public class DataManager {
             }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while checking custom transaction categories. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return false;
+    }
+
+    public boolean pairedTransactionExists(String transactionId) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try (PreparedStatement statement = currentConnection.prepareStatement(
+                "SELECT COUNT(*) FROM transactions WHERE cashewTransactionId = ? OR cashewPairedTransactionId = ?")) {
+            statement.setString(1, transactionId);
+            statement.setString(2, transactionId);
+
+            try (ResultSet set = statement.executeQuery()) {
+                return set.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to query data!", "An SQL error was encountered while looking for Cashew transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
         return false;
     }
@@ -1147,8 +1205,8 @@ public class DataManager {
             if (CashewTransaction.isImported(transaction)) {
                 CashewTransaction cashew = (CashewTransaction) transaction;
                 try (PreparedStatement statement = currentConnection.prepareStatement(
-                        "INSERT INTO transactions (uuid, cashewTransactionId, type, amount, sourceAccountId, targetAccountId, cashewSourceAccountId, cashewTargetAccountId, category, customCategoryId, comment, timestamp)" +
-                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        "INSERT INTO transactions (uuid, cashewTransactionId, type, amount, sourceAccountId, targetAccountId, cashewSourceAccountId, cashewTargetAccountId, category, customCategoryId, comment, timestamp, cashewPairedTransactionId)" +
+                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     statement.setString(1, cashew.getId().toString());
                     statement.setString(2, cashew.getCashewTransactionId());
                     statement.setString(3, cashew.getType().name());
@@ -1161,6 +1219,7 @@ public class DataManager {
                     statement.setInt(10, customCategoryId == -1 ? 0 : customCategoryId);
                     statement.setString(11, cashew.getComment());
                     statement.setString(12, Timestamp.valueOf(cashew.getTimestamp()).toString());
+                    statement.setString(13, cashew.getCashewPairedTransactionId());
                     statement.execute();
                 }
             } else {
@@ -1284,17 +1343,17 @@ public class DataManager {
         }
 
         try (PreparedStatement statement = currentConnection.prepareStatement(
-                    """
-                            UPDATE products SET
-                                                name = ?,
-                                                price = ?,
-                                                durationOfUseInDays = ?,
-                                                unitsPerProduct = ?,
-                                                smallestUnit = ?,
-                                                unitSingular = ?,
-                                                unitPlural = ?
-                            WHERE id = ?;
-                            """)) {
+                """
+                        UPDATE products SET
+                                            name = ?,
+                                            price = ?,
+                                            durationOfUseInDays = ?,
+                                            unitsPerProduct = ?,
+                                            smallestUnit = ?,
+                                            unitSingular = ?,
+                                            unitPlural = ?
+                        WHERE id = ?;
+                        """)) {
 
             statement.setString(1, data.name());
             statement.setDouble(2, data.price());
@@ -1444,7 +1503,7 @@ public class DataManager {
 
         int generatedDishId = -1;
         try (PreparedStatement statement = currentConnection.prepareStatement(
-                    "INSERT INTO dishes (name, servings) VALUES (?, ?);",
+                "INSERT INTO dishes (name, servings) VALUES (?, ?);",
                 Statement.RETURN_GENERATED_KEYS)) {
 
             statement.setString(1, dish.name());
@@ -1480,12 +1539,12 @@ public class DataManager {
         }
 
         try (PreparedStatement statement = currentConnection.prepareStatement(
-                    """
-                            UPDATE dishes SET
-                                                name = ?,
-                                                servings = ?
-                            WHERE id = ?;
-                            """)) {
+                """
+                        UPDATE dishes SET
+                                            name = ?,
+                                            servings = ?
+                        WHERE id = ?;
+                        """)) {
 
             statement.setString(1, data.name());
             statement.setDouble(2, data.servings());
