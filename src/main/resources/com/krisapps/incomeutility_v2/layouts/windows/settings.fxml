@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import org.kordamp.ikonli.javafx.*?>
 <?import java.lang.*?>
 <?import java.net.URL?>
 <StackPane alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
@@ -61,6 +61,86 @@
                                                                 <Insets top="5.0" />
                                                             </VBox.margin>
                                                         </HBox>
+                                                    </children>
+                                                </VBox>
+                                                <VBox>
+                                                    <children>
+                                                        <Label maxWidth="1.7976931348623157E308"
+                                                               text="Log file location">
+                                                            <styleClass>
+                                                                <String fx:value="large-label"/>
+                                                                <String fx:value="bold"/>
+                                                            </styleClass>
+                                                        </Label>
+                                                        <Label maxWidth="1.7976931348623157E308"
+                                                               styleClass="medium-label"
+                                                               text="The location of the log file to write logs to."/>
+                                                        <HBox spacing="5.0">
+                                                            <children>
+                                                                <Button fx:id="logFilePicker"
+                                                                        maxHeight="1.7976931348623157E308"
+                                                                        maxWidth="1.7976931348623157E308"
+                                                                        mnemonicParsing="false" text="Select"
+                                                                        HBox.hgrow="SOMETIMES">
+                                                                    <graphic>
+                                                                        <FontIcon iconLiteral="fltfal-folder-24"
+                                                                                  iconSize="12"/>
+                                                                    </graphic>
+                                                                </Button>
+                                                                <Button fx:id="clearLogButton"
+                                                                        maxHeight="1.7976931348623157E308"
+                                                                        maxWidth="1.7976931348623157E308"
+                                                                        mnemonicParsing="false" styleClass="destructive"
+                                                                        text="Clear logs">
+                                                                    <graphic>
+                                                                        <FontIcon iconLiteral="fltral-delete-24"
+                                                                                  iconSize="12"/>
+                                                                    </graphic>
+                                                                </Button>
+                                                                <TextField fx:id="logFilePathField"
+                                                                           maxHeight="1.7976931348623157E308"
+                                                                           maxWidth="1.7976931348623157E308"
+                                                                           HBox.hgrow="ALWAYS"/>
+                                                            </children>
+                                                            <VBox.margin>
+                                                                <Insets top="5.0"/>
+                                                            </VBox.margin>
+                                                        </HBox>
+                                                        <VBox>
+                                                            <children>
+                                                                <Label maxWidth="1.7976931348623157E308"
+                                                                       text="Debugging">
+                                                                    <styleClass>
+                                                                        <String fx:value="large-label"/>
+                                                                        <String fx:value="bold"/>
+                                                                    </styleClass>
+                                                                </Label>
+                                                                <Label maxWidth="1.7976931348623157E308"
+                                                                       styleClass="medium-label"
+                                                                       text="Enables/disables Income Utility to also write debug logs (more descriptive but not necessarily always useful messages)"/>
+                                                                <HBox>
+                                                                    <VBox.margin>
+                                                                        <Insets top="5.0"/>
+                                                                    </VBox.margin>
+                                                                    <children>
+                                                                        <ToggleButton fx:id="debugToggle"
+                                                                                      alignment="CENTER_LEFT"
+                                                                                      maxWidth="1.7976931348623157E308"
+                                                                                      mnemonicParsing="false"
+                                                                                      text="Debug logging is disabled"
+                                                                                      HBox.hgrow="ALWAYS">
+                                                                            <styleClass>
+                                                                                <String fx:value="green"/>
+                                                                                <String fx:value="bold"/>
+                                                                            </styleClass>
+                                                                        </ToggleButton>
+                                                                    </children>
+                                                                </HBox>
+                                                            </children>
+                                                            <VBox.margin>
+                                                                <Insets top="15.0"/>
+                                                            </VBox.margin>
+                                                        </VBox>
                                                     </children>
                                                 </VBox>
                                             </children>

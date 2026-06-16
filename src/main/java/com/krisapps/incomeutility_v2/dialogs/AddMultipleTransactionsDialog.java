@@ -10,6 +10,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,7 +25,7 @@ public class AddMultipleTransactionsDialog extends IncomeUtilityDialog<ArrayList
 
     private ArrayList<Transaction> output = new ArrayList<>();
 
-    public AddMultipleTransactionsDialog(Account parent) {
+    public AddMultipleTransactionsDialog(Account parent, LocalDate selectedDate) {
         super("add-multiple-transactions.fxml", "Add multiple transactions", "overview_96.png");
 
         getDialogPane().getButtonTypes().add(new ButtonType("Import", ButtonBar.ButtonData.APPLY));
@@ -41,19 +42,11 @@ public class AddMultipleTransactionsDialog extends IncomeUtilityDialog<ArrayList
 
         Button add = new Button("Add transaction");
         add.setOnAction((ev) -> {
-            Transaction t = new Transaction();
-            t.setSourceAccountId(parent.getId());
-            t.setTargetAccountId(parent.getId());
-            output.add(t);
-            refreshItems(output);
+            addEmptyTransaction(parent, selectedDate);
         });
 
         addTransactionButton.setOnAction((ev) -> {
-            Transaction t = new Transaction();
-            t.setSourceAccountId(parent.getId());
-            t.setTargetAccountId(parent.getId());
-            output.add(t);
-            refreshItems(output);
+            addEmptyTransaction(parent, selectedDate);
         });
 
         box.getChildren().add(l);
@@ -78,6 +71,15 @@ public class AddMultipleTransactionsDialog extends IncomeUtilityDialog<ArrayList
                 return new ArrayList<>();
             }
         });
+    }
+
+    private void addEmptyTransaction(Account parent, LocalDate selectedDate) {
+        Transaction t = new Transaction();
+        t.setDate(selectedDate);
+        t.setSourceAccountId(parent.getId());
+        t.setTargetAccountId(parent.getId());
+        output.add(t);
+        refreshItems(output);
     }
 
     private void refreshItems(ArrayList<Transaction> transactions) {

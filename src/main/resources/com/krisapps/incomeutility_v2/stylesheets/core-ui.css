@@ -343,6 +343,28 @@
 
 /* </editor-fold> */
 
+/* <editor-fold desc="Titled Pane"> */
+.titled-pane:expanded > .title {
+    -fx-background-color: #c8c8c8;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px 10px 0 0;
+    -fx-font-size: 14px;
+}
+
+.titled-pane:collapsed > .title {
+    -fx-background-color: #c8c8c8;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-font-size: 14px;
+}
+
+.titled-pane > .content {
+    -fx-border-radius: 0 0 10px 10px;
+    -fx-background-radius: 0 0 10px 10px;
+}
+
+/* </editor-fold> */
+
 /* <editor-fold desc="Toggle Button"> */
 .toggle-button {
     -fx-background-color: #d3d3d3;
@@ -389,6 +411,26 @@
 .toggle-button.blue:selected:hover {
     -fx-background-color: #ca5e72;
     -fx-border-color: #ca5e72;
+}
+
+.toggle-button.green {
+    -fx-background-color: #ff768f;
+    -fx-border-color: #ff768f;
+}
+
+.toggle-button.green:selected {
+    -fx-background-color: #76ea84;
+    -fx-border-color: #76ea84;
+}
+
+.toggle-button.green:hover {
+    -fx-background-color: #ca5e72;
+    -fx-border-color: #ca5e72;
+}
+
+.toggle-button.green:selected:hover {
+    -fx-background-color: #54af61;
+    -fx-border-color: #54af61;
 }
 
 /* </editor-fold> */

@@ -69,7 +69,7 @@ public class AddSingleTransactionDialog extends IncomeUtilityDialog<Transaction>
     private Label singleTargetLabel;
     private final Account selectedAccount;
 
-    public AddSingleTransactionDialog(Account selectedAccount) {
+    public AddSingleTransactionDialog(Account selectedAccount, LocalDate selectedDate) {
         super("add-transaction.fxml", "Register transaction");
         this.selectedAccount = selectedAccount;
 
@@ -102,7 +102,7 @@ public class AddSingleTransactionDialog extends IncomeUtilityDialog<Transaction>
 
         transactionTypeSelector.setValue(TransactionType.WITHDRAWAL);
         categorySelector.setValue(TransactionCategory.WITHDRAWAL.name());
-        dateSelector.setValue(LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault()));
+        dateSelector.setValue(selectedDate);
         timeField.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
 
         outputTransaction.setType(TransactionType.WITHDRAWAL);

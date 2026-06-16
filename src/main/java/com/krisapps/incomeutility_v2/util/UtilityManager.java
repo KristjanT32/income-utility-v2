@@ -17,7 +17,8 @@ import java.util.logging.Level;
 
 public class UtilityManager {
     private static final HashMap<String, SubUtility> activeUtilities = new HashMap<>();
-    public static UtilityManager instance;
+    private static UtilityManager instance;
+    private final Logging log = Logging.getInstance();
 
     private UtilityManager() {
 
@@ -36,10 +37,6 @@ public class UtilityManager {
         }
 
         return instance;
-    }
-
-    private static void log(String msg, Level level) {
-        DataManager.log("[Process Registry] " + msg, level);
     }
 
     private String generateId(SubUtilityType type) {
@@ -77,7 +74,7 @@ public class UtilityManager {
         try {
             register(utility, processId);
         } catch (IOException e) {
-            log(String.format("Failed to start %s: ", utility.getName()) + e.getMessage(), Level.SEVERE);
+            log.log(String.format("Failed to start %s: ", utility.getName()) + e.getMessage(), "Process Registry", Level.SEVERE);
             e.printStackTrace();
         }
     }
@@ -133,7 +130,7 @@ public class UtilityManager {
     public void stopUtility(String processId) {
         Optional<SubUtility> util = Optional.ofNullable(activeUtilities.get(processId));
         util.ifPresentOrElse(SubUtility::stop, () -> {
-            log(String.format("Attempted to stop non-existent utility with process id: %s", processId), Level.WARNING);
+            log.log(String.format("Attempted to stop non-existent utility with process id: %s", processId), "Process Registry", Level.WARNING);
         });
     }
 
@@ -146,22 +143,26 @@ public class UtilityManager {
     }
 
     private void register(SubUtility process, String processId) throws IOException {
-        activeUtilities.put(
-                processId, process.start(processId)
-        );
+        try {
+            activeUtilities.put(
+                    processId, process.start(processId)
+            );
+        } catch (IOException e) {
+            log.logStackTrace(e);
+        }
 
-        log(String.format("Registered new active process '%s' (id: %s)", process.getName(), processId), Level.INFO);
+        log.debug(String.format("Registered new active process '%s' (id: %s)", process.getName(), processId));
     }
 
     private void unregister(String processId) {
         if (activeUtilities.containsKey(processId)) {
 
             SubUtility util = activeUtilities.get(processId);
-            log(String.format("Unregistering active process for '%s' (%s)%n", util.getName(), processId), Level.INFO);
+            log.debug(String.format("Unregistering active process for '%s' (%s)%n", util.getName(), processId));
 
             activeUtilities.remove(processId);
         } else {
-            log(String.format("Failed to unregister '%s' - process not found in registry.", processId), Level.WARNING);
+            log.log(String.format("Failed to unregister '%s' - process not found in registry.", processId), "Process Registry", Level.WARNING);
         }
     }
 
