@@ -10,11 +10,7 @@ import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -31,9 +27,7 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
     @FXML
     private Label typeLabel;
     @FXML
-    private Label dateLabel;
-    @FXML
-    private Label timeLabel;
+    private Label datetimeLabel;
     @FXML
     private Label amountLabel;
     @FXML
@@ -47,7 +41,7 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
     @FXML
     private Label transferToLabel;
     @FXML
-    private HBox transferPanel;
+    private ScrollPane transferPanel;
     @FXML
     private FontIcon typeIcon;
 
@@ -76,6 +70,7 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
 
         ButtonType cancelButton = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
         getDialogPane().getButtonTypes().setAll(cancelButton);
+        getDialogPane().setMaxWidth(450);
 
         editButton.managedProperty().bind(editButton.visibleProperty());
         deleteButton.managedProperty().bind(deleteButton.visibleProperty());
@@ -107,8 +102,10 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
             deleteButton.setVisible(false);
         }
 
+
         transferPanel.managedProperty().bindBidirectional(transferPanel.visibleProperty());
         amountLabel.managedProperty().bindBidirectional(amountLabel.visibleProperty());
+        pairedInfoBox.managedProperty().bind(pairedInfoBox.visibleProperty());
 
         updateUI();
     }
@@ -138,6 +135,12 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
             Optional<Account> to = dataManager.getAccount(transaction.getTargetAccountId());
             transferToLabel.setText(to.isPresent() ? to.get().getName() : "Unknown account");
 
+            Tooltip fromHint = new Tooltip(from.get().getName());
+            Tooltip.install(transferFromLabel, fromHint);
+
+            Tooltip toHint = new Tooltip(to.get().getName());
+            Tooltip.install(transferToLabel, toHint);
+
             amountLabel.setText(Formatting.formatMoney(
                     transaction.getAbsoluteAmount(),
                     to.isPresent() ? to.get().getCurrencyConfig() : CurrencyConfig.DEFAULT
@@ -151,6 +154,7 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
             accountLabel.setText(acc.isPresent() ? acc.get().getName() : "Unknown account");
 
             amountLabel.setText(
+                    (transaction.getType().equals(TransactionType.WITHDRAWAL) ? "-" : transaction.getType().equals(TransactionType.DEPOSIT) ? "+" : "") +
                     Formatting.formatMoney(
                             transaction.getAbsoluteAmount(),
                             acc.isPresent() ? acc.get().getCurrencyConfig() : CurrencyConfig.DEFAULT
@@ -161,17 +165,20 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
             accountLabel.setManaged(true);
         }
 
-        dateLabel.setText(Formatting.formatLocalDate(transaction.getTimestamp().toLocalDate()));
-        timeLabel.setText(Formatting.formatLocalTime(transaction.getTimestamp().toLocalTime()));
+        datetimeLabel.setText(Formatting.formatLocalDate(transaction.getTimestamp().toLocalDate()) + ", at " + Formatting.formatLocalTime(transaction.getTimestamp().toLocalTime()));
         commentLabel.setText(transaction.getComment().isEmpty() ? "No comments added." : transaction.getComment());
         categoryLabel.setText(transaction.getCategory().equals(TransactionCategory.CUSTOM) ? transaction.getCustomCategory() : Formatting.humanize(transaction.getCategory().name()));
 
-        CashewTransaction asCashew = ((CashewTransaction) transaction);
-        idLabel.setText(transaction.getId().toString() + " (Local)");
-        cashewIdLabel.setText(asCashew.getCashewTransactionId() + " (Cashew)");
+        try {
+            CashewTransaction asCashew = ((CashewTransaction) transaction);
+            cashewIdLabel.setText(asCashew.getCashewTransactionId() + " (Cashew)");
+            pairedInfoBox.setVisible(asCashew.hasPairedTransaction());
+            pairedIdLabel.setText(asCashew.getCashewPairedTransactionId());
+        } catch (ClassCastException e) {
+            cashewIdLabel.setVisible(false);
+            pairedInfoBox.setVisible(false);
+        }
 
-        pairedInfoBox.managedProperty().bind(pairedInfoBox.visibleProperty());
-        pairedInfoBox.setVisible(asCashew.hasPairedTransaction());
-        pairedIdLabel.setText(asCashew.getCashewPairedTransactionId());
+        idLabel.setText(transaction.getId().toString() + " (Local)");
     }
 }

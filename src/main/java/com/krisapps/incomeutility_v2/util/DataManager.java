@@ -97,6 +97,7 @@ public class DataManager {
         loadConfigurationData();
         databaseFilePath = configurationData.getDatabaseLocation();
         logger.initialize(configurationData.getLogFileLocation());
+        logger.setEnableDebug(configurationData.isDebugEnabled());
 
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
@@ -147,7 +148,7 @@ public class DataManager {
                     """);
 
             statement.execute("""
-                    CREATE TABLE "transactions" (
+                    CREATE TABLE IF NOT EXISTS "transactions" (
                      	"id"	INTEGER NOT NULL,
                      	"uuid"	TEXT NOT NULL UNIQUE,
                      	"cashewTransactionId"	TEXT,
@@ -202,6 +203,8 @@ public class DataManager {
                      )
                     """);
             statement.execute("PRAGMA user_version = 1");
+
+            statement.execute("INSERT OR IGNORE INTO transaction_categories (id, displayName) VALUES (0, 'No custom category')");
             log("Database successfully initialized!");
         } catch (SQLException e) {
             log("Failed to initialize database: " + e.getMessage());
@@ -1633,6 +1636,21 @@ public class DataManager {
         CurrencyConfig current = configurationData.getPricerCurrencyConfiguration();
         current.setCurrencySymbolPrefix(isPrefixed);
         configurationData.setPricerCurrencyConfiguration(current);
+    }
+
+    public void updateLogLocation(Path location) {
+        if (location == null) return;
+        if (configurationData == null) {
+            initialize();
+        }
+        configurationData.setLogFileLocation(location);
+    }
+
+    public void updateDebugEnabled(boolean enabled) {
+        if (configurationData == null) {
+            initialize();
+        }
+        configurationData.setDebugEnabled(enabled);
     }
     //</editor-fold>
 

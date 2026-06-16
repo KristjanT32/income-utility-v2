@@ -13,6 +13,7 @@ public class ConfigurationData {
     private String databaseLocation;
     private CurrencyConfig pricerCurrencyConfiguration;
     private String logFileLocation;
+    private boolean debug;
 
     public ConfigurationData() {
         this.lastActiveAccountId = null;
@@ -55,5 +56,13 @@ public class ConfigurationData {
 
     public void setLogFileLocation(Path logFileLocation) {
         this.logFileLocation = logFileLocation.toString();
+    }
+
+    public void setDebugEnabled(boolean debug) {
+        this.debug = debug;
+    }
+
+    public boolean isDebugEnabled() {
+        return debug;
     }
 }

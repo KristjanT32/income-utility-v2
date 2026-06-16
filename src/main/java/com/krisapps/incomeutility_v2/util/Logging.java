@@ -18,7 +18,7 @@ public class Logging {
     private static Logging instance;
 
     private Path logFilePath;
-    private final boolean DEBUG = false;
+    private boolean DEBUG = false;
     private boolean initialized = false;
 
     // Stores log messages that were queued to be logged after logger initialization.
@@ -205,5 +205,14 @@ public class Logging {
         } catch (IOException e) {
             logToConsole("Failed to append log message to file. Error: " + e.getMessage());
         }
+    }
+
+    public void setEnableDebug(boolean enableDebug) {
+        this.DEBUG = enableDebug;
+    }
+
+
+    public boolean isDebugEnabled() {
+        return DEBUG;
     }
 }

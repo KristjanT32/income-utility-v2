@@ -386,7 +386,7 @@ public class MoneyFlowUtilityController extends SubUtilityController {
 
     @FXML
     public void promptAddSingleTransaction() {
-        AddSingleTransactionDialog dlg = new AddSingleTransactionDialog(selectedAccount);
+        AddSingleTransactionDialog dlg = new AddSingleTransactionDialog(selectedAccount, selectedDate);
         Optional<Transaction> t = dlg.showAndWait();
         t.ifPresent((transaction -> {
             try {
@@ -402,7 +402,7 @@ public class MoneyFlowUtilityController extends SubUtilityController {
 
     @FXML
     public void promptAddMultipleTransactions() {
-        AddMultipleTransactionsDialog dlg = new AddMultipleTransactionsDialog(selectedAccount);
+        AddMultipleTransactionsDialog dlg = new AddMultipleTransactionsDialog(selectedAccount, selectedDate);
         Optional<ArrayList<Transaction>> t = dlg.showAndWait();
         t.ifPresent((transaction -> {
             try {

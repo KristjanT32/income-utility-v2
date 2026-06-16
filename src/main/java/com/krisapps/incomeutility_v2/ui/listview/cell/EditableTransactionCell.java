@@ -8,6 +8,7 @@ import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.ui.listview.AccountComboboxCellFactory;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.Formatting;
+import com.krisapps.incomeutility_v2.util.misc.Formats;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -184,6 +185,7 @@ public class EditableTransactionCell extends ListCell<Transaction> {
             getItem().setComment(val);
         });
 
+        dateSelector.setConverter(Formats.DATE_FORMAT);
         dateSelector.valueProperty().addListener((obs, old, val) -> {
             if (updating || getItem() == null) return;
             if (val != null) {

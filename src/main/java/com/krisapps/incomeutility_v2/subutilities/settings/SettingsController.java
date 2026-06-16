@@ -43,10 +43,22 @@ public class SettingsController extends SubUtilityController {
     private TextField dbFilePathField;
 
     @FXML
+    private TextField logFilePathField;
+
+    @FXML
     private Button dbFilePicker;
 
     @FXML
+    private Button logFilePicker;
+
+    @FXML
+    private Button clearLogButton;
+
+    @FXML
     private ToggleButton pricerCurrencyToggle;
+
+    @FXML
+    private ToggleButton debugToggle;
 
     @FXML
     private TextField pricerCurrencyField;
@@ -56,6 +68,7 @@ public class SettingsController extends SubUtilityController {
     private ConfigurationData currentData;
 
     private final FileChooser dbPicker = new FileChooser();
+    private final FileChooser logPicker = new FileChooser();
 
     @FXML
     public void initialize() {
@@ -261,37 +274,8 @@ public class SettingsController extends SubUtilityController {
                 }
         ));
 
-        FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("Database files", "*.db", "*.sql", "*.sqlite");
-        dbPicker.setTitle("Select database file");
-        dbPicker.getExtensionFilters().add(filter);
-        dbPicker.setInitialDirectory(DataManager.getDataDirectory().toFile());
-
-        dbFilePicker.setOnAction((_) -> {
-            File f = dbPicker.showOpenDialog(self.getInstance().getOwner());
-            if (f != null) {
-                dbFilePathField.setText(f.getPath());
-
-                dataman.updateDatabaseLocation(f.toPath());
-                self.log("Data source switched to: " + f.getPath());
-                promptRestartProgram();
-            }
-        });
-
-        dbFilePathField.setOnAction(e -> {
-            try {
-                Path p = Path.of(dbFilePathField.getText());
-
-                if (!p.toString().isEmpty() && p.toFile().exists() && p.toFile().isFile()) {
-                    dataman.updateDatabaseLocation(p);
-                    self.log("Data source switched to: " + p);
-                    promptRestartProgram();
-                } else {
-                    dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
-                }
-            } catch (InvalidPathException _) {
-                dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
-            }
-        });
+        setupDatabaseFilePicker();
+        setupLogFilePicker();
 
         pricerCurrencyToggle.selectedProperty().addListener((obs, old, val) -> {
             pricerCurrencyToggle.setText(val ? "Prefixed" : "Suffixed");
@@ -302,6 +286,25 @@ public class SettingsController extends SubUtilityController {
             if (!pricerCurrencyField.getText().isEmpty()) {
                 dataman.updatePricerCurrencySymbol(pricerCurrencyField.getText().trim());
             }
+        });
+
+        debugToggle.selectedProperty().addListener((obs, old, val) -> {
+            debugToggle.setText(val ? "Debug logging is enabled" : "Debug logging is disabled");
+            dataman.updateDebugEnabled(val);
+        });
+
+        clearLogButton.setOnAction(_ -> {
+            Optional<ButtonType> choice = PopupManager.showConfirmation("Clear log file?", "Are you sure you'd like to clear the log file?\nThis cannot be undone.",
+                    new ButtonType("Yes, clear logs", ButtonBar.ButtonData.APPLY),
+                    new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+            );
+
+            choice.ifPresent(b -> {
+                if (b.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                    Logging.getInstance().truncateLogFile();
+                    PopupManager.showPopup("Logs cleared!", "The log file was truncated successfully.", Alert.AlertType.INFORMATION);
+                }
+            });
         });
 
         VBox box = new VBox();
@@ -325,8 +328,80 @@ public class SettingsController extends SubUtilityController {
         refreshPricerSettings();
     }
 
+    private void setupDatabaseFilePicker() {
+        FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("Database files", "*.db", "*.sql", "*.sqlite");
+        dbPicker.setTitle("Select database file");
+        dbPicker.getExtensionFilters().add(filter);
+        dbPicker.setInitialDirectory(DataManager.getDataDirectory().toFile());
+
+        dbFilePicker.setOnAction((_) -> {
+            File f = dbPicker.showOpenDialog(self.getInstance().getOwner());
+            if (f != null) {
+                dbFilePathField.setText(f.getPath());
+
+                dataman.updateDatabaseLocation(f.toPath());
+                self.log("Data source switched to: " + f.getPath());
+                promptRestartProgram("Data source changed", "The active data source for Income Utility has changed - for these changes to take effect, the utility needs to be restarted.\n\nWould you like to restart the utility now?");
+            }
+        });
+
+        dbFilePathField.setOnAction(e -> {
+            try {
+                Path p = Path.of(dbFilePathField.getText());
+
+                if (!p.toString().isEmpty() && p.toFile().exists() && p.toFile().isFile()) {
+                    dataman.updateDatabaseLocation(p);
+                    self.log("Data source switched to: " + p);
+                    promptRestartProgram("Data source changed", "The active data source for Income Utility has changed - for these changes to take effect, the utility needs to be restarted.\n\nWould you like to restart the utility now?");
+                } else {
+                    dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
+                }
+            } catch (InvalidPathException _) {
+                dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
+            }
+        });
+    }
+
+    private void setupLogFilePicker() {
+        FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("Log files", "*.log", "*.txt");
+        FileChooser.ExtensionFilter noFilter = new FileChooser.ExtensionFilter("All files", "*");
+        logPicker.setTitle("Select log file");
+        logPicker.getExtensionFilters().add(filter);
+        logPicker.getExtensionFilters().add(noFilter);
+        logPicker.setInitialDirectory(DataManager.getDataDirectory().toFile());
+
+        logFilePicker.setOnAction((_) -> {
+            File f = logPicker.showOpenDialog(self.getInstance().getOwner());
+            if (f != null) {
+                logFilePathField.setText(f.getPath());
+
+                dataman.updateLogLocation(f.toPath());
+                self.log("Log file path switched to: " + f.getPath());
+                promptRestartProgram("Log file changed", "For the new log file to become active, the utility needs to be restarted.\n\nWould you like to restart the utility now?");
+            }
+        });
+
+        logFilePathField.setOnAction(e -> {
+            try {
+                Path p = Path.of(logFilePathField.getText());
+
+                if (!p.toString().isEmpty() && p.toFile().exists() && p.toFile().isFile()) {
+                    dataman.updateLogLocation(p);
+                    self.log("Log file path switched to: " + p);
+                    promptRestartProgram("Log file changed", "For the new log file to become active, the utility needs to be restarted.\n\nWould you like to restart the utility now?");
+                } else {
+                    logFilePathField.setText(dataman.getConfigurationData().getLogFileLocation().toString());
+                }
+            } catch (InvalidPathException _) {
+                logFilePathField.setText(dataman.getConfigurationData().getLogFileLocation().toString());
+            }
+        });
+    }
+
     private void refreshGlobalSettings() {
         dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
+        logFilePathField.setText(dataman.getConfigurationData().getLogFileLocation().toString());
+        debugToggle.setSelected(dataman.getConfigurationData().isDebugEnabled());
     }
 
     private void refreshMoneyFlowSettings() {
@@ -357,8 +432,8 @@ public class SettingsController extends SubUtilityController {
 
     }
 
-    private void promptRestartProgram() {
-        PopupManager.showConfirmation("Data source changed", "The active data source for Income Utility has changed - for these changes to take effect, the utility needs to be restarted.\n\nWould you like to restart the utility now?",
+    private void promptRestartProgram(String title, String msg) {
+        PopupManager.showConfirmation(title, msg,
                 new ButtonType("Yes, restart", ButtonBar.ButtonData.APPLY),
                 new ButtonType("No, I'll restart later", ButtonBar.ButtonData.CANCEL_CLOSE)
         ).ifPresent(r -> {
