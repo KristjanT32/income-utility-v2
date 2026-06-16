@@ -7,6 +7,7 @@ import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
 import com.krisapps.incomeutility_v2.types.data.ConfigurationData;
 import com.krisapps.incomeutility_v2.ui.listview.CustomCategoryCellFactory;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Logging;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -147,18 +148,40 @@ public class SettingsController extends SubUtilityController {
                 });
             }
 
+            case "clear-log" -> {
+                Optional<ButtonType> choice = PopupManager.showConfirmation("Clear log file?", "Are you sure you'd like to clear the log file?\nThis cannot be undone.",
+                        new ButtonType("Yes, clear logs", ButtonBar.ButtonData.APPLY),
+                        new ButtonType("No, cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+                );
+
+                choice.ifPresent(b -> {
+                    if (b.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                        Logging.getInstance().truncateLogFile();
+                        PopupManager.showPopup("Logs cleared!", "The log file was truncated successfully.", Alert.AlertType.INFORMATION);
+                    }
+                });
+            }
+
             case "refresh" -> {
                 refreshGlobalSettings();
                 refreshMoneyFlowSettings();
                 refreshPricerSettings();
             }
-
             case "discard" -> {
                 currentData = null;
                 currentData = dataman.getConfigurationData();
                 PopupManager.showPopup("Changes discarded", "All pending changes have been discarded!", Alert.AlertType.INFORMATION);
             }
             case "exit" -> self.stop();
+            case "help" -> {
+                StringBuilder commands = new StringBuilder();
+                commands.append("The following utility commands are available from this utility:\n");
+                for (String cmd : List.of("initdb", "drop", "drop-all", "reset", "clear-log", "refresh", "discard", "exit", "help")) {
+                    commands.append("       - " + cmd + "\n");
+                }
+
+                PopupManager.showPopup("Available commands", commands.toString(), Alert.AlertType.INFORMATION);
+            }
         }
     }
 
