@@ -29,7 +29,8 @@ public class Logging {
 
     private final String MSG_FORMAT_FULL = "[%s Income Utility/%s] [%s]: %s%n";
     private final String MSG_FORMAT_CONCISE = "[%s Income Utility/%s]: %s%n";
-    private final String MSG_FORMAT_DEBUG = "[%s Income Utility/DBG]: %s%n";
+    private final String MSG_FORMAT_DEBUG_CONCISE = "[%s Income Utility/DBG]: %s%n";
+    private final String MSG_FORMAT_DEBUG_FULL = "[%s Income Utility/DBG] [%s]: %s%n";
 
 
     private Logging() {
@@ -43,6 +44,11 @@ public class Logging {
         return instance;
     }
 
+    /**
+     * Initializes the logger with the specified log file location.
+     *
+     * @param logFilePath The path to the log file to use.
+     */
     public void initialize(Path logFilePath) {
         if (initialized) {
             logToConsole("Will not re-initialize Logging");
@@ -56,6 +62,7 @@ public class Logging {
         this.logFilePath = logFilePath;
         if (!logFilePath.toFile().exists()) {
             try {
+                //noinspection ResultOfMethodCallIgnored
                 logFilePath.toFile().createNewFile();
                 logToConsole("Created a new log file at: " + logFilePath);
             } catch (IOException e) {
@@ -74,14 +81,40 @@ public class Logging {
         }
     }
 
+    /**
+     * Logs a debug message.
+     * Does nothing, if debug logging is disabled.
+     *
+     * @param msg The message to log.
+     */
     public void debug(String msg) {
         if (!DEBUG) return;
 
-        String message = String.format(MSG_FORMAT_DEBUG, Formatting.formatDate(Date.from(Instant.now()), true), msg);
+        String message = String.format(MSG_FORMAT_DEBUG_CONCISE, Formatting.formatDate(Date.from(Instant.now()), true), msg);
         System.out.print(message);
         writeToLogFile(message);
     }
 
+    /**
+     * Logs a debug message.
+     * Does nothing, if debug logging is disabled.
+     *
+     * @param msg          The message to log.
+     * @param modulePrefix The prefix of the module of the program to which the message relates.
+     */
+    public void debug(String msg, String modulePrefix) {
+        if (!DEBUG) return;
+
+        String message = String.format(MSG_FORMAT_DEBUG_FULL, Formatting.formatDate(Date.from(Instant.now()), true), modulePrefix, msg);
+        System.out.print(message);
+        writeToLogFile(message);
+    }
+
+    /**
+     * Logs the message only to the standard output, leaving it out of the log file.
+     *
+     * @param msg The message to log.
+     */
     private void logToConsole(String msg) {
         String message = String.format(MSG_FORMAT_FULL, Formatting.formatDate(Date.from(Instant.now()), true), Level.INFO.getName(), "Logger", msg);
         System.out.print(message);
@@ -97,34 +130,108 @@ public class Logging {
         writeToLogFile(msg);
     }
 
-    public void log(String msg, Level level) {
+    /**
+     * Logs an informational message.
+     *
+     * @param msg   The message to log.
+     * @param level The type of log message to log.
+     */
+    public void info(String msg, Level level) {
         String message = String.format(MSG_FORMAT_CONCISE, Formatting.formatDate(Date.from(Instant.now()), true), level.getName(), msg);
         System.out.print(message);
         writeToLogFile(message);
     }
 
-    public void log(String msg, String modulePrefix) {
+    /**
+     * Logs an informational message.
+     *
+     * @param msg          The message to log.
+     * @param modulePrefix The prefix of the module of the program to which the message relates.
+     */
+    public void info(String msg, String modulePrefix) {
         String message = String.format(MSG_FORMAT_FULL, Formatting.formatDate(Date.from(Instant.now()), true), Level.INFO.getName(), modulePrefix, msg);
         System.out.print(message);
         writeToLogFile(message);
     }
 
+
+    /**
+     * Logs a message.
+     *
+     * @param msg          The message to log.
+     * @param modulePrefix The prefix of the module of the program to which the message relates.
+     * @param level        The type of log message to log.
+     */
     public void log(String msg, String modulePrefix, Level level) {
         String message = String.format(MSG_FORMAT_FULL, Formatting.formatDate(Date.from(Instant.now()), true), level.getName(), modulePrefix, msg);
         System.out.print(message);
         writeToLogFile(message);
     }
 
+    /**
+     * Logs a warning message.
+     *
+     * @param msg The message to log.
+     */
+    public void warning(String msg) {
+        info(msg, Level.WARNING);
+    }
+
+    /**
+     * Logs a warning message.
+     *
+     * @param msg          The message to log.
+     * @param modulePrefix The prefix of the module of the program to which the message relates.
+     */
+    public void warning(String msg, String modulePrefix) {
+        log(msg, modulePrefix, Level.WARNING);
+    }
+
+    /**
+     * Logs an error message.
+     *
+     * @param msg The message to log.
+     */
+    public void error(String msg) {
+        info(msg, Level.SEVERE);
+    }
+
+    /**
+     * Logs an error message.
+     *
+     * @param msg          The message to log.
+     * @param modulePrefix The prefix of the module of the program to which the message relates.
+     */
+    public void error(String msg, String modulePrefix) {
+        log(msg, modulePrefix, Level.SEVERE);
+    }
+
+    /**
+     * Logs a message to the supplied log section.
+     * If the supplied section doesn't exist, this method will log an informational message instead.
+     *
+     * @param msg     The message to log.
+     * @param section The ID of the log section to log to.
+     */
     public void logToSection(String msg, String section) {
         if (sectionQueue.containsKey(section)) {
             String message = String.format(MSG_FORMAT_CONCISE, Formatting.formatDate(Date.from(Instant.now()), true), Level.INFO.getName(), msg);
             sectionQueue.get(section).add(message);
         } else {
             debug("Cannot log to non-existent log section '" + section + "'");
-            log(msg, Level.INFO);
+            info(msg, Level.INFO);
         }
     }
 
+
+    /**
+     * Logs a message to the supplied log section.
+     * If the supplied section doesn't exist, this method will log an informational message instead.
+     *
+     * @param msg          The message to log.
+     * @param modulePrefix The prefix of the module of the program to which the message relates.
+     * @param section      The ID of the log section to log to.
+     */
     public void logToSection(String msg, String modulePrefix, String section) {
         if (sectionQueue.containsKey(section)) {
             String message = String.format(MSG_FORMAT_FULL, Formatting.formatDate(Date.from(Instant.now()), true), Level.INFO.getName(), modulePrefix, msg);
@@ -135,6 +242,14 @@ public class Logging {
         }
     }
 
+    /**
+     * Logs a message to the supplied log section.
+     * If the supplied section doesn't exist, this method will log an informational message instead.
+     * @param msg The message to log.
+     * @param modulePrefix The prefix of the module of the program to which the message relates.
+     * @param level The type of log message to log.
+     * @param section The ID of the log section to log to.
+     */
     public void logToSection(String msg, String modulePrefix, Level level, String section) {
         if (sectionQueue.containsKey(section)) {
             String message = String.format(MSG_FORMAT_FULL, Formatting.formatDate(Date.from(Instant.now()), true), level.getName(), modulePrefix, msg);
@@ -145,8 +260,21 @@ public class Logging {
         }
     }
 
+    /**
+     * Logs the stacktrace for the supplied exception.
+     * <br>
+     * More specifically, this will log the message, the stack trace, as well as the stack trace of the cause of this exception.
+     * <br>
+     * This method will print the stack trace to the standard output only if debug logging is enabled.
+     * @param e The exception whose stack trace to log.
+     */
     public void logStackTrace(Exception e) {
+        if (DEBUG) {
+            e.printStackTrace();
+        }
+
         String section = "__stacktrace_" + e.getClass().getName() + "_" + System.currentTimeMillis();
+        String causeSection = "__cause" + section;
         startSection(section, "--- Begin stack trace for " + e.getClass().getSimpleName() + " at " + Formatting.formatDate(Date.from(Instant.now()), true) + " ---");
         logToSection("", section);
         logToSection(e.getMessage(), section);
@@ -154,6 +282,17 @@ public class Logging {
         for (StackTraceElement el : e.getStackTrace()) {
             logToSection(el.toString(), section);
         }
+        if (e.getCause() != null) {
+            startSection(causeSection, "--- Begin stack trace of exception cause ---");
+            logToSection("", causeSection);
+            logToSection(e.getCause().getMessage(), causeSection);
+            for (StackTraceElement el : e.getCause().getStackTrace()) {
+                logToSection(el.toString(), causeSection);
+            }
+            logToSection("", causeSection);
+            endSection(causeSection, "--- End stack trace of exception cause ---");
+        }
+
         endSection(section, "--- End of stack trace ---");
     }
 
