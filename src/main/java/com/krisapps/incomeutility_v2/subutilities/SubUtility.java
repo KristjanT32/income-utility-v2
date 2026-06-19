@@ -1,7 +1,7 @@
 package com.krisapps.incomeutility_v2.subutilities;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
-import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Logging;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -14,6 +14,7 @@ import javafx.stage.Stage;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.file.InvalidPathException;
 import java.util.function.Consumer;
 
 public abstract class SubUtility {
@@ -22,19 +23,20 @@ public abstract class SubUtility {
     private final String layoutPath;
     private final SubUtilityController controller;
 
+    private final Logging log = Logging.getInstance();
+
     private final int minWidth;
     private final int minHeight;
     private final boolean allowResize;
 
     private HBox commandPrompt;
     private TextField commandPromptField;
-    private Label commandPromptLabel;
 
 
     private String processId;
     private final String utilityName;
     private String iconFilePath = "income_utility.png";
-    private Consumer<String> onCloseCallback = (id) -> {
+    private Consumer<String> onCloseCallback = (_) -> {
     };
 
     private Stage instance;
@@ -66,33 +68,46 @@ public abstract class SubUtility {
         this.iconFilePath = iconFilePath == null ? this.iconFilePath : iconFilePath;
     }
 
+    @SuppressWarnings("ConstantConditions")
     public SubUtility start(String processId) throws IOException {
+        if (IncomeUtilityApplication.class.getResource(layoutPath) == null) {
+            throw new InvalidPathException(layoutPath, "The specified layout path for this utility is invalid");
+        }
+
+        if (IncomeUtilityApplication.class.getResource("icons/" + iconFilePath) == null) {
+            throw new InvalidPathException(iconFilePath, "The specified icon file path for this utility is invalid!");
+        }
+
+
         Stage window = new Stage();
         FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource(layoutPath));
         loader.setController(this.controller);
 
-        Scene s = new Scene(loader.load());
-        window.setScene(s);
-        window.setMinWidth(minWidth);
-        window.setMinHeight(minHeight);
-        window.setResizable(allowResize);
-        window.setTitle(type.getDisplayName());
-        window.getIcons().add(new Image(IncomeUtilityApplication.class.getResource("icons/" + iconFilePath).toExternalForm()));
-        window.setOnCloseRequest((_) -> {
-            stop();
-        });
+        try {
+            Scene s = new Scene(loader.load());
+            window.setScene(s);
+            window.setMinWidth(minWidth);
+            window.setMinHeight(minHeight);
+            window.setResizable(allowResize);
+            window.setTitle(type.getDisplayName());
+            window.getIcons().add(new Image(IncomeUtilityApplication.class.getResource("icons/" + iconFilePath).toExternalForm()));
+            window.setOnCloseRequest((_) -> stop());
+        } catch (Exception e) {
+            log("Failed to start utility of type '" + type + "'");
+            log.logStackTrace(e);
+        }
 
         // If the utility has a command prompt
         if (loader.getNamespace().get("commandPrompt") != null) {
             log("Command prompt found, setting up...");
             commandPrompt = (HBox) loader.getNamespace().get("commandPrompt");
             commandPromptField = (TextField) loader.getNamespace().get("commandPromptField");
-            commandPromptLabel = (Label) loader.getNamespace().get("commandPromptLabel");
+            Label commandPromptLabel = (Label) loader.getNamespace().get("commandPromptLabel");
 
             commandPrompt.managedProperty().bind(commandPrompt.visibleProperty());
             commandPromptLabel.setText(utilityName.toLowerCase().replaceAll("[,.;]", "").trim().replaceAll(" ", "-"));
             commandPromptField.setText("");
-            commandPromptField.setOnAction((action) -> {
+            commandPromptField.setOnAction((_) -> {
                 String command = commandPromptField.getText();
                 if (!command.isBlank()) {
                     String[] split = command.split(" ");
@@ -134,6 +149,7 @@ public abstract class SubUtility {
             this.controller.onStartup(this);
             this.instance.show();
         } catch (Throwable e) {
+            //noinspection CallToPrintStackTrace
             e.printStackTrace();
         }
 
@@ -175,6 +191,6 @@ public abstract class SubUtility {
     }
 
     public void log(String msg) {
-        DataManager.log(String.format("[%s/%s] %s", utilityName, processId, msg));
+        log.info(msg, String.format("%s/%s", utilityName, processId));
     }
 }

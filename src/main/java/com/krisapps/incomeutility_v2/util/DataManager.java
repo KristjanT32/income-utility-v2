@@ -71,9 +71,9 @@ public class DataManager {
 
     public static void log(String msg) {
         if (msg.toLowerCase().contains("failed") || msg.toLowerCase().contains("error") || msg.toLowerCase().contains("fail") || msg.toLowerCase().contains("couldn't") || msg.toLowerCase().contains("could not")) {
-            logger.log(msg, Level.SEVERE);
+            logger.info(msg, Level.SEVERE);
         } else {
-            logger.log(msg, Level.INFO);
+            logger.info(msg, Level.INFO);
         }
     }
 
@@ -86,7 +86,7 @@ public class DataManager {
     }
 
     public static void log(String msg, Level level) {
-        logger.log(msg, level);
+        logger.info(msg, level);
     }
 
     public static void log(String msg, String modulePrefix, Level level) {

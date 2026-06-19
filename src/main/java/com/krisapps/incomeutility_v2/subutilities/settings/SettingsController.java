@@ -65,6 +65,7 @@ public class SettingsController extends SubUtilityController {
 
     private SubUtility self;
     private final DataManager dataman = DataManager.getInstance();
+    private final Logging log = Logging.getInstance();
     private ConfigurationData currentData;
 
     private final FileChooser dbPicker = new FileChooser();
@@ -83,7 +84,7 @@ public class SettingsController extends SubUtilityController {
         self.getInstance().getScene().addEventFilter(KeyEvent.KEY_PRESSED, (event) -> {
             if (event.getCode().equals(KeyCode.ESCAPE)) {
                 categoryList.getItems().removeIf(item -> item.getKey() == -1);
-                self.log("Cleared all pending category additions");
+                log.info("Cleared all pending category additions", "Settings");
             }
         });
     }
@@ -228,7 +229,7 @@ public class SettingsController extends SubUtilityController {
                             if (r.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
                                 dataman.removeCustomTransactionCategory(id);
                                 refreshCategoryList();
-                                self.log("Deleted custom transaction category #" + id);
+                                log.info("Deleted custom transaction category #" + id, "Settings");
                             }
                         });
                         return;
@@ -265,7 +266,7 @@ public class SettingsController extends SubUtilityController {
                             replacement.ifPresent(integerStringPair -> {
                                 dataman.replaceCustomTransactionInTransactions(id, integerStringPair.getKey());
                                 dataman.removeCustomTransactionCategory(id);
-                                self.log("Deleted custom transaction category #" + id);
+                                log.info("Deleted custom transaction category #" + id, "Settings");
                             });
                             refreshCategoryList();
                         }
@@ -340,7 +341,7 @@ public class SettingsController extends SubUtilityController {
                 dbFilePathField.setText(f.getPath());
 
                 dataman.updateDatabaseLocation(f.toPath());
-                self.log("Data source switched to: " + f.getPath());
+                log.info("Data source switched to: " + f.getPath(), "Settings");
                 promptRestartProgram("Data source changed", "The active data source for Income Utility has changed - for these changes to take effect, the utility needs to be restarted.\n\nWould you like to restart the utility now?");
             }
         });
@@ -351,7 +352,7 @@ public class SettingsController extends SubUtilityController {
 
                 if (!p.toString().isEmpty() && p.toFile().exists() && p.toFile().isFile()) {
                     dataman.updateDatabaseLocation(p);
-                    self.log("Data source switched to: " + p);
+                    log.info("Data source switched to: " + p, "Settings");
                     promptRestartProgram("Data source changed", "The active data source for Income Utility has changed - for these changes to take effect, the utility needs to be restarted.\n\nWould you like to restart the utility now?");
                 } else {
                     dbFilePathField.setText(dataman.getConfigurationData().getDatabaseLocation().toString());
@@ -376,7 +377,7 @@ public class SettingsController extends SubUtilityController {
                 logFilePathField.setText(f.getPath());
 
                 dataman.updateLogLocation(f.toPath());
-                self.log("Log file path switched to: " + f.getPath());
+                log.info("Log file path switched to: " + f.getPath(), "Settings");
                 promptRestartProgram("Log file changed", "For the new log file to become active, the utility needs to be restarted.\n\nWould you like to restart the utility now?");
             }
         });
@@ -387,7 +388,7 @@ public class SettingsController extends SubUtilityController {
 
                 if (!p.toString().isEmpty() && p.toFile().exists() && p.toFile().isFile()) {
                     dataman.updateLogLocation(p);
-                    self.log("Log file path switched to: " + p);
+                    log.info("Log file path switched to: " + p, "Settings");
                     promptRestartProgram("Log file changed", "For the new log file to become active, the utility needs to be restarted.\n\nWould you like to restart the utility now?");
                 } else {
                     logFilePathField.setText(dataman.getConfigurationData().getLogFileLocation().toString());

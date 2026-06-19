@@ -21,7 +21,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 
 import java.util.*;
@@ -38,7 +41,7 @@ public class IncomeUtilityController {
     private VBox root;
 
     @FXML
-    private TilePane utilitiesView;
+    private GridPane utilitiesView;
 
     @FXML
     private VBox mimoCell;
@@ -48,6 +51,9 @@ public class IncomeUtilityController {
 
     @FXML
     private VBox breakdownCell;
+
+    @FXML
+    private VBox pantryCell;
 
     @FXML
     private VBox subscriptionsCell;
@@ -97,6 +103,14 @@ public class IncomeUtilityController {
                 utilities.openUtility(SubUtilityType.BREAKDOWN);
             } else {
                 utilities.focusAll(SubUtilityType.BREAKDOWN);
+            }
+        });
+
+        pantryCell.setOnMouseClicked((e) -> {
+            if (!e.isShiftDown()) {
+                utilities.openUtility(SubUtilityType.PANTRY);
+            } else {
+                utilities.focusAll(SubUtilityType.PANTRY);
             }
         });
 
