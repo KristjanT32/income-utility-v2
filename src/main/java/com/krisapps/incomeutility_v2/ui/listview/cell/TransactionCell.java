@@ -94,25 +94,36 @@ public class TransactionCell extends ListCell<Transaction> {
         rootPane.getStyleClass().removeAll("outflow", "inflow", "transfer");
 
         if (transaction.getType().equals(TransactionType.TRANSFER)) {
-            if (parent.getId().equals(transaction.getTargetAccountId())) {
-                // If current account is the target
+            if (parent == null) {
                 Optional<Account> account = DataManager.getInstance().getAccount(transaction.getSourceAccountId());
 
-                rootPane.getStyleClass().add("inflow");
-                categoryLabel.setText("Transferred from " + (account.isPresent() ? account.get().getName() : "Unknown account") + " (" + (transaction.getCategory() == TransactionCategory.CUSTOM
+                rootPane.getStyleClass().add("transfer");
+                categoryLabel.setText("Transferred from " + (account.isPresent() ? account.get().getName() : "Unknown account") + " • " + (transaction.getCategory() == TransactionCategory.CUSTOM
                         ? Formatting.capitalize(transaction.getCustomCategory())
-                        : Formatting.capitalize(transaction.getCategory().toString())) + ")");
+                        : Formatting.capitalize(transaction.getCategory().toString())));
                 commentLabel.setText(transaction.getComment());
-            } else if (parent.getId().equals(transaction.getSourceAccountId())) {
+            } else {
 
-                // If current account is the source
-                Optional<Account> account = DataManager.getInstance().getAccount(transaction.getTargetAccountId());
+                if (parent.getId().equals(transaction.getTargetAccountId())) {
+                    // If current account is the target
+                    Optional<Account> account = DataManager.getInstance().getAccount(transaction.getSourceAccountId());
 
-                rootPane.getStyleClass().add("outflow");
-                categoryLabel.setText("Transferred to " + (account.isPresent() ? account.get().getName() : "Unknown account") + " (" + (transaction.getCategory() == TransactionCategory.CUSTOM
-                        ? Formatting.capitalize(transaction.getCustomCategory())
-                        : Formatting.capitalize(transaction.getCategory().toString())) + ")");
-                commentLabel.setText(transaction.getComment());
+                    rootPane.getStyleClass().add("inflow");
+                    categoryLabel.setText("Transferred from " + (account.isPresent() ? account.get().getName() : "Unknown account") + " • " + (transaction.getCategory() == TransactionCategory.CUSTOM
+                            ? Formatting.capitalize(transaction.getCustomCategory())
+                            : Formatting.capitalize(transaction.getCategory().toString())));
+                    commentLabel.setText(transaction.getComment());
+                } else if (parent.getId().equals(transaction.getSourceAccountId())) {
+
+                    // If current account is the source
+                    Optional<Account> account = DataManager.getInstance().getAccount(transaction.getTargetAccountId());
+
+                    rootPane.getStyleClass().add("outflow");
+                    categoryLabel.setText("Transferred to " + (account.isPresent() ? account.get().getName() : "Unknown account") + " • " + (transaction.getCategory() == TransactionCategory.CUSTOM
+                            ? Formatting.capitalize(transaction.getCustomCategory())
+                            : Formatting.capitalize(transaction.getCategory().toString())));
+                    commentLabel.setText(transaction.getComment());
+                }
             }
         } else {
             rootPane.getStyleClass().add(transaction.getType() == TransactionType.WITHDRAWAL ? "outflow" : transaction.getType() == TransactionType.DEPOSIT ? "inflow" : "transfer");

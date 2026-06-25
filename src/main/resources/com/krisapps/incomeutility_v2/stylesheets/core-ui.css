@@ -341,6 +341,10 @@
     -fx-background-color: #787878;
 }
 
+.button.bold {
+    -fx-font-weight: bold;
+}
+
 /* </editor-fold> */
 
 /* <editor-fold desc="Titled Pane"> */

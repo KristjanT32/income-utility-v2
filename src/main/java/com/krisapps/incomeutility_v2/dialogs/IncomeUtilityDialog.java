@@ -80,4 +80,8 @@ public class IncomeUtilityDialog<T> extends Dialog<T> {
             throw new RuntimeException(e);
         }
     }
+
+    public void setAllowResize(boolean allowResize) {
+        ((Stage) getDialogPane().getScene().getWindow()).setResizable(allowResize);
+    }
 }
