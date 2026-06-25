@@ -95,10 +95,10 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
 
         getDialogPane().getButtonTypes().clear();
         getDialogPane().getButtonTypes().setAll(new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE));
-        getDialogPane().setMinWidth(1050);
+        getDialogPane().setMinWidth(800);
         getDialogPane().setMinHeight(700);
         initModality(Modality.WINDOW_MODAL);
-        setAllowResize(true);
+        //setAllowResize(true);
         getDialogPane().getScene().addEventFilter(KeyEvent.KEY_PRESSED, (e) -> {
             if (e.getCode().equals(KeyCode.F5)) {
                 performSearch();
