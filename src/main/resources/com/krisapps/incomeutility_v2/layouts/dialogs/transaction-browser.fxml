@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import java.lang.*?>
+<?import java.net.URL?>
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity"
+      prefHeight="700.0" prefWidth="970.0" spacing="10.0" xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+    <children>
+        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="NEVER">
+            <children>
+                <Label fx:id="label" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                       styleClass="title" text="Transaction browser"/>
+            </children>
+            <VBox.margin>
+                <Insets/>
+            </VBox.margin>
+        </VBox>
+        <VBox VBox.vgrow="SOMETIMES">
+            <children>
+                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308">
+                    <VBox.margin>
+                        <Insets top="10.0"/>
+                    </VBox.margin>
+                    <children>
+                        <Label maxWidth="1.7976931348623157E308" text="Filtering options" HBox.hgrow="ALWAYS">
+                            <styleClass>
+                                <String fx:value="large-label"/>
+                                <String fx:value="bold"/>
+                            </styleClass>
+                        </Label>
+                        <Button fx:id="resetFiltersButton" mnemonicParsing="false" text="Clear all filters">
+                            <graphic>
+                                <FontIcon iconLiteral="fltral-eraser-24" iconSize="15"/>
+                            </graphic>
+                        </Button>
+                    </children>
+                </HBox>
+                <VBox spacing="10.0">
+                    <VBox.margin>
+                        <Insets bottom="5.0" top="5.0"/>
+                    </VBox.margin>
+                    <children>
+                        <VBox spacing="20.0" VBox.vgrow="ALWAYS">
+                            <children>
+                                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="50.0">
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308"
+                                              HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <Label maxHeight="1.7976931348623157E308" maxWidth="150.0"
+                                                       minWidth="150.0" prefWidth="150.0" styleClass="large-label"
+                                                       text="Filter by account:" HBox.hgrow="ALWAYS">
+                                                    <HBox.margin>
+                                                        <Insets/>
+                                                    </HBox.margin>
+                                                </Label>
+                                                <ComboBox fx:id="accountFilter" maxHeight="1.7976931348623157E308"
+                                                          maxWidth="1.7976931348623157E308"
+                                                          promptText="Select account..." HBox.hgrow="ALWAYS">
+                                                    <HBox.margin>
+                                                        <Insets/>
+                                                    </HBox.margin>
+                                                </ComboBox>
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308"
+                                              HBox.hgrow="SOMETIMES">
+                                            <children>
+                                                <Label maxHeight="1.7976931348623157E308"
+                                                       maxWidth="1.7976931348623157E308" styleClass="large-label"
+                                                       text="Look for:" HBox.hgrow="NEVER">
+                                                    <HBox.margin>
+                                                        <Insets right="20.0"/>
+                                                    </HBox.margin>
+                                                </Label>
+                                                <ComboBox fx:id="typeFilter" maxHeight="1.7976931348623157E308"
+                                                          maxWidth="1.7976931348623157E308"
+                                                          promptText="Transaction type" HBox.hgrow="ALWAYS">
+                                                    <HBox.margin>
+                                                        <Insets/>
+                                                    </HBox.margin>
+                                                </ComboBox>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </HBox>
+                                <HBox spacing="25.0">
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308"
+                                              HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <Label maxHeight="1.7976931348623157E308" maxWidth="150.0"
+                                                       minWidth="150.0" prefWidth="150.0" styleClass="large-label"
+                                                       text="Base category is: " HBox.hgrow="ALWAYS">
+                                                    <HBox.margin>
+                                                        <Insets/>
+                                                    </HBox.margin>
+                                                </Label>
+                                                <ComboBox fx:id="baseCategoryFilter" maxHeight="1.7976931348623157E308"
+                                                          maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308"
+                                              HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <Label fx:id="customCategoryLabel" maxHeight="1.7976931348623157E308"
+                                                       maxWidth="1.7976931348623157E308" styleClass="large-label"
+                                                       text="Custom category contains:">
+                                                    <HBox.margin>
+                                                        <Insets right="20.0"/>
+                                                    </HBox.margin>
+                                                    <tooltip>
+                                                        <Tooltip
+                                                                text="Click on this label to toggle between partial match and exact match mode for the custom category."/>
+                                                    </tooltip>
+                                                    <cursor>
+                                                        <Cursor fx:constant="HAND"/>
+                                                    </cursor>
+                                                </Label>
+                                                <TextField fx:id="customCategoryFilter"
+                                                           maxHeight="1.7976931348623157E308"
+                                                           maxWidth="1.7976931348623157E308"
+                                                           promptText="Custom category..." HBox.hgrow="ALWAYS"/>
+                                                <ComboBox fx:id="exactCustomCategoryFilter"
+                                                          maxHeight="1.7976931348623157E308"
+                                                          maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308">
+                                    <children>
+                                        <Label maxHeight="1.7976931348623157E308" maxWidth="150.0" minWidth="150.0"
+                                               prefWidth="150.0" styleClass="large-label" text="Filter by date:"
+                                               HBox.hgrow="ALWAYS">
+                                            <HBox.margin>
+                                                <Insets/>
+                                            </HBox.margin>
+                                        </Label>
+                                        <ComboBox fx:id="dateFilterSelector" maxHeight="1.7976931348623157E308"
+                                                  maxWidth="1.7976931348623157E308"
+                                                  promptText="All transactions between (inclusive)" HBox.hgrow="ALWAYS">
+                                            <HBox.margin>
+                                                <Insets right="25.0"/>
+                                            </HBox.margin>
+                                        </ComboBox>
+                                        <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308"
+                                              HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308"
+                                                      spacing="5.0">
+                                                    <children>
+                                                        <DatePicker fx:id="dateFilter1"
+                                                                    maxHeight="1.7976931348623157E308" maxWidth="120.0"
+                                                                    prefWidth="120.0" promptText="dd/MM/yyyy"
+                                                                    HBox.hgrow="ALWAYS"/>
+                                                        <TextField fx:id="timeFilter1"
+                                                                   maxHeight="1.7976931348623157E308" maxWidth="70.0"
+                                                                   minWidth="70.0" prefWidth="70.0"
+                                                                   promptText="HH:mm:ss"/>
+                                                    </children>
+                                                </HBox>
+                                                <FontIcon fx:id="arrowIcon" iconLiteral="fltral-arrow-right-24"
+                                                          iconSize="16">
+                                                    <HBox.margin>
+                                                        <Insets left="5.0" right="5.0"/>
+                                                    </HBox.margin>
+                                                </FontIcon>
+                                                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308"
+                                                      spacing="5.0">
+                                                    <children>
+                                                        <DatePicker fx:id="dateFilter2"
+                                                                    maxHeight="1.7976931348623157E308" maxWidth="120.0"
+                                                                    minWidth="120.0" prefWidth="120.0"
+                                                                    HBox.hgrow="ALWAYS"/>
+                                                        <TextField fx:id="timeFilter2"
+                                                                   maxHeight="1.7976931348623157E308" maxWidth="70.0"
+                                                                   minWidth="70.0" prefWidth="70.0"
+                                                                   promptText="HH:mm:ss"/>
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </HBox>
+                                <HBox spacing="25.0">
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308"
+                                              HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <Label fx:id="commentLabel" maxHeight="1.7976931348623157E308"
+                                                       maxWidth="150.0" minWidth="150.0" prefWidth="150.0"
+                                                       styleClass="large-label" text="Comment contains:"
+                                                       HBox.hgrow="ALWAYS">
+                                                    <HBox.margin>
+                                                        <Insets/>
+                                                    </HBox.margin>
+                                                    <tooltip>
+                                                        <Tooltip
+                                                                text="Click on this label to toggle between partial match and exact match mode for the comment content."/>
+                                                    </tooltip>
+                                                    <cursor>
+                                                        <Cursor fx:constant="HAND"/>
+                                                    </cursor>
+                                                </Label>
+                                                <TextField fx:id="commentFilter" maxHeight="1.7976931348623157E308"
+                                                           maxWidth="1.7976931348623157E308" promptText="Comment..."
+                                                           HBox.hgrow="ALWAYS"/>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </HBox>
+                            </children>
+                            <styleClass>
+                                <String fx:value="rounded-container"/>
+                                <String fx:value="large"/>
+                            </styleClass>
+                        </VBox>
+                        <HBox spacing="25.0">
+                            <children>
+                                <Button fx:id="searchButton" maxHeight="1.7976931348623157E308"
+                                        maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="bold"
+                                        text="Search (F5)" HBox.hgrow="ALWAYS">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fltfmz-search-24" iconSize="15"/>
+                                    </graphic>
+                                </Button>
+                                <HBox>
+                                    <children>
+                                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                                               text="Search mode: " HBox.hgrow="ALWAYS">
+                                            <HBox.margin>
+                                                <Insets right="5.0"/>
+                                            </HBox.margin>
+                                            <styleClass>
+                                                <String fx:value="medium-label"/>
+                                                <String fx:value="bold"/>
+                                            </styleClass>
+                                        </Label>
+                                        <ComboBox fx:id="searchModeSelector" maxHeight="1.7976931348623157E308"
+                                                  maxWidth="1.7976931348623157E308" promptText="AND"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                            <VBox.margin>
+                                <Insets top="25.0"/>
+                            </VBox.margin>
+                        </HBox>
+                    </children>
+                </VBox>
+                <ListView fx:id="resultList" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                          VBox.vgrow="ALWAYS">
+                    <VBox.margin>
+                        <Insets top="5.0"/>
+                    </VBox.margin>
+                </ListView>
+                <Label fx:id="searchInfoLabel" alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308"
+                       styleClass="large-label" text="XYZ results, query took XY ms">
+                    <VBox.margin>
+                        <Insets top="5.0"/>
+                    </VBox.margin>
+                </Label>
+            </children>
+        </VBox>
+    </children>
+    <stylesheets>
+        <URL value="@../../stylesheets/core-ui.css"/>
+        <URL value="@../../stylesheets/main.css"/>
+    </stylesheets>
+</VBox>

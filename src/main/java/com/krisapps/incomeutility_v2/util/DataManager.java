@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.ToNumberPolicy;
 import com.google.gson.stream.JsonReader;
+import com.krisapps.incomeutility_v2.types.DateFilteringMode;
+import com.krisapps.incomeutility_v2.types.SearchMode;
 import com.krisapps.incomeutility_v2.types.data.ConfigurationData;
 import com.krisapps.incomeutility_v2.types.data.LegacyData;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
@@ -22,6 +24,7 @@ import com.krisapps.incomeutility_v2.util.services.MigrationService;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.util.Pair;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +34,8 @@ import java.security.InvalidParameterException;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -71,9 +76,9 @@ public class DataManager {
 
     public static void log(String msg) {
         if (msg.toLowerCase().contains("failed") || msg.toLowerCase().contains("error") || msg.toLowerCase().contains("fail") || msg.toLowerCase().contains("couldn't") || msg.toLowerCase().contains("could not")) {
-            logger.log(msg, Level.SEVERE);
+            logger.info(msg, Level.SEVERE);
         } else {
-            logger.log(msg, Level.INFO);
+            logger.info(msg, Level.INFO);
         }
     }
 
@@ -86,7 +91,7 @@ public class DataManager {
     }
 
     public static void log(String msg, Level level) {
-        logger.log(msg, level);
+        logger.info(msg, level);
     }
 
     public static void log(String msg, String modulePrefix, Level level) {
@@ -643,6 +648,145 @@ public class DataManager {
         return new ArrayList<>();
     }
 
+
+    /**
+     * Returns the SQL condition fragment (e.g 'column = "string"' or any other condition) for the supplied filtering mode.
+     *
+     * @param filteringMode The mode for which to return the condition.
+     * @param date1         The first date argument (role depends on the filtering mode)
+     * @param date2         The second date argument (role depends on the filtering mode)
+     * @param filterColumn  The name of the column which is being filtered.
+     * @return
+     */
+    private String getDateFilterSqlFragment(DateFilteringMode filteringMode, LocalDateTime date1, LocalDateTime date2, String filterColumn) {
+        switch (filteringMode) {
+            case RANGE -> {
+                return "%filter% BETWEEN \"%date1%\" AND \"%date2%\""
+                        .replace("%filter%", filterColumn)
+                        .replace("%date1%", Timestamp.from(date1.atZone(ZoneId.systemDefault()).toInstant()).toString())
+                        .replace("%date2%", Timestamp.from(date2.atZone(ZoneId.systemDefault()).toInstant()).toString())
+                        ;
+            }
+            case ALL_BEFORE -> {
+                return "%filter% <= \"%date1%\""
+                        .replace("%filter%", filterColumn)
+                        .replace("%date1%", Timestamp.from(date1.atZone(ZoneId.systemDefault()).toInstant()).toString())
+                        ;
+            }
+            case ALL_AFTER -> {
+                return "%filter% >= \"%date1%\""
+                        .replace("%filter%", filterColumn)
+                        .replace("%date1%", Timestamp.from(date1.atZone(ZoneId.systemDefault()).toInstant()).toString())
+                        ;
+            }
+            case ALL_ON -> {
+                return "DATE(%filter%) = DATE(\"%date1%\")"
+                        .replace("%filter%", filterColumn)
+                        .replace("%date1%", Timestamp.from(date1.atZone(ZoneId.systemDefault()).toInstant()).toString())
+                        ;
+            }
+            case null, default -> {
+                return "";
+            }
+        }
+    }
+
+    /**
+     * Queries the database for all transactions matching the following filters.
+     * If {@link SearchMode#AND} is used, only transactions matching all the criteria will be returned.
+     * If {@link SearchMode#OR} is used, partial matches will also be returned.
+     *
+     * @param typeFilter           The type of transactions to query the database for.
+     * @param categoryFilter       The category of transactions to query.
+     * @param dateFilteringMode    The mode for date filtering. Refer to the documentation for {@link DateFilteringMode} for more info.
+     * @param dateFilter1          The first date parameter for filtering
+     * @param timeFilter1          The first time parameter for filtering
+     * @param dateFilter2          The second date parameter for filtering
+     * @param timeFilter2          The second time parameter for filtering
+     * @param commentFilter        The comment filter. Must follow the pattern for being included in <code>LIKE</code> statement, e.g. use percent signs in the string for partial matches.
+     * @param customCategoryFilter The custom category filter. Must follow the pattern for being included in <code>LIKE</code> statement, e.g. use percent signs in the string for partial matches.
+     * @param accountFilter        The account ID whose transactions to query.
+     * @param searchMode           The search mode. {@link SearchMode#AND} will only include transactions which match all criteria, while {@link SearchMode#OR} will also include partial matches.
+     * @return All transactions matching the supplied criteria according to the search mode.
+     */
+    public List<Transaction> getTransactions(@Nullable TransactionType typeFilter, @Nullable TransactionCategory categoryFilter, DateFilteringMode dateFilteringMode, @Nullable LocalDate dateFilter1, @Nullable LocalTime timeFilter1, @Nullable LocalDate dateFilter2, @Nullable LocalTime timeFilter2, @Nullable String commentFilter, @Nullable String customCategoryFilter, @Nullable UUID accountFilter, SearchMode searchMode) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        StringBuilder queryBuilder = new StringBuilder();
+        LinkedList<String> conditions = new LinkedList<>();
+
+
+        queryBuilder.append("SELECT * FROM transactions JOIN transaction_categories tc ON tc.id = transactions.customCategoryId");
+
+        if (accountFilter != null) {
+            conditions.add("(targetAccountId = \"" + accountFilter + "\" OR sourceAccountId = \"" + accountFilter + "\")");
+        }
+
+        if (typeFilter != null) {
+            conditions.add("type = \"" + typeFilter.name() + "\"");
+        }
+
+        if (categoryFilter != null) {
+            conditions.add("category LIKE \"%" + categoryFilter.name() + "%\"");
+        }
+
+        // Date filters 1 and 2 are the range start/end points if the filtering mode is RANGE, otherwise, only the first filter is used.
+        if (dateFilter1 != null) {
+            if (dateFilter2 != null) {
+                conditions.add(
+                        getDateFilterSqlFragment(dateFilteringMode, dateFilter1.atTime(timeFilter1 == null ? LocalTime.MIN : timeFilter1), dateFilter2.atTime(timeFilter2 == null ? LocalTime.MAX : timeFilter2), "timestamp")
+                );
+            } else {
+                conditions.add(
+                        getDateFilterSqlFragment(dateFilteringMode, dateFilter1.atTime(timeFilter1 == null ? LocalTime.MIN : timeFilter1), null, "timestamp")
+                );
+            }
+        }
+
+        if (commentFilter != null) {
+            conditions.add("comment LIKE \"" + commentFilter + "\"");
+        }
+
+        if (customCategoryFilter != null) {
+            conditions.add("tc.displayName LIKE \"" + customCategoryFilter + "\"");
+        }
+
+        if (!conditions.isEmpty()) {
+            queryBuilder.append(" WHERE ");
+
+            int index = 0;
+            for (String condition : conditions) {
+                queryBuilder.append(condition);
+                index++;
+
+                if (index <= conditions.size() - 1) {
+                    queryBuilder.append(" %connector% ".replace("%connector%", searchMode.name()));
+                }
+            }
+            queryBuilder.append(";");
+        } else {
+            queryBuilder.append(";");
+        }
+
+        logger.debug("Executing: " + queryBuilder, "SQL");
+        try (PreparedStatement stmt = currentConnection.prepareStatement(queryBuilder.toString())) {
+            ResultSet rs = stmt.executeQuery();
+
+            ArrayList<Transaction> results = new ArrayList<>();
+            while (rs.next()) {
+                results.add(mapResultSetToTransaction(rs));
+            }
+
+            return results;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            logger.logStackTrace(e);
+            return new ArrayList<>();
+        }
+    }
+
     public Optional<Transaction> getTransaction(UUID transactionId) {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
@@ -664,7 +808,7 @@ public class DataManager {
             }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transaction data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
-            e.printStackTrace();
+            logger.logStackTrace(e);
         }
         return Optional.empty();
     }

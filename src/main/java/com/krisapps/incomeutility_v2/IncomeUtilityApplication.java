@@ -34,18 +34,19 @@ public class IncomeUtilityApplication extends Application {
         window.setTitle(removePrefix ? title : "KrisApps Income Utility: " + title);
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(IncomeUtilityApplication.class.getResource("main.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 980, 500);
+        Scene scene = new Scene(fxmlLoader.load(), 980, 640);
         stage.setMinWidth(980);
-        stage.setMinHeight(500);
+        stage.setMinHeight(680);
         stage.setTitle("KrisApps Income Utility v2.0");
         stage.setScene(scene);
         stage.getIcons().add(new Image(IncomeUtilityApplication.class.getResource("icons/income_utility.png").toExternalForm()));
 
         window = stage;
-        window.setOnCloseRequest((r) -> {
+        window.setOnCloseRequest((_) -> {
             if (UtilityManager.getInstance().hasOpenUtilities()) {
                 PopupManager.showConfirmation(
                         "Shutdown application",
@@ -93,6 +94,7 @@ public class IncomeUtilityApplication extends Application {
 
             shutdown();
         } catch (Exception e) {
+            //noinspection CallToPrintStackTrace
             e.printStackTrace();
         }
     }
@@ -100,33 +102,30 @@ public class IncomeUtilityApplication extends Application {
     public static void shutdown() {
         LoadingDialog dialog = new LoadingDialog(LoadingDialog.LoadingOperationType.INDETERMINATE_PROGRESSBAR);
         dialog.setPrimaryLabel("Cleaning up");
-        dialog.show("Shutting down...", new Runnable() {
-            @Override
-            public void run() {
-                DataManager.getInstance().saveCurrentConfigurationData();
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
-                UtilityManager.getInstance().stopAll(SubUtilityType.ALL);
-                while (DataManager.getInstance().isSaving()) {
-                    dialog.setPrimaryLabel("Saving data");
-                    dialog.setSecondaryLabel("Waiting for I/O operations to finish...");
-                }
-
-                dialog.setPrimaryLabel("Resolving tension");
-                dialog.setSecondaryLabel("Closing, bye!");
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
-                Platform.exit();
-                System.exit(0);
+        dialog.show("Shutting down...", () -> {
+            DataManager.getInstance().saveCurrentConfigurationData();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
+
+            UtilityManager.getInstance().stopAll(SubUtilityType.ALL);
+            while (DataManager.getInstance().isSaving()) {
+                dialog.setPrimaryLabel("Saving data");
+                dialog.setSecondaryLabel("Waiting for I/O operations to finish...");
+            }
+
+            dialog.setPrimaryLabel("Resolving tension");
+            dialog.setSecondaryLabel("Closing, bye!");
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            Platform.exit();
+            System.exit(0);
         });
     }
 }

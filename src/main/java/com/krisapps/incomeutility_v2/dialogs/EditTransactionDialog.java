@@ -80,7 +80,7 @@ public class EditTransactionDialog extends IncomeUtilityDialog<Transaction> {
 
         amountField.setTextFormatter(new TextFormatter<>(numbersOnlyFormatter));
         timeField.textProperty().addListener((obs, _, val) -> {
-            timeField.setStyle("-fx-text-fill: " + (timeField.getText().matches("(?:0[0-9]|1[0-9]|2[0-3])(?::[0-5][0-9])*") ? "black" : "red"));
+            timeField.setStyle("-fx-text-fill: " + (timeField.getText().matches(Formats.TIME_VALIDATION_EXPRESSION) ? "black" : "red"));
             try {
                 outputTransaction.setTime(LocalTime.parse(val, DateTimeFormatter.ofPattern("HH:mm:ss")));
             } catch (DateTimeParseException _) {

@@ -14,6 +14,7 @@ import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.cell.AccountComboboxButtonCell;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.Formatting;
+import com.krisapps.incomeutility_v2.util.Logging;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import com.krisapps.incomeutility_v2.util.misc.Formats;
 import com.krisapps.incomeutility_v2.util.services.FiscalService;
@@ -116,6 +117,7 @@ public class BreakdownController extends SubUtilityController {
     private Label currentBalanceLabel;
 
     private static final FiscalService fiscal = FiscalService.getInstance();
+    private static final Logging log = Logging.getInstance();
     private Account selectedAccount;
     private TypeFilter currentTypeFilter = TypeFilter.EXPENSES;
     private TypeFilter currentBreakdownFilter = TypeFilter.EXPENSES;
@@ -479,13 +481,13 @@ public class BreakdownController extends SubUtilityController {
     public void updateCache() {
         if (!shouldRecache) return;
 
-        DataManager.log("Beginning to cache data...");
+        log.info("Beginning to cache data...", "Fiscal Breakdown");
         long start = System.currentTimeMillis();
 
         cachedTransactions = null;
         cachedTransactions = fiscal.getTransactionsBetween(selectedAccount, periodStartPicker.getValue(), periodEndPicker.getValue());
 
-        DataManager.log("Caching completed in " + (System.currentTimeMillis() - start) + "ms");
+        log.info("Caching completed in " + (System.currentTimeMillis() - start) + "ms", "Fiscal Breakdown");
         shouldRecache = false;
     }
 
@@ -568,7 +570,7 @@ public class BreakdownController extends SubUtilityController {
 
         refreshCharts(cachedTransactions, categorisedExpenses, categorisedIncome);
         refreshStats();
-        DataManager.log("UI refresh took " + (System.currentTimeMillis() - refreshStart) + "ms");
+        log.debug("UI refresh took " + (System.currentTimeMillis() - refreshStart) + "ms", "Fiscal Breakdown");
     }
 
     private void refreshStats() {

@@ -18,6 +18,7 @@ import com.krisapps.incomeutility_v2.ui.listview.ProductCellFactory;
 import com.krisapps.incomeutility_v2.ui.listview.SimpleProductCellFactory;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.Formatting;
+import com.krisapps.incomeutility_v2.util.Logging;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -136,6 +137,7 @@ public class PricerController extends SubUtilityController {
     private SubUtility utility;
     private CurrencyConfig currencyConfig;
     private final DataManager dataman = DataManager.getInstance();
+    private final Logging log = Logging.getInstance();
 
     private DishEditorState dishEditorState = DishEditorState.SELECT_DISH;
     private boolean editorHasChanges = false;
@@ -354,7 +356,7 @@ public class PricerController extends SubUtilityController {
 
         saveDishButton.setOnAction(_ -> {
             if (!dishEditorState.equals(DishEditorState.DISH_CREATION)) {
-                DataManager.log("'Save' button clicked during invalid state (actual state: " + dishEditorState.name() + ", expected: DISH_CREATION)", "Dish Editor");
+                log.info("'Save' button clicked during invalid state (actual state: " + dishEditorState.name() + ", expected: DISH_CREATION)", "Dish Editor");
                 return;
             }
 
@@ -366,7 +368,7 @@ public class PricerController extends SubUtilityController {
             );
 
             dataman.addDish(outputDish);
-            DataManager.log("New dish created: " + currentEditorDish.name(), "Dish Editor");
+            log.info("New dish created: " + currentEditorDish.name(), "Dish Editor");
 
             resetDishEditor();
             dishEditorState = DishEditorState.SELECT_DISH;
@@ -375,7 +377,7 @@ public class PricerController extends SubUtilityController {
 
         applyDishChangesButton.setOnAction(_ -> {
             if (!dishEditorState.equals(DishEditorState.DISH_EDITING)) {
-                DataManager.log("'Apply' button clicked during invalid state (actual state: " + dishEditorState.name() + ", expected: DISH_EDITING)", "Dish Editor");
+                log.info("'Apply' button clicked during invalid state (actual state: " + dishEditorState.name() + ", expected: DISH_EDITING)", "Dish Editor");
                 return;
             }
 
@@ -392,9 +394,9 @@ public class PricerController extends SubUtilityController {
                     dataman.updateDishIngredient(ingredient.relationId(), ingredient);
                 }
 
-                DataManager.log("Dish data updated: " + currentEditorDish.name() + " (id: " + currentEditorDish.id() + ")", "Dish Editor");
+                log.info("Dish data updated: " + currentEditorDish.name() + " (id: " + currentEditorDish.id() + ")", "Dish Editor");
             } else {
-                DataManager.log("Editor closed with no changes.", "Dish Editor");
+                log.info("Editor closed with no changes.", "Dish Editor");
             }
 
             resetDishEditor();

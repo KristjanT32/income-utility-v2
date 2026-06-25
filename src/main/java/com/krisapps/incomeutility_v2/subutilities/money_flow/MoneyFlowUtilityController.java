@@ -3,6 +3,7 @@ package com.krisapps.incomeutility_v2.subutilities.money_flow;
 import com.krisapps.incomeutility_v2.dialogs.AddMultipleTransactionsDialog;
 import com.krisapps.incomeutility_v2.dialogs.AddSingleTransactionDialog;
 import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
+import com.krisapps.incomeutility_v2.dialogs.TransactionBrowserDialog;
 import com.krisapps.incomeutility_v2.dialogs.generic.InputDialog;
 import com.krisapps.incomeutility_v2.dialogs.generic.LoadingDialog;
 import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException;
@@ -86,6 +87,9 @@ public class MoneyFlowUtilityController extends SubUtilityController {
 
     @FXML
     private Button resetDateButton;
+
+    @FXML
+    private Button searchButton;
 
     @FXML
     private HBox commandPrompt;
@@ -296,6 +300,11 @@ public class MoneyFlowUtilityController extends SubUtilityController {
         Tooltip.install(nextDayButton, new Tooltip(
                 "Selects the next day."
         ));
+
+        searchButton.setOnAction(_ -> {
+            TransactionBrowserDialog browser = new TransactionBrowserDialog();
+            browser.showAndWait();
+        });
 
         refreshUI();
     }

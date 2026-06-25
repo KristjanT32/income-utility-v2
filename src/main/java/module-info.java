@@ -1,4 +1,5 @@
-module com.krisapps.incomeutility_v2 {
+@SuppressWarnings("JavaModuleDefinition")
+module com.krisapps.incomeutility {
     requires javafx.controls;
     requires javafx.fxml;
 
@@ -22,6 +23,7 @@ module com.krisapps.incomeutility_v2 {
     opens com.krisapps.incomeutility_v2.subutilities.pricer to javafx.fxml;
     opens com.krisapps.incomeutility_v2.subutilities.breakdown to javafx.fxml;
     opens com.krisapps.incomeutility_v2.subutilities.settings to javafx.fxml;
+    opens com.krisapps.incomeutility_v2.subutilities.pantry to javafx.fxml;
 
     exports com.krisapps.incomeutility_v2;
     exports com.krisapps.incomeutility_v2.types.transaction;

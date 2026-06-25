@@ -5,6 +5,7 @@ import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
 import com.krisapps.incomeutility_v2.subutilities.breakdown.BreakdownUtility;
 import com.krisapps.incomeutility_v2.subutilities.money_flow.MoneyFlowUtility;
+import com.krisapps.incomeutility_v2.subutilities.pantry.PantryUtility;
 import com.krisapps.incomeutility_v2.subutilities.pricer.PricerUtility;
 import com.krisapps.incomeutility_v2.subutilities.settings.SettingsUtility;
 import javafx.scene.control.ButtonBar;
@@ -39,6 +40,12 @@ public class UtilityManager {
         return instance;
     }
 
+    /**
+     * Generates a process ID for a sub-utility of the supplied type.
+     *
+     * @param type The type of sub-utility to generate the process ID for.
+     * @return A process ID for the supplied utility type.
+     */
     private String generateId(SubUtilityType type) {
         long count = activeUtilities.values().stream().filter(util -> util.getType() == type).count();
         return String.format("%s_%d-%d", type.name().toLowerCase(), count, (int) (Math.random() * 1000));
@@ -48,10 +55,17 @@ public class UtilityManager {
         return activeUtilities.values().stream().anyMatch(util -> util.getType() == type);
     }
 
+    /**
+     * Starts an instance of the sub-utility of the specified type.
+     * <br>
+     * The only disallowed type is {@link SubUtilityType#ALL}, as this method is only meant to launch one instance at a time.
+     *
+     * @param subutility The type of sub-utility to launch.
+     */
     private void startUtility(SubUtilityType subutility) {
         String processId = getProcessIdFor(subutility);
 
-        SubUtility utility = null;
+        SubUtility utility;
         switch (subutility) {
             case PRICER -> {
                 utility = new PricerUtility();
@@ -64,6 +78,9 @@ public class UtilityManager {
             }
             case SETTINGS -> {
                 utility = new SettingsUtility();
+            }
+            case PANTRY -> {
+                utility = new PantryUtility();
             }
 
             default -> throw new IllegalArgumentException("Invalid subutility '" + subutility + "'");
@@ -83,6 +100,11 @@ public class UtilityManager {
         return !activeUtilities.isEmpty();
     }
 
+    /**
+     * Launches the sub-utility of the supplied type.
+     *
+     * @param utility The type of sub-utility to launch.
+     */
     public void openUtility(SubUtilityType utility) {
         if (checkAlreadyOpen(utility)) {
             PopupManager.showConfirmation("Confirm open new instance",
@@ -99,6 +121,11 @@ public class UtilityManager {
         }
     }
 
+    /**
+     * Terminates all instances of sub-utilities of the supplied type.
+     *
+     * @param type The type of sub-utilities to stop.
+     */
     public void stopAll(SubUtilityType type) {
         if (type == SubUtilityType.ALL) {
             for (SubUtility util : activeUtilities.values()) {
@@ -113,6 +140,11 @@ public class UtilityManager {
         }
     }
 
+    /**
+     * Focuses all instances of sub-utilities of the supplied type.
+     *
+     * @param type The type of sub-utilities to focus.
+     */
     public void focusAll(SubUtilityType type) {
         if (type == SubUtilityType.ALL) {
             for (SubUtility util : activeUtilities.values()) {
@@ -127,13 +159,23 @@ public class UtilityManager {
         }
     }
 
+    /**
+     * Stops the specified sub-utility process.
+     *
+     * @param processId The process ID for the sub-utility.
+     */
     public void stopUtility(String processId) {
         Optional<SubUtility> util = Optional.ofNullable(activeUtilities.get(processId));
         util.ifPresentOrElse(SubUtility::stop, () -> {
-            log.log(String.format("Attempted to stop non-existent utility with process id: %s", processId), "Process Registry", Level.WARNING);
+            log.warning(String.format("Attempted to stop non-existent utility with process id: %s", processId), "Process Registry");
         });
     }
 
+    /**
+     * Generates a unique process ID for a sub-utility of the supplied type, ensuring it's unique.
+     * @param processType The type of sub-utility to generate the process ID for.
+     * @return A unique process ID.
+     */
     private String getProcessIdFor(SubUtilityType processType) {
         String processId = generateId(processType);
         while (activeUtilities.containsKey(processId)) {
@@ -142,27 +184,38 @@ public class UtilityManager {
         return processId;
     }
 
+    /**
+     * Starts and registers a new active sub-utility process.
+     * @param process The utility whose process to register.
+     * @param processId The process ID for the sub-utility.
+     * @throws IOException If the utility cannot be started for some reason.
+     */
     private void register(SubUtility process, String processId) throws IOException {
         try {
             activeUtilities.put(
                     processId, process.start(processId)
             );
+            log.debug(String.format("Registered new active process '%s' (id: %s)", process.getName(), processId), "Process Registry");
         } catch (IOException e) {
             log.logStackTrace(e);
         }
-
-        log.debug(String.format("Registered new active process '%s' (id: %s)", process.getName(), processId));
     }
 
+    /**
+     * Unregisters a process from the active process registry.
+     * <br>
+     * Only use this method after stopping the utility, as you cannot stop a utility process without its ID.
+     * @param processId The process ID of the process to unregister.
+     */
     private void unregister(String processId) {
         if (activeUtilities.containsKey(processId)) {
 
             SubUtility util = activeUtilities.get(processId);
-            log.debug(String.format("Unregistering active process for '%s' (%s)%n", util.getName(), processId));
+            log.debug(String.format("Unregistering active process for '%s' (%s)%n", util.getName(), processId), "Process Registry");
 
             activeUtilities.remove(processId);
         } else {
-            log.log(String.format("Failed to unregister '%s' - process not found in registry.", processId), "Process Registry", Level.WARNING);
+            log.warning(String.format("Failed to unregister '%s' - process not found in registry.", processId), "Process Registry");
         }
     }
 
