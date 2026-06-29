@@ -18,9 +18,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.util.StringConverter;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -33,6 +33,12 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
 
     @FXML
     private Button resetFiltersButton;
+
+    @FXML
+    private HBox dateFilters;
+
+    @FXML
+    private Separator dateFilterSeparator;
 
     @FXML
     private ComboBox<DateFilteringMode> dateFilterSelector;
@@ -71,7 +77,7 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
     private TextField timeFilter2;
 
     @FXML
-    private FontIcon arrowIcon;
+    private Label dateFilterSpacer;
 
     @FXML
     private Label searchInfoLabel;
@@ -95,8 +101,8 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
 
         getDialogPane().getButtonTypes().clear();
         getDialogPane().getButtonTypes().setAll(new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE));
-        getDialogPane().setMinWidth(800);
-        getDialogPane().setMinHeight(700);
+        getDialogPane().setMinWidth(1055);
+        getDialogPane().setMinHeight(730);
         initModality(Modality.WINDOW_MODAL);
         //setAllowResize(true);
         getDialogPane().getScene().addEventFilter(KeyEvent.KEY_PRESSED, (e) -> {
@@ -197,8 +203,10 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
         dateFilter2.managedProperty().bind(dateFilter2.visibleProperty());
         timeFilter1.managedProperty().bind(timeFilter1.visibleProperty());
         timeFilter2.managedProperty().bind(timeFilter2.visibleProperty());
-        arrowIcon.managedProperty().bind(arrowIcon.visibleProperty());
-        arrowIcon.visibleProperty().bind(dateFilter1.visibleProperty().and(dateFilter2.visibleProperty()));
+        dateFilterSpacer.managedProperty().bind(dateFilterSpacer.visibleProperty());
+        dateFilterSpacer.visibleProperty().bind(dateFilter1.visibleProperty().and(dateFilter2.visibleProperty()));
+        dateFilterSeparator.managedProperty().bind(dateFilterSeparator.visibleProperty());
+        dateFilterSeparator.visibleProperty().bind(dateFilters.visibleProperty());
 
         dateFilter1.setConverter(Formats.DATE_FORMAT);
         dateFilter2.setConverter(Formats.DATE_FORMAT);
@@ -223,11 +231,15 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
         });
         dateFilterSelector.valueProperty().addListener((obs, old, val) -> {
             if (val != null) {
+                dateFilters.setVisible(true);
+                dateFilters.setManaged(true);
                 if (val.equals(DateFilteringMode.NONE)) {
                     dateFilter1.setVisible(false);
                     dateFilter2.setVisible(false);
                     timeFilter1.setVisible(false);
                     timeFilter2.setVisible(false);
+                    dateFilters.setVisible(false);
+                    dateFilters.setManaged(false);
                 } else if (val.equals(DateFilteringMode.RANGE)) {
                     dateFilter1.setVisible(true);
                     dateFilter2.setVisible(true);
