@@ -40,3 +40,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+/dependency-reduced-pom.xml
+/hs_err_pid26524.log
+/identifier.sqlite
+/src/main/test/test.db
