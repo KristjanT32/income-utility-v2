@@ -13,6 +13,9 @@ While not a utility itself, most sub-utilities in the program rely on Accounts -
 The base utility for your day-to-day finance tracking. Money In, Money Out allows you to add and manage your transactions, as well as import already existing transactions from Cashew, an open-source web-based budget tracker.
 You can also add multiple transactions in one go from one convenient dialog, as well as edit any past transaction.
 
+## Transaction Browser (part of Money In, Money Out)
+Transaction Browser is not a standalone utility, rather it is accessible from within Money In, Money Out. It allows you to browse all existing transactions from Money In, Money Out, providing a lot of useful filtering options to narrow down your search. Filter by amount, type, comment content and more!
+
 ## Fiscal Breakdown
 This utility integrates nicely with Money In, Money Out. Fiscal Breakdown shows your spending and income during a selected period of time, broken down into separate categories - it also provides several useful charts to visualise your financial information. For example:
 * Two pie charts, one for your income, one for the expenses
@@ -37,7 +40,7 @@ This utility is planned to give the user a way of tracking inventory of their pa
 
 ## Settings
 Settings isn't a utility per se, but it is also implemented as a separate utility - currently, you can change the data source from it, as well as manage custom transaction categories. 
-Settings also allows you to manage Pricer's currency settings.
+Settings also allows you to manage Pricer's currency settings and configure logging.
 This utility will be updated as more sub-utilities are added and more functionality is implemented.
 
 
