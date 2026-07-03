@@ -5,7 +5,7 @@
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.layout.*?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-<?import java.lang.String?>
+<?import java.lang.*?>
 <?import java.net.URL?>
 <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity"
       prefHeight="730.0" prefWidth="1052.0" spacing="10.0" xmlns="http://javafx.com/javafx/25"
@@ -165,33 +165,77 @@
                                             </children>
                                         </HBox>
                                         <Separator maxWidth="1.7976931348623157E308" opacity="0.5"/>
-                                        <HBox>
+                                        <HBox alignment="CENTER">
                                             <children>
-                                                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308"
-                                                      HBox.hgrow="ALWAYS">
+                                                <Label fx:id="commentLabel1" maxHeight="1.7976931348623157E308"
+                                                       maxWidth="215.0" minWidth="215.0" prefWidth="215.0"
+                                                       styleClass="large-label" text="Amount is:" HBox.hgrow="ALWAYS">
+                                                    <HBox.margin>
+                                                        <Insets/>
+                                                    </HBox.margin>
+                                                    <tooltip>
+                                                        <Tooltip
+                                                                text="Click on this label to toggle between partial match and exact match mode for the comment content."/>
+                                                    </tooltip>
+                                                    <cursor>
+                                                        <Cursor fx:constant="DEFAULT"/>
+                                                    </cursor>
+                                                </Label>
+                                                <ComboBox fx:id="amountFilterSelector"
+                                                          maxHeight="1.7976931348623157E308"
+                                                          maxWidth="1.7976931348623157E308" minWidth="310.0"
+                                                          promptText="equal to" styleClass="large" HBox.hgrow="ALWAYS"/>
+                                                <Separator fx:id="amountFilterSeparator" maxWidth="25.0" minWidth="10.0"
+                                                           opacity="0.0" visible="false"/>
+                                                <HBox fx:id="amountFilters" alignment="CENTER" HBox.hgrow="ALWAYS">
                                                     <children>
-                                                        <Label fx:id="commentLabel" maxHeight="1.7976931348623157E308"
-                                                               maxWidth="215.0" minWidth="215.0" prefWidth="215.0"
-                                                               styleClass="large-label" text="Comment contains:"
-                                                               HBox.hgrow="ALWAYS">
-                                                            <HBox.margin>
-                                                                <Insets/>
-                                                            </HBox.margin>
-                                                            <tooltip>
-                                                                <Tooltip
-                                                                        text="Click on this label to toggle between partial match and exact match mode for the comment content."/>
-                                                            </tooltip>
-                                                            <cursor>
-                                                                <Cursor fx:constant="HAND"/>
-                                                            </cursor>
-                                                        </Label>
-                                                        <TextField fx:id="commentFilter"
+                                                        <TextField fx:id="amountFilter1"
                                                                    maxHeight="1.7976931348623157E308"
                                                                    maxWidth="1.7976931348623157E308"
-                                                                   promptText="Comment..." styleClass="large"
+                                                                   promptText="Amount..." styleClass="large"
+                                                                   HBox.hgrow="ALWAYS"/>
+                                                        <Label fx:id="amountFilterSpacer" alignment="CENTER"
+                                                               maxHeight="1.7976931348623157E308"
+                                                               maxWidth="1.7976931348623157E308" text="-"
+                                                               HBox.hgrow="ALWAYS">
+                                                            <styleClass>
+                                                                <String fx:value="xl-label"/>
+                                                                <String fx:value="bold"/>
+                                                            </styleClass>
+                                                            <padding>
+                                                                <Insets left="5.0" right="5.0"/>
+                                                            </padding>
+                                                        </Label>
+                                                        <TextField fx:id="amountFilter2"
+                                                                   maxHeight="1.7976931348623157E308"
+                                                                   maxWidth="1.7976931348623157E308"
+                                                                   promptText="Amount..." styleClass="large"
                                                                    HBox.hgrow="ALWAYS"/>
                                                     </children>
                                                 </HBox>
+                                            </children>
+                                        </HBox>
+                                        <Separator maxWidth="1.7976931348623157E308" opacity="0.5"/>
+                                        <HBox>
+                                            <children>
+                                                <Label fx:id="commentLabel" maxHeight="1.7976931348623157E308"
+                                                       maxWidth="215.0" minWidth="215.0" prefWidth="215.0"
+                                                       styleClass="large-label" text="Comment contains:"
+                                                       HBox.hgrow="ALWAYS">
+                                                    <HBox.margin>
+                                                        <Insets/>
+                                                    </HBox.margin>
+                                                    <tooltip>
+                                                        <Tooltip
+                                                                text="Click on this label to toggle between partial match and exact match mode for the comment content."/>
+                                                    </tooltip>
+                                                    <cursor>
+                                                        <Cursor fx:constant="HAND"/>
+                                                    </cursor>
+                                                </Label>
+                                                <TextField fx:id="commentFilter" maxHeight="1.7976931348623157E308"
+                                                           maxWidth="1.7976931348623157E308" promptText="Comment..."
+                                                           styleClass="large" HBox.hgrow="ALWAYS"/>
                                             </children>
                                         </HBox>
                                         <Separator maxWidth="1.7976931348623157E308" opacity="0.5"/>
@@ -243,12 +287,16 @@
                                                 </HBox>
                                                 <Separator maxWidth="1.7976931348623157E308" opacity="0.0"
                                                            visible="false" HBox.hgrow="ALWAYS"/>
-                                                <Button fx:id="resetFiltersButton" maxWidth="1.7976931348623157E308"
-                                                        mnemonicParsing="false" styleClass="destructive"
+                                                <Button fx:id="resetFiltersButton" maxHeight="1.7976931348623157E308"
+                                                        maxWidth="1.7976931348623157E308" mnemonicParsing="false"
                                                         text="Clear all filters">
                                                     <graphic>
                                                         <FontIcon iconLiteral="fltral-eraser-24" iconSize="15"/>
                                                     </graphic>
+                                                    <styleClass>
+                                                        <String fx:value="destructive"/>
+                                                        <String fx:value="large-label"/>
+                                                    </styleClass>
                                                 </Button>
                                             </children>
                                         </HBox>
@@ -262,11 +310,15 @@
                         <HBox spacing="25.0">
                             <children>
                                 <Button fx:id="searchButton" maxHeight="1.7976931348623157E308"
-                                        maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="bold"
-                                        text="Search (F5)" HBox.hgrow="ALWAYS">
+                                        maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Search (F5)"
+                                        HBox.hgrow="ALWAYS">
                                     <graphic>
                                         <FontIcon iconLiteral="fltfmz-search-24" iconSize="15"/>
                                     </graphic>
+                                    <styleClass>
+                                        <String fx:value="bold"/>
+                                        <String fx:value="large-label"/>
+                                    </styleClass>
                                 </Button>
                             </children>
                             <VBox.margin>

@@ -40,7 +40,7 @@ public class Formats {
     public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
-    public final UnaryOperator<TextFormatter.Change> NUMBERS_ONLY_FORMATTER = (change) -> {
+    public static final UnaryOperator<TextFormatter.Change> NUMBERS_ONLY_FORMATTER = (change) -> {
         if (change.getControlNewText().isEmpty()) {
             return change;
         }

@@ -14,6 +14,7 @@ module com.krisapps.incomeutility {
     requires java.sql;
     requires jdk.jshell;
     requires java.management;
+    requires java.naming;
 
     opens com.krisapps.incomeutility_v2 to javafx.fxml;
     opens com.krisapps.incomeutility_v2.subutilities.money_flow to javafx.fxml;

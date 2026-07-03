@@ -705,25 +705,26 @@ public class DataManager {
      * @param filterColumn  The name of the column by which to filter.
      * @return The condition fragment
      */
-    private String getAmountFilterSqlFragment(AmountFilterMode filteringMode, double amount1, double amount2, String filterColumn) {
+    private String getAmountFilterSqlFragment(AmountFilterMode filteringMode, Double amount1, Double amount2, String filterColumn) {
         return switch (filteringMode) {
-            case LESS_THAN -> "%filter% < %amount%"
+            case NONE -> "";
+            case LESS_THAN -> "ABS(%filter%) < CAST(\"%amount%\" as REAL)"
                     .replace("%filter%", filterColumn)
                     .replace("%amount%", String.valueOf(amount1));
-            case LESS_THAN_OR_EQUAL_TO -> "%filter% <= %amount%"
+            case LESS_THAN_OR_EQUAL_TO -> "ABS(%filter%) <= CAST(\"%amount%\" as REAL)"
                     .replace("%filter%", filterColumn)
                     .replace("%amount%", String.valueOf(amount1));
-            case EQUAL_TO -> "%filter% = %amount%"
+            case EQUAL_TO -> "ABS(%filter%) = CAST(\"%amount%\" as REAL)"
                     .replace("%filter%", filterColumn)
                     .replace("%amount%", String.valueOf(amount1));
-            case BETWEEN -> "%filter% BETWEEN %bound1% AND %bound2%"
+            case BETWEEN -> "ABS(%filter%) BETWEEN CAST(\"%bound1%\" as REAL) AND CAST(\"%bound2%\" as REAL)"
                     .replace("%filter%", filterColumn)
                     .replace("%bound1%", String.valueOf(amount1))
                     .replace("%bound2%", String.valueOf(amount2));
-            case GREATER_THAN -> "%filter% > %amount%"
+            case GREATER_THAN -> "ABS(%filter%) > CAST(\"%amount%\" as REAL)"
                     .replace("%filter%", filterColumn)
                     .replace("%amount%", String.valueOf(amount1));
-            case GREATER_THAN_OR_EQUAL_TO -> "%filter% >= %amount%"
+            case GREATER_THAN_OR_EQUAL_TO -> "ABS(%filter%) >= CAST(\"%amount%\" as REAL)"
                     .replace("%filter%", filterColumn)
                     .replace("%amount%", String.valueOf(amount1));
         };
@@ -741,18 +742,19 @@ public class DataManager {
      * @param timeFilter1          The first time parameter for filtering
      * @param dateFilter2          The second date parameter for filtering
      * @param timeFilter2          The second time parameter for filtering
+     * @param amountFilteringMode The mode for amount filtering. Refer to the documentation for {@link AmountFilterMode} for more info.
+     * @param amount1 The first amount argument for filtering
+     * @param amount2 The second amount argument for filtering
      * @param commentFilter        The comment filter. Must follow the pattern for being included in <code>LIKE</code> statement, e.g. use percent signs in the string for partial matches.
      * @param customCategoryFilter The custom category filter. Must follow the pattern for being included in <code>LIKE</code> statement, e.g. use percent signs in the string for partial matches.
      * @param accountFilter        The account ID whose transactions to query.
      * @param searchMode           The search mode. {@link SearchMode#AND} will only include transactions which match all criteria, while {@link SearchMode#OR} will also include partial matches.
      * @return All transactions matching the supplied criteria according to the search mode.
      */
-    public List<Transaction> getTransactions(@Nullable TransactionType typeFilter, @Nullable TransactionCategory categoryFilter, DateFilteringMode dateFilteringMode, @Nullable LocalDate dateFilter1, @Nullable LocalTime timeFilter1, @Nullable LocalDate dateFilter2, @Nullable LocalTime timeFilter2, @Nullable String commentFilter, @Nullable String customCategoryFilter, @Nullable UUID accountFilter, SearchMode searchMode) {
+    public List<Transaction> getTransactions(@Nullable TransactionType typeFilter, @Nullable TransactionCategory categoryFilter, DateFilteringMode dateFilteringMode, @Nullable LocalDate dateFilter1, @Nullable LocalTime timeFilter1, @Nullable LocalDate dateFilter2, @Nullable LocalTime timeFilter2, @Nullable AmountFilterMode amountFilteringMode, @Nullable Double amount1, @Nullable Double amount2, @Nullable String commentFilter, @Nullable String customCategoryFilter, @Nullable UUID accountFilter, SearchMode searchMode) {
         if (currentConnection == null) {
             currentConnection = getDatabaseConnection();
         }
-
-        // TODO: Implement support for the amount filter.
 
         StringBuilder queryBuilder = new StringBuilder();
         LinkedList<String> conditions = new LinkedList<>();
@@ -772,16 +774,24 @@ public class DataManager {
         }
 
         // Date filters 1 and 2 are the range start/end points if the filtering mode is RANGE, otherwise, only the first filter is used.
-        if (dateFilter1 != null) {
-            if (dateFilter2 != null) {
-                conditions.add(
-                        getDateFilterSqlFragment(dateFilteringMode, dateFilter1.atTime(timeFilter1 == null ? LocalTime.MIN : timeFilter1), dateFilter2.atTime(timeFilter2 == null ? LocalTime.MAX : timeFilter2), "timestamp")
-                );
-            } else {
-                conditions.add(
-                        getDateFilterSqlFragment(dateFilteringMode, dateFilter1.atTime(timeFilter1 == null ? LocalTime.MIN : timeFilter1), null, "timestamp")
-                );
+        // Ignore all date filtering parameters if mode is null.
+        if (dateFilteringMode != null) {
+            if (dateFilter1 != null) {
+                if (dateFilter2 != null) {
+                    conditions.add(
+                            getDateFilterSqlFragment(dateFilteringMode, dateFilter1.atTime(timeFilter1 == null ? LocalTime.MIN : timeFilter1), dateFilter2.atTime(timeFilter2 == null ? LocalTime.MAX : timeFilter2), "timestamp")
+                    );
+                } else {
+                    conditions.add(
+                            getDateFilterSqlFragment(dateFilteringMode, dateFilter1.atTime(timeFilter1 == null ? LocalTime.MIN : timeFilter1), null, "timestamp")
+                    );
+                }
             }
+        }
+
+        // Ignore all amount parameters if mode is null.
+        if (amountFilteringMode != null && !amountFilteringMode.equals(AmountFilterMode.NONE)) {
+            conditions.add(getAmountFilterSqlFragment(amountFilteringMode, amount1, amount2, "amount"));
         }
 
         if (commentFilter != null) {
