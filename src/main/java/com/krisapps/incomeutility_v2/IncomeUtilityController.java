@@ -1,5 +1,6 @@
 package com.krisapps.incomeutility_v2;
 
+import com.krisapps.incomeutility_v2.dialogs.AboutDialog;
 import com.krisapps.incomeutility_v2.dialogs.AccountInfoDialog;
 import com.krisapps.incomeutility_v2.dialogs.AddAccountWizard;
 import com.krisapps.incomeutility_v2.dialogs.ImportFromCashewDialog;
@@ -37,6 +38,7 @@ public class IncomeUtilityController {
     public final static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(4);
     public final UtilityManager utilities = UtilityManager.create();
     public final DataManager data = DataManager.getInstance();
+
     @FXML
     private VBox root;
 
@@ -67,6 +69,9 @@ public class IncomeUtilityController {
     private int nextColumn = 0;
 
     @FXML
+    private Label primaryLabel;
+
+    @FXML
     public void initialize() {
         IncomeUtilityApplication.updateTitle("Starting application...", true);
         data.initialize();
@@ -75,6 +80,11 @@ public class IncomeUtilityController {
         refreshAccountView();
 
         IncomeUtilityApplication.updateTitle("Dashboard", false);
+
+        primaryLabel.setOnMouseClicked(_ -> {
+            AboutDialog dlg = new AboutDialog();
+            dlg.showAndWait();
+        });
     }
 
     public static <V> Future<?> submitAsynchronousTask(Task<V> task) {

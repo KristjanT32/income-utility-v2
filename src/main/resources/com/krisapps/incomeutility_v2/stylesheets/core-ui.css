@@ -347,6 +347,19 @@
 
 /* </editor-fold> */
 
+/* <editor-fold desc="Hyperlink"> */
+.hyperlink {
+    -fx-border-width: 0;
+    -fx-text-fill: #367b8f;
+    -fx-padding: 0;
+}
+
+.hyperlink:visited {
+    -fx-text-fill: #214e5a;
+}
+
+/* </editor-fold> */
+
 /* <editor-fold desc="Titled Pane"> */
 .titled-pane:expanded > .title {
     -fx-background-color: #c8c8c8;
