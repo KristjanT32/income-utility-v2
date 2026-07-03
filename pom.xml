@@ -6,7 +6,7 @@
 
     <groupId>com.krisapps</groupId>
     <artifactId>income-utility-v2</artifactId>
-    <version>2.3.10</version>
+    <version>2.3.11</version>
     <name>Income Utility</name>
 
     <properties>
@@ -94,6 +94,9 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.krisapps.incomeutility_v2.IncomeUtilityApplication</mainClass>
+                                    <manifestEntries>
+                                        <Implementation-Version>${project.version}</Implementation-Version>
+                                    </manifestEntries>
                                 </transformer>
                             </transformers>
                             <!-- Prevents security exceptions from signed dependency jars -->
