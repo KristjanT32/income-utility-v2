@@ -4,10 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.ToNumberPolicy;
 import com.google.gson.stream.JsonReader;
+import com.krisapps.incomeutility_v2.types.AmountFilterMode;
 import com.krisapps.incomeutility_v2.types.DateFilteringMode;
 import com.krisapps.incomeutility_v2.types.SearchMode;
 import com.krisapps.incomeutility_v2.types.data.ConfigurationData;
 import com.krisapps.incomeutility_v2.types.data.LegacyData;
+import com.krisapps.incomeutility_v2.types.filtering.SearchCondition;
+import com.krisapps.incomeutility_v2.types.filtering.SearchConditionElement;
+import com.krisapps.incomeutility_v2.types.filtering.SearchConditionOperator;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
@@ -26,6 +30,7 @@ import javafx.scene.control.Alert;
 import javafx.util.Pair;
 import org.jetbrains.annotations.Nullable;
 
+import javax.naming.directory.InvalidSearchFilterException;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -650,13 +655,13 @@ public class DataManager {
 
 
     /**
-     * Returns the SQL condition fragment (e.g 'column = "string"' or any other condition) for the supplied filtering mode.
+     * Returns the SQL condition fragment (specifically the condition part) for the supplied filtering mode.
      *
-     * @param filteringMode The mode for which to return the condition.
+     * @param filteringMode The date filtering mode for which to return the condition.
      * @param date1         The first date argument (role depends on the filtering mode)
      * @param date2         The second date argument (role depends on the filtering mode)
-     * @param filterColumn  The name of the column which is being filtered.
-     * @return
+     * @param filterColumn  The name of the column by which to filter.
+     * @return The condition fragment
      */
     private String getDateFilterSqlFragment(DateFilteringMode filteringMode, LocalDateTime date1, LocalDateTime date2, String filterColumn) {
         switch (filteringMode) {
@@ -692,6 +697,39 @@ public class DataManager {
     }
 
     /**
+     * Returns the SQL condition fragment (specifically the condition part) for the supplied filtering mode.
+     *
+     * @param filteringMode The amount filtering mode for which to return the condition.
+     * @param amount1       The first amount argument. For modes which only require one amount, this will be the one used.
+     * @param amount2       The second amount argument. For modes which require two amounts, this is the second one.
+     * @param filterColumn  The name of the column by which to filter.
+     * @return The condition fragment
+     */
+    private String getAmountFilterSqlFragment(AmountFilterMode filteringMode, double amount1, double amount2, String filterColumn) {
+        return switch (filteringMode) {
+            case LESS_THAN -> "%filter% < %amount%"
+                    .replace("%filter%", filterColumn)
+                    .replace("%amount%", String.valueOf(amount1));
+            case LESS_THAN_OR_EQUAL_TO -> "%filter% <= %amount%"
+                    .replace("%filter%", filterColumn)
+                    .replace("%amount%", String.valueOf(amount1));
+            case EQUAL_TO -> "%filter% = %amount%"
+                    .replace("%filter%", filterColumn)
+                    .replace("%amount%", String.valueOf(amount1));
+            case BETWEEN -> "%filter% BETWEEN %bound1% AND %bound2%"
+                    .replace("%filter%", filterColumn)
+                    .replace("%bound1%", String.valueOf(amount1))
+                    .replace("%bound2%", String.valueOf(amount2));
+            case GREATER_THAN -> "%filter% > %amount%"
+                    .replace("%filter%", filterColumn)
+                    .replace("%amount%", String.valueOf(amount1));
+            case GREATER_THAN_OR_EQUAL_TO -> "%filter% >= %amount%"
+                    .replace("%filter%", filterColumn)
+                    .replace("%amount%", String.valueOf(amount1));
+        };
+    }
+
+    /**
      * Queries the database for all transactions matching the following filters.
      * If {@link SearchMode#AND} is used, only transactions matching all the criteria will be returned.
      * If {@link SearchMode#OR} is used, partial matches will also be returned.
@@ -714,9 +752,10 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
+        // TODO: Implement support for the amount filter.
+
         StringBuilder queryBuilder = new StringBuilder();
         LinkedList<String> conditions = new LinkedList<>();
-
 
         queryBuilder.append("SELECT * FROM transactions JOIN transaction_categories tc ON tc.id = transactions.customCategoryId");
 
@@ -772,6 +811,71 @@ public class DataManager {
 
         logger.debug("Executing: " + queryBuilder, "SQL");
         try (PreparedStatement stmt = currentConnection.prepareStatement(queryBuilder.toString())) {
+            ResultSet rs = stmt.executeQuery();
+
+            ArrayList<Transaction> results = new ArrayList<>();
+            while (rs.next()) {
+                results.add(mapResultSetToTransaction(rs));
+            }
+
+            return results;
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transactions. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            logger.logStackTrace(e);
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Retrieves all transactions based on the supplied search conditions.
+     *
+     * @param conditions A list of conditions to filter the transactions.
+     * @return All matching transactions
+     * @throws InvalidSearchFilterException If an invalid sequence of condition elements is supplied.
+     */
+    public List<Transaction> getTransactions(SearchConditionElement... conditions) throws InvalidSearchFilterException {
+        StringBuilder queryBuilder = new StringBuilder();
+        queryBuilder.append("SELECT * FROM transactions JOIN transaction_categories tc ON tc.id = transactions.customCategoryId");
+
+        if (conditions.length > 0) {
+            queryBuilder.append(" WHERE ");
+
+            SearchConditionElement previousElement = null;
+            int index = 0;
+            for (SearchConditionElement element : conditions) {
+                if (previousElement != null) {
+                    if (previousElement instanceof SearchConditionOperator && element instanceof SearchConditionOperator) {
+                        throw new InvalidSearchFilterException("A search condition operator must be followed by a search condition!");
+                    }
+
+                    if (previousElement instanceof SearchCondition && element instanceof SearchCondition) {
+                        throw new InvalidSearchFilterException("A search condition must be followed by a condition operator!");
+                    }
+                } else {
+                    if (element instanceof SearchConditionOperator) {
+                        throw new InvalidSearchFilterException("Search filter cannot start with a condition operator!");
+                    }
+                }
+
+                if (element instanceof SearchConditionOperator) {
+                    if (index + 1 > conditions.length - 1 || conditions[index + 1] instanceof SearchConditionOperator) {
+                        throw new InvalidSearchFilterException("Search operator at position " + index + " is not followed by a condition!");
+                    }
+                }
+
+                queryBuilder.append(element instanceof SearchCondition ? "(" + element.toSQL() + ")" : element.toSQL()).append(" ");
+                previousElement = element;
+                index++;
+            }
+        }
+        queryBuilder.append(";");
+
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        logger.debug("Executing: " + queryBuilder, "SQL");
+        try (PreparedStatement stmt = currentConnection.prepareStatement(queryBuilder.toString().trim())) {
             ResultSet rs = stmt.executeQuery();
 
             ArrayList<Transaction> results = new ArrayList<>();
