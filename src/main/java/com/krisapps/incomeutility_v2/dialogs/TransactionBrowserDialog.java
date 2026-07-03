@@ -1,6 +1,7 @@
 package com.krisapps.incomeutility_v2.dialogs;
 
 import com.krisapps.incomeutility_v2.dialogs.generic.LoadingDialog;
+import com.krisapps.incomeutility_v2.types.AmountFilterMode;
 import com.krisapps.incomeutility_v2.types.DateFilteringMode;
 import com.krisapps.incomeutility_v2.types.SearchMode;
 import com.krisapps.incomeutility_v2.types.TransactionTypeFilter;
@@ -38,7 +39,13 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
     private HBox dateFilters;
 
     @FXML
+    private HBox amountFilters;
+
+    @FXML
     private Separator dateFilterSeparator;
+
+    @FXML
+    private Separator amountFilterSeparator;
 
     @FXML
     private ComboBox<DateFilteringMode> dateFilterSelector;
@@ -57,6 +64,15 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
 
     @FXML
     private ComboBox<Account> accountFilter;
+
+    @FXML
+    private ComboBox<AmountFilterMode> amountFilterSelector;
+
+    @FXML
+    private TextField amountFilter1;
+
+    @FXML
+    private TextField amountFilter2;
 
     @FXML
     private TextField commentFilter;
@@ -78,6 +94,9 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
 
     @FXML
     private Label dateFilterSpacer;
+
+    @FXML
+    private Label amountFilterSpacer;
 
     @FXML
     private Label searchInfoLabel;
@@ -125,6 +144,9 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
                 timeFilter1.getText().isEmpty() ? null : LocalTime.parse(timeFilter1.getText(), DateTimeFormatter.ofPattern("HH:mm:ss")),
                 dateFilter2.getValue(),
                 timeFilter2.getText().isEmpty() ? null : LocalTime.parse(timeFilter2.getText(), DateTimeFormatter.ofPattern("HH:mm:ss")),
+                amountFilterSelector.getValue(),
+                amountFilter1.getText().isEmpty() ? null : Double.parseDouble(amountFilter1.getText()),
+                amountFilter2.getText().isEmpty() ? null : Double.parseDouble(amountFilter2.getText()),
                 commentExactMatchEnabled.get() ? commentFilter.getText() : (commentFilter.getText().isEmpty() ? null : "%" + commentFilter.getText() + "%"),
                 customCategoryExactMatchEnabled.get() ? exactCustomCategoryFilter.getValue() : (customCategoryFilter.getText().isEmpty() ? null : "%" + customCategoryFilter.getText() + "%"),
                 accountFilter.getValue() == null ? null : accountFilter.getValue().getId(),
@@ -199,6 +221,7 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
             }
         });
 
+        /* <editor-fold desc="Date filter UI setup"> */
         dateFilter1.managedProperty().bind(dateFilter1.visibleProperty());
         dateFilter2.managedProperty().bind(dateFilter2.visibleProperty());
         timeFilter1.managedProperty().bind(timeFilter1.visibleProperty());
@@ -207,6 +230,7 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
         dateFilterSpacer.visibleProperty().bind(dateFilter1.visibleProperty().and(dateFilter2.visibleProperty()));
         dateFilterSeparator.managedProperty().bind(dateFilterSeparator.visibleProperty());
         dateFilterSeparator.visibleProperty().bind(dateFilters.visibleProperty());
+        dateFilters.managedProperty().bind(dateFilters.visibleProperty());
 
         dateFilter1.setConverter(Formats.DATE_FORMAT);
         dateFilter2.setConverter(Formats.DATE_FORMAT);
@@ -232,14 +256,12 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
         dateFilterSelector.valueProperty().addListener((obs, old, val) -> {
             if (val != null) {
                 dateFilters.setVisible(true);
-                dateFilters.setManaged(true);
                 if (val.equals(DateFilteringMode.NONE)) {
                     dateFilter1.setVisible(false);
                     dateFilter2.setVisible(false);
                     timeFilter1.setVisible(false);
                     timeFilter2.setVisible(false);
                     dateFilters.setVisible(false);
-                    dateFilters.setManaged(false);
                 } else if (val.equals(DateFilteringMode.RANGE)) {
                     dateFilter1.setVisible(true);
                     dateFilter2.setVisible(true);
@@ -254,6 +276,52 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
             }
         });
         dateFilterSelector.getSelectionModel().select(DateFilteringMode.NONE);
+        /* </editor-fold> */
+
+        /* <editor-fold desc="Amount filter UI setup"> */
+        amountFilter1.managedProperty().bind(amountFilter1.visibleProperty());
+        amountFilter2.managedProperty().bind(amountFilter2.visibleProperty());
+        amountFilterSpacer.managedProperty().bind(amountFilterSpacer.visibleProperty());
+        amountFilterSpacer.visibleProperty().bind(amountFilter1.visibleProperty().and(amountFilter2.visibleProperty()));
+        amountFilterSeparator.managedProperty().bind(amountFilterSeparator.visibleProperty());
+        amountFilterSeparator.visibleProperty().bind(amountFilters.visibleProperty());
+        amountFilters.managedProperty().bind(amountFilters.visibleProperty());
+
+        amountFilter1.setTextFormatter(new TextFormatter<>(Formats.NUMBERS_ONLY_FORMATTER));
+        amountFilter2.setTextFormatter(new TextFormatter<>(Formats.NUMBERS_ONLY_FORMATTER));
+
+        amountFilterSelector.getItems().setAll(AmountFilterMode.values());
+        amountFilterSelector.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(AmountFilterMode object) {
+                return object.getDisplayName();
+            }
+
+            @Override
+            public AmountFilterMode fromString(String string) {
+                return null;
+            }
+        });
+        amountFilterSelector.valueProperty().addListener((obs, old, val) -> {
+            if (val != null) {
+                amountFilters.setVisible(true);
+                if (val.equals(AmountFilterMode.NONE)) {
+                    amountFilter1.setVisible(false);
+                    amountFilter2.setVisible(false);
+                    amountFilters.setVisible(false);
+                } else if (val.equals(AmountFilterMode.BETWEEN)) {
+                    amountFilter1.setVisible(true);
+                    amountFilter2.setVisible(true);
+                } else {
+                    amountFilter1.setVisible(true);
+                    amountFilter2.setVisible(false);
+                }
+            }
+        });
+        amountFilterSelector.getSelectionModel().select(AmountFilterMode.NONE);
+        /* </editor-fold> */
+
+
 
         searchModeSelector.getItems().setAll(SearchMode.values());
         searchModeSelector.getSelectionModel().select(SearchMode.AND);
@@ -350,6 +418,9 @@ public class TransactionBrowserDialog extends IncomeUtilityDialog<Void> {
             dateFilter2.setValue(null);
             timeFilter1.setText("");
             timeFilter2.setText("");
+            amountFilterSelector.setValue(AmountFilterMode.NONE);
+            amountFilter1.setText("");
+            amountFilter2.setText("");
             commentFilter.setText("");
             customCategoryFilter.setText("");
             exactCustomCategoryFilter.setValue("");
