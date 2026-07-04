@@ -35,9 +35,6 @@ This utility gives the user the ability to record products, view various pricing
 This utility is currently unimplemented, but the goal is to provide the user a neat way of organizing their subscriptions, to make it easier to keep track of payments and/or spending. Ideally, the utility ought to
 integrate with Money In, Money Out, so subscription payments can be added automatically.
 
-## Pantry (W.I.P)
-This utility is planned to give the user a way of tracking inventory of their pantry (or any...uhh, storage type for that matter). The utility is also planned to integrate with both Pricer and Money In, Money Out, to allow for automatic shopping list creation, various statistics and more!
-
 ## Settings
 Settings isn't a utility per se, but it is also implemented as a separate utility - currently, you can change the data source from it, as well as manage custom transaction categories. 
 Settings also allows you to manage Pricer's currency settings and configure logging.
