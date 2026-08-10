@@ -6,7 +6,7 @@
 
     <groupId>com.krisapps</groupId>
     <artifactId>income-utility-v2</artifactId>
-    <version>2.3.11</version>
+    <version>2.3.12</version>
     <name>Income Utility</name>
 
     <properties>

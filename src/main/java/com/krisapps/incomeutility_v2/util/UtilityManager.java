@@ -5,7 +5,6 @@ import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityType;
 import com.krisapps.incomeutility_v2.subutilities.breakdown.BreakdownUtility;
 import com.krisapps.incomeutility_v2.subutilities.money_flow.MoneyFlowUtility;
-import com.krisapps.incomeutility_v2.subutilities.pantry.PantryUtility;
 import com.krisapps.incomeutility_v2.subutilities.pricer.PricerUtility;
 import com.krisapps.incomeutility_v2.subutilities.settings.SettingsUtility;
 import javafx.scene.control.ButtonBar;
@@ -78,9 +77,6 @@ public class UtilityManager {
             }
             case SETTINGS -> {
                 utility = new SettingsUtility();
-            }
-            case PANTRY -> {
-                utility = new PantryUtility();
             }
 
             default -> throw new IllegalArgumentException("Invalid subutility '" + subutility + "'");
