@@ -55,9 +55,6 @@ public class IncomeUtilityController {
     private VBox breakdownCell;
 
     @FXML
-    private VBox pantryCell;
-
-    @FXML
     private VBox subscriptionsCell;
 
     @FXML
@@ -113,14 +110,6 @@ public class IncomeUtilityController {
                 utilities.openUtility(SubUtilityType.BREAKDOWN);
             } else {
                 utilities.focusAll(SubUtilityType.BREAKDOWN);
-            }
-        });
-
-        pantryCell.setOnMouseClicked((e) -> {
-            if (!e.isShiftDown()) {
-                utilities.openUtility(SubUtilityType.PANTRY);
-            } else {
-                utilities.focusAll(SubUtilityType.PANTRY);
             }
         });
 

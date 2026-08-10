@@ -8,7 +8,7 @@ public enum AmountFilterMode {
     EQUAL_TO("Equal to (=)"),
     BETWEEN("Between (both sides inclusive)"),
     GREATER_THAN("Greater than (>)"),
-    GREATER_THAN_OR_EQUAL_TO("Greater than (>=)");
+    GREATER_THAN_OR_EQUAL_TO("Greater than or equal to (>=)");
     private String displayName;
 
     AmountFilterMode(String displayName) {

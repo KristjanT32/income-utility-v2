@@ -236,6 +236,16 @@
     -fx-border-color: #9c9c9c;
 }
 
+.spinner > .increment-arrow-button {
+    -fx-border-radius: 0 10px 0 0;
+    -fx-background-radius: 0 10px 0 0;
+}
+
+.spinner > .decrement-arrow-button {
+    -fx-border-radius: 0 0 10px 0;
+    -fx-background-radius: 0 0 10px 0;
+}
+
 .spinner > .increment-arrow-button:hover, .spinner > .decrement-arrow-button:hover {
     -fx-background-color: #bcbcbc;
 }
