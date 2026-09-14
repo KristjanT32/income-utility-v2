@@ -7,6 +7,7 @@ import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Logging;
 import com.krisapps.incomeutility_v2.util.PopupManager;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -28,6 +29,7 @@ public class MigrationService {
 
     private static MigrationService instance;
     private final Connection databaseConnection;
+    private final Logging logger = Logging.getInstance();
 
     /**
      * Initializes the MigrationService.
@@ -266,7 +268,7 @@ public class MigrationService {
      */
     public boolean copyCategories(List<String> categories, @Nullable LoadingDialog progressDialog) {
         try {
-            databaseConnection.prepareStatement("INSERT INTO transaction_categories (id, displayName) VALUES (0, 'No custom category');").execute();
+            databaseConnection.prepareStatement("INSERT OR IGNORE INTO transaction_categories (id, displayName) VALUES (0, 'No custom category');").execute();
             for (String category : categories) {
                 boolean success = copyCategory(category, progressDialog);
                 if (!success) {
@@ -282,6 +284,7 @@ public class MigrationService {
             return true;
         } catch (SQLException e) {
             PopupManager.showPopup("SQL exception during category migration!", "The following error occurred when migrating custom transaction categories: " + e.getMessage(), Alert.AlertType.ERROR);
+            logger.logStackTrace(e);
             return false;
         }
     }
