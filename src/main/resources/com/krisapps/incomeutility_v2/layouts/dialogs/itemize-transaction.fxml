@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import java.lang.*?>
+<?import java.net.URL?>
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity"
+      prefHeight="525.0" prefWidth="419.0" spacing="10.0" xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+    <children>
+        <Label styleClass="title" text="Itemize transaction">
+            <VBox.margin>
+                <Insets/>
+            </VBox.margin>
+        </Label>
+        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" VBox.vgrow="ALWAYS">
+            <children>
+                <Label maxWidth="1.7976931348623157E308"
+                       text="Break down the total amount of the transaction by itemizing it." wrapText="true"
+                       VBox.vgrow="SOMETIMES"/>
+                <Label maxWidth="1.7976931348623157E308"
+                       text="You can use already existing products from Pricer, or add custom entries and specify their price."
+                       wrapText="true" VBox.vgrow="SOMETIMES"/>
+            </children>
+        </VBox>
+        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="SOMETIMES">
+            <children>
+                <HBox>
+                    <children>
+                        <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                               text="Items associated with this transaction" HBox.hgrow="ALWAYS">
+                            <styleClass>
+                                <String fx:value="bold"/>
+                                <String fx:value="large-label"/>
+                            </styleClass>
+                        </Label>
+                        <MenuButton maxHeight="1.7976931348623157E308" mnemonicParsing="false" styleClass="medium-label"
+                                    text="Add...">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="Custom item"/>
+                                <MenuItem mnemonicParsing="false" text="Pricer item"/>
+                            </items>
+                        </MenuButton>
+                    </children>
+                    <VBox.margin>
+                        <Insets bottom="5.0"/>
+                    </VBox.margin>
+                </HBox>
+                <ListView maxWidth="1.7976931348623157E308" VBox.vgrow="SOMETIMES"/>
+            </children>
+        </VBox>
+        <HBox spacing="25.0">
+            <children>
+                <HBox maxWidth="1.7976931348623157E308" spacing="5.0" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Itemized total:"
+                               HBox.hgrow="ALWAYS"/>
+                        <Label alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="0.00"
+                               HBox.hgrow="SOMETIMES">
+                            <styleClass>
+                                <String fx:value="medium-label"/>
+                                <String fx:value="bold"/>
+                            </styleClass>
+                        </Label>
+                    </children>
+                </HBox>
+                <HBox maxWidth="1.7976931348623157E308" spacing="5.0" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Miscellaneous:"
+                               HBox.hgrow="ALWAYS"/>
+                        <Label alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="0.00"
+                               HBox.hgrow="SOMETIMES">
+                            <styleClass>
+                                <String fx:value="medium-label"/>
+                                <String fx:value="bold"/>
+                            </styleClass>
+                        </Label>
+                    </children>
+                </HBox>
+            </children>
+            <styleClass>
+                <String fx:value="rounded-container"/>
+                <String fx:value="large"/>
+            </styleClass>
+        </HBox>
+    </children>
+    <stylesheets>
+        <URL value="@../../stylesheets/core-ui.css"/>
+        <URL value="@../../stylesheets/main.css"/>
+    </stylesheets>
+</VBox>

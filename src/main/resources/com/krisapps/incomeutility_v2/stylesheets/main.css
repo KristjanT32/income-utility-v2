@@ -266,4 +266,14 @@
     -fx-font-weight: bold;
 }
 
+.add-button {
+    -fx-background-color: #79dd79;
+    -fx-border-color: #79dd79;
+}
+
+.edit-button {
+    -fx-background-color: #dddb79;
+    -fx-border-color: #dddb79;
+}
+
 /* </editor-fold> */
