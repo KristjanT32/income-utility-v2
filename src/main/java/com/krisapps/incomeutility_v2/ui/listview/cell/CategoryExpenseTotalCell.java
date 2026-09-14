@@ -1,11 +1,9 @@
 package com.krisapps.incomeutility_v2.ui.listview.cell;
 
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
-import com.krisapps.incomeutility_v2.dialogs.generic.ListDialog;
+import com.krisapps.incomeutility_v2.dialogs.TransactionListDialog;
 import com.krisapps.incomeutility_v2.types.data.CategorySummary;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
-import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
-import com.krisapps.incomeutility_v2.ui.listview.TransactionCellFactory;
 import com.krisapps.incomeutility_v2.util.Formatting;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -55,8 +53,7 @@ public class CategoryExpenseTotalCell extends ListCell<CategorySummary> {
         super.updateItem(item, empty);
 
         showTransactionsButton.setOnAction(ev -> {
-            ListDialog<Transaction> transactionListDialog = new ListDialog<>("Category transactions");
-            transactionListDialog.setListViewCellFactory(new TransactionCellFactory(parent, (_) -> {}, true));
+            TransactionListDialog transactionListDialog = new TransactionListDialog("Category transactions");
             transactionListDialog.setItems(item.getTransactions());
             transactionListDialog.setLabel("Transactions marked");
             transactionListDialog.setSubLabel(item.getCategoryName());

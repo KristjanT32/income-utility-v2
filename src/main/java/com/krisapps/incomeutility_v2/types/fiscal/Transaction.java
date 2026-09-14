@@ -5,6 +5,7 @@ import com.krisapps.incomeutility_v2.types.transaction.TransactionCategory;
 import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.Formatting;
+import com.krisapps.incomeutility_v2.util.misc.Formats;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.*;
@@ -173,6 +174,22 @@ public class Transaction {
         } else {
             return Formatting.formatMoney(absolute ? Math.abs(this.amount) : this.amount, CurrencyConfig.DEFAULT.getCurrencySymbol(), CurrencyConfig.DEFAULT.isCurrencySymbolPrefix());
         }
+    }
+
+    public String asStringRepresentation() {
+        String template = switch (type) {
+            case DEPOSIT -> "%type% of %value% to %account2% at %timestamp%";
+            case WITHDRAWAL -> "%type% of %value% from %account2% at %timestamp%";
+            case TRANSFER -> "%type% of %value% to %account1% from %account2% at %timestamp%";
+        };
+
+        return template
+                .replace("%type%", type.getDisplayName())
+                .replace("%value%", Formatting.formatMoney(this.getAbsoluteAmount()))
+                .replace("%account1%", sourceAccountId != null ? sourceAccountId.toString() : "N/A")
+                .replace("%account2%", targetAccountId != null ? targetAccountId.toString() : "N/A")
+                .replace("%timestamp%", Formats.DATETIME_FORMATTER.format(timestamp))
+                ;
     }
 
     public Transaction copy() {

@@ -1,6 +1,6 @@
 package com.krisapps.incomeutility_v2.subutilities.breakdown;
 
-import com.krisapps.incomeutility_v2.dialogs.generic.ListDialog;
+import com.krisapps.incomeutility_v2.dialogs.TransactionListDialog;
 import com.krisapps.incomeutility_v2.subutilities.SubUtility;
 import com.krisapps.incomeutility_v2.subutilities.SubUtilityController;
 import com.krisapps.incomeutility_v2.types.data.CategorySummary;
@@ -317,10 +317,9 @@ public class BreakdownController extends SubUtilityController {
                 Tooltip tooltip = new Tooltip("%s (%s%%)".formatted(Formatting.formatMoney(slice.getPieValue(), selectedAccount.getCurrencyConfig()), Formatting.decimalFormatter.format((slice.getPieValue() / total) * 100)));
                 Tooltip.install(slice.getNode(), tooltip);
                 slice.getNode().setOnMouseClicked(_ -> {
-                    ListDialog<Transaction> listDialog = new ListDialog<>("Transactions for category '" + slice.getName() + "'");
+                    TransactionListDialog listDialog = new TransactionListDialog("Transactions for category '" + slice.getName() + "'");
                     listDialog.setLabel("Transactions marked");
                     listDialog.setSubLabel("%s, %s".formatted(slice.getName(), Formatting.formatMoney(slice.getPieValue(), selectedAccount.getCurrencyConfig())));
-                    listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {}, true));
                     listDialog.setItems(transactionList.getItems().stream().filter(t -> t.getCategory().name().equalsIgnoreCase(slice.getName()) || t.getCustomCategory().equalsIgnoreCase(slice.getName())).toList());
                     listDialog.show();
                 });
@@ -344,11 +343,9 @@ public class BreakdownController extends SubUtilityController {
                 Tooltip tooltip = new Tooltip("%s (%s%%)".formatted(Formatting.formatMoney(slice.getPieValue(), selectedAccount.getCurrencyConfig()), Formatting.decimalFormatter.format((slice.getPieValue() / total) * 100)));
                 Tooltip.install(slice.getNode(), tooltip);
                 slice.getNode().setOnMouseClicked(_ -> {
-                    ListDialog<Transaction> listDialog = new ListDialog<>("Transactions for category '" + slice.getName() + "'");
+                    TransactionListDialog listDialog = new TransactionListDialog("Transactions for category '" + slice.getName() + "'");
                     listDialog.setLabel("Transactions marked");
                     listDialog.setSubLabel("%s, %s".formatted(slice.getName(), Formatting.formatMoney(slice.getPieValue(), selectedAccount.getCurrencyConfig())));
-                    listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {
-                    }, true));
                     listDialog.setItems(cachedTransactions.stream().filter(t -> t.getCategory().name().equalsIgnoreCase(slice.getName()) || t.getCustomCategory().equalsIgnoreCase(slice.getName()) && fiscal.isIncome(selectedAccount, t)).toList());
                     listDialog.show();
                 });
@@ -372,10 +369,9 @@ public class BreakdownController extends SubUtilityController {
 
                     dataPoint.getNode().setCursor(Cursor.HAND);
                     dataPoint.getNode().setOnMouseClicked(_ -> {
-                        ListDialog<Transaction> listDialog = new ListDialog<>("Transactions on " + dataPoint.getXValue());
+                        TransactionListDialog listDialog = new TransactionListDialog("Transactions on " + dataPoint.getXValue());
                         listDialog.setLabel("Transactions on " + dataPoint.getXValue());
                         listDialog.setSubLabel("Total: " + Formatting.formatMoney(dataPoint.getYValue(), selectedAccount.getCurrencyConfig()));
-                        listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {}, true));
                         listDialog.setItems(transactionList.getItems().stream().filter(t -> t.getTimestamp().toLocalDate().equals(LocalDate.parse(dataPoint.getXValue(), DateTimeFormatter.ofPattern("dd/MM/yyyy")))).toList());
                         listDialog.show();
                     });
@@ -394,10 +390,9 @@ public class BreakdownController extends SubUtilityController {
                     Tooltip.install(dataPoint.getNode(), tooltip);
 
                     dataPoint.getNode().setOnMouseClicked(_ -> {
-                        ListDialog<Transaction> listDialog = new ListDialog<>("Transactions for category '" + dataPoint.getXValue() + "'");
+                        TransactionListDialog listDialog = new TransactionListDialog("Transactions for category '" + dataPoint.getXValue() + "'");
                         listDialog.setLabel("Transactions marked");
                         listDialog.setSubLabel("%s, %s".formatted(dataPoint.getXValue(), Formatting.formatMoney(dataPoint.getYValue(), selectedAccount.getCurrencyConfig())));
-                        listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {}, true));
                         listDialog.setItems(transactionList.getItems().stream().filter(t -> t.getCategory().name().equalsIgnoreCase(dataPoint.getXValue()) || t.getCustomCategory().equalsIgnoreCase(dataPoint.getXValue())).toList());
                         listDialog.show();
                     });
@@ -415,11 +410,9 @@ public class BreakdownController extends SubUtilityController {
                     Tooltip.install(dataPoint.getNode(), tooltip);
 
                     dataPoint.getNode().setOnMouseClicked(_ -> {
-                        ListDialog<Transaction> listDialog = new ListDialog<>("Transactions for category '" + dataPoint.getXValue() + "'");
+                        TransactionListDialog listDialog = new TransactionListDialog("Transactions for category '" + dataPoint.getXValue() + "'");
                         listDialog.setLabel("Transactions marked");
                         listDialog.setSubLabel("%s, %s".formatted(dataPoint.getXValue(), Formatting.formatMoney(dataPoint.getYValue(), selectedAccount.getCurrencyConfig())));
-                        listDialog.setListViewCellFactory(new TransactionCellFactory(selectedAccount, _ -> {
-                        }, true));
                         listDialog.setItems(cachedTransactions.stream().filter(t -> t.getCategory().name().equalsIgnoreCase(dataPoint.getXValue()) || t.getCustomCategory().equalsIgnoreCase(dataPoint.getXValue()) && fiscal.isIncome(selectedAccount, t)).toList());
                         listDialog.show();
                     });

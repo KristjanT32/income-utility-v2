@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import java.net.URL?>
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity"
+      prefHeight="522.0" prefWidth="647.0" spacing="10.0" xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="25.0" VBox.vgrow="SOMETIMES">
+            <VBox.margin>
+                <Insets/>
+            </VBox.margin>
+            <children>
+                <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label fx:id="label" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                               styleClass="title" text="Primary label"/>
+                        <Label fx:id="sublabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                               styleClass="xl-label" text="Secondary label"/>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+        <ListView fx:id="transactionList" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                  VBox.vgrow="SOMETIMES"/>
+        <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308">
+            <children>
+                <MenuButton maxWidth="250.0" mnemonicParsing="false" text="Export selected transactions..."
+                            HBox.hgrow="ALWAYS">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#exportAsCSV" text="Export as CSV"/>
+                        <MenuItem mnemonicParsing="false" onAction="#exportAsPlainText" text="Export as plain text"/>
+                        <MenuItem mnemonicParsing="false" onAction="#exportAsExcelWorksheet"
+                                  text="Export as an Excel worksheet"/>
+                    </items>
+                    <graphic>
+                        <FontIcon iconLiteral="fltfal-arrow-export-20" iconSize="12" wrappingWidth="16.0"/>
+                    </graphic>
+                </MenuButton>
+            </children>
+        </HBox>
+    </children>
+    <stylesheets>
+        <URL value="@../../stylesheets/core-ui.css"/>
+        <URL value="@../../stylesheets/main.css"/>
+    </stylesheets>
+</VBox>
