@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import java.lang.*?>
 <?import java.net.URL?>
 <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity"
@@ -29,28 +30,39 @@
         </VBox>
         <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="SOMETIMES">
             <children>
-                <HBox>
+                <VBox alignment="CENTER_LEFT" spacing="5.0">
                     <children>
                         <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-                               text="Items associated with this transaction" HBox.hgrow="ALWAYS">
+                               text="Items associated with this transaction">
                             <styleClass>
                                 <String fx:value="bold"/>
                                 <String fx:value="large-label"/>
                             </styleClass>
                         </Label>
-                        <MenuButton maxHeight="1.7976931348623157E308" mnemonicParsing="false" styleClass="medium-label"
-                                    text="Add...">
-                            <items>
-                                <MenuItem mnemonicParsing="false" text="Custom item"/>
-                                <MenuItem mnemonicParsing="false" text="Pricer item"/>
-                            </items>
-                        </MenuButton>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+                                <Button fx:id="addCustomItemButton" maxWidth="1.7976931348623157E308"
+                                        mnemonicParsing="false" styleClass="medium-label" text="New item"
+                                        HBox.hgrow="ALWAYS">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fltfmz-table-add-24" iconSize="16"/>
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="addPricerItemButton" maxWidth="1.7976931348623157E308"
+                                        mnemonicParsing="false" styleClass="medium-label" text="New Pricer item"
+                                        HBox.hgrow="ALWAYS">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fltfal-document-search-24" iconSize="16"/>
+                                    </graphic>
+                                </Button>
+                            </children>
+                        </HBox>
                     </children>
                     <VBox.margin>
                         <Insets bottom="5.0"/>
                     </VBox.margin>
-                </HBox>
-                <ListView maxWidth="1.7976931348623157E308" VBox.vgrow="SOMETIMES"/>
+                </VBox>
+                <ListView fx:id="itemList" maxWidth="1.7976931348623157E308" VBox.vgrow="SOMETIMES"/>
             </children>
         </VBox>
         <HBox spacing="25.0">

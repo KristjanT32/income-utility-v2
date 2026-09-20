@@ -62,6 +62,10 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
 
     @FXML
     private Button deleteButton;
+
+    @FXML
+    private TitledPane itemizedBreakdownPanel;
+
     private final Transaction transaction;
 
     public TransactionDetailsDialog(Transaction t, Account selectedAccount, boolean isReadOnly) {

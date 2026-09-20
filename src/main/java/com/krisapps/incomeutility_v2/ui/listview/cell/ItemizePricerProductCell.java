@@ -55,8 +55,12 @@ public class ItemizePricerProductCell extends ListCell<ItemizableItem> {
         }
     }
 
+    public VBox getRootPane() {
+        return rootPane;
+    }
+
     @Override
-    protected void updateItem(ItemizableItem item, boolean empty) {
+    public void updateItem(ItemizableItem item, boolean empty) {
         super.updateItem(item, empty);
     }
 }

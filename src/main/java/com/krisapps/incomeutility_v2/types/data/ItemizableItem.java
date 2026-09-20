@@ -3,19 +3,21 @@ package com.krisapps.incomeutility_v2.types.data;
 import com.krisapps.incomeutility_v2.types.pricer.Product;
 
 public record ItemizableItem(
+        int relationId,
+        int transactionId,
+        int productId,
         String itemName,
-        double itemPrice,
-        int pricerProductId
+        Double itemPrice
 ) {
-    public static ItemizableItem of(String itemName, double itemPrice) {
-        return new ItemizableItem(itemName, itemPrice, -1);
+    public static ItemizableItem ofPricerProduct(Product product, int transactionId) {
+        return new ItemizableItem(-1, transactionId, product.id(), product.name(), product.price());
     }
 
-    public static ItemizableItem of(Product pricerProduct) {
-        return new ItemizableItem(pricerProduct.name(), pricerProduct.price(), pricerProduct.id());
+    public static ItemizableItem ofCustomProduct(String name, Double price, int transactionId) {
+        return new ItemizableItem(-1, transactionId, -1, name, price);
     }
 
     public boolean isPricerProduct() {
-        return pricerProductId != -1;
+        return productId != -1;
     }
 }

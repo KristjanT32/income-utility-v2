@@ -117,7 +117,20 @@
              <Insets top="20.0"/>
          </VBox.margin>
       </VBox>
-       <TitledPane expanded="false" text="More info">
+       <TitledPane fx:id="itemizedBreakdownPanel" disable="true" expanded="false" text="Itemized breakdown">
+           <content>
+               <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308"
+                           maxWidth="1.7976931348623157E308">
+                   <padding>
+                       <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                   </padding>
+                   <content>
+                       <ListView maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"/>
+                   </content>
+               </ScrollPane>
+           </content>
+       </TitledPane>
+       <TitledPane text="More info">
            <content>
                <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308"
                            maxWidth="1.7976931348623157E308">

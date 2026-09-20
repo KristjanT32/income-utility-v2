@@ -8,6 +8,7 @@ import com.krisapps.incomeutility_v2.types.AmountFilterMode;
 import com.krisapps.incomeutility_v2.types.DateFilteringMode;
 import com.krisapps.incomeutility_v2.types.SearchMode;
 import com.krisapps.incomeutility_v2.types.data.ConfigurationData;
+import com.krisapps.incomeutility_v2.types.data.ItemizableItem;
 import com.krisapps.incomeutility_v2.types.data.LegacyData;
 import com.krisapps.incomeutility_v2.types.filtering.SearchCondition;
 import com.krisapps.incomeutility_v2.types.filtering.SearchConditionElement;
@@ -404,7 +405,7 @@ public class DataManager {
 
 
     //<editor-fold desc="Data access">
-    public Transaction mapResultSetToTransaction(ResultSet row) throws SQLException {
+    public static Transaction mapResultSetToTransaction(ResultSet row) throws SQLException {
         UUID uuid = UUID.fromString(row.getString("uuid"));
         TransactionType type = TransactionType.valueOf(row.getString("type"));
         String cashewTransactionId = row.getString("cashewTransactionId");
@@ -445,7 +446,7 @@ public class DataManager {
         return t;
     }
 
-    public Product mapResultSetToProduct(ResultSet row) throws SQLException {
+    public static Product mapResultSetToProduct(ResultSet row) throws SQLException {
         try {
             return new Product(
                     row.getInt("id"),
@@ -463,7 +464,7 @@ public class DataManager {
         }
     }
 
-    public Dish mapResultSetToDish(ResultSet row, List<DishIngredient> ingredients) throws SQLException {
+    public static Dish mapResultSetToDish(ResultSet row, List<DishIngredient> ingredients) throws SQLException {
         try {
             return new Dish(
                     row.getInt("id"),
@@ -473,6 +474,21 @@ public class DataManager {
             );
         } catch (SQLException e) {
             log("Failed to map the supplied ResultSet to a Dish record!");
+            return null;
+        }
+    }
+
+    public static ItemizableItem mapResultSetToTransactionItem(ResultSet response) throws SQLException {
+        try {
+            return new ItemizableItem(
+                    response.getInt("id"),
+                    response.getInt("transaction_id") == 0 ? -1 : response.getInt("transaction_id"),
+                    response.getInt("product_id") == 0 ? -1 : response.getInt("product_id"),
+                    response.getString("custom_product_name"),
+                    response.getDouble("custom_product_price")
+            );
+        } catch (SQLException e) {
+            log("Failed to map the supplied ResultSet to a ItemizableItem record!");
             return null;
         }
     }
@@ -1115,6 +1131,69 @@ public class DataManager {
             PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying dish ingredients. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
         return new ArrayList<>();
+    }
+
+    public List<ItemizableItem> getTransactionItems() {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transaction_items;")) {
+            try (ResultSet response = stmt.executeQuery()) {
+                List<ItemizableItem> out = new ArrayList<>();
+                while (response.next()) {
+                    out.add(mapResultSetToTransactionItem(response));
+                }
+
+                return out;
+            }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transaction items. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return new ArrayList<>();
+    }
+
+    public List<ItemizableItem> getTransactionItems(int transactionId) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transaction_items WHERE transaction_id = ?;")) {
+            stmt.setInt(1, transactionId);
+
+            try (ResultSet response = stmt.executeQuery()) {
+                List<ItemizableItem> out = new ArrayList<>();
+                while (response.next()) {
+                    out.add(mapResultSetToTransactionItem(response));
+                }
+
+                return out;
+            }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transaction items. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return new ArrayList<>();
+    }
+
+    public Optional<ItemizableItem> getTransactionItem(int itemId) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transaction_items WHERE id = ?;")) {
+            stmt.setInt(1, itemId);
+
+            try (ResultSet response = stmt.executeQuery()) {
+                if (response.next()) {
+                    return Optional.of(mapResultSetToTransactionItem(response));
+                } else {
+                    return Optional.empty();
+                }
+            }
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to retrieve data!", "An SQL error was encountered while querying transaction item data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+        return Optional.empty();
     }
 
     public boolean customTransactionCategoryExists(String category) {
@@ -1836,6 +1915,76 @@ public class DataManager {
             }
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while deleting dish data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void addTransactionItem(int transactionId, ItemizableItem item) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        if (transactionId == -1) {
+            throw new IllegalArgumentException("Transaction ID cannot be -1!");
+        }
+
+        try (PreparedStatement statement = currentConnection.prepareStatement("INSERT INTO transaction_items (transaction_id, product_id, custom_product_name, custom_product_price) VALUES (?, ?, ?, ?);")) {
+            statement.setInt(1, transactionId);
+            if (item.isPricerProduct()) {
+                statement.setInt(2, item.productId());
+                statement.setNull(3, Types.VARCHAR);
+                statement.setNull(4, Types.REAL);
+            } else {
+                statement.setNull(2, Types.INTEGER);
+                statement.setString(3, item.itemName());
+                statement.setDouble(4, item.itemPrice());
+            }
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while writing transaction item data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void updateTransactionItem(int itemId, ItemizableItem data) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        if (itemId == -1) {
+            throw new IllegalArgumentException("Item ID cannot be -1!");
+        }
+
+        try (PreparedStatement statement = currentConnection.prepareStatement("UPDATE transaction_items SET transaction_id = ?, product_id = ?, custom_product_name = ?, custom_product_price = ? WHERE id = ?;")) {
+            statement.setInt(1, data.transactionId());
+            if (data.isPricerProduct()) {
+                statement.setInt(2, data.productId());
+                statement.setNull(3, Types.VARCHAR);
+                statement.setNull(4, Types.REAL);
+            } else {
+                statement.setNull(2, Types.INTEGER);
+                statement.setString(3, data.itemName());
+                statement.setDouble(4, data.itemPrice());
+            }
+            statement.setInt(5, itemId);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while updating transaction item data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void deleteTransactionItem(int itemId) {
+        if (currentConnection == null) {
+            currentConnection = getDatabaseConnection();
+        }
+
+        if (itemId == -1) {
+            throw new IllegalArgumentException("Item ID cannot be -1!");
+        }
+
+        try (PreparedStatement statement = currentConnection.prepareStatement("DELETE FROM transaction_items WHERE id = ?;")) {
+            statement.setInt(1, itemId);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            PopupManager.showPopup("Failed to delete data!", "An SQL error was encountered while deleting transaction item data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
