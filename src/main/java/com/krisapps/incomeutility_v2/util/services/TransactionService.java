@@ -1,6 +1,7 @@
 package com.krisapps.incomeutility_v2.util.services;
 
 import com.krisapps.incomeutility_v2.exceptions.TransactionNotPermittedException;
+import com.krisapps.incomeutility_v2.types.data.ItemizableItem;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.fiscal.cashew.CashewTransaction;
@@ -74,7 +75,7 @@ public class TransactionService {
         }
 
         Account account = a.get();
-        data.addTransaction(new Transaction(TransactionType.DEPOSIT, amount, accountId, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment, null));
+        data.addTransaction(new Transaction(TransactionType.DEPOSIT, amount, accountId, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment, null, -1));
         data.updateAccount(accountId, account);
         log("New transaction registered: DEPOSIT of %s to %s".formatted(amount, account.getName()));
     }
@@ -105,7 +106,7 @@ public class TransactionService {
 
         Account account = a.get();
 
-        data.addTransaction(new Transaction(TransactionType.WITHDRAWAL, amount, accountId, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment, null));
+        data.addTransaction(new Transaction(TransactionType.WITHDRAWAL, amount, accountId, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment, null, -1));
         data.updateAccount(accountId, account);
         log("New transaction registered: WITHDRAWAL of %s from %s".formatted(amount, account.getName()));
     }
@@ -145,7 +146,7 @@ public class TransactionService {
 
         data.updateAccount(fromAccount.getId(), fromAccount);
         data.updateAccount(toAccount.getId(), toAccount);
-        data.addTransaction(new Transaction(TransactionType.TRANSFER, amount, from, to, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment, null));
+        data.addTransaction(new Transaction(TransactionType.TRANSFER, amount, from, to, time != null ? time : LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()), category, customCategory, comment, null, -1));
         log("New transaction registered: TRANSFER of %s from %s to %s".formatted(amount, fromAccount.getName(), toAccount.getName()));
     }
 
@@ -288,6 +289,22 @@ public class TransactionService {
         } else {
             return data.importedTransactionExists(account, transaction);
         }
+    }
+
+    public boolean isItemized(Transaction t) {
+        return !data.getTransactionItems(t.getDatabaseId()).isEmpty();
+    }
+
+    public List<ItemizableItem> getTransactionItems(Transaction t) {
+        if (t == null) {
+            return new ArrayList<>();
+        }
+
+        if (!isItemized(t)) {
+            return new ArrayList<>();
+        }
+
+        return data.getTransactionItems(t.getDatabaseId());
     }
 
     private void log(String msg) {

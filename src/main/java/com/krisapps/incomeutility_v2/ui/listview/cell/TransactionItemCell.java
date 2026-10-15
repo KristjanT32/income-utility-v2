@@ -3,19 +3,18 @@ package com.krisapps.incomeutility_v2.ui.listview.cell;
 import com.krisapps.incomeutility_v2.IncomeUtilityApplication;
 import com.krisapps.incomeutility_v2.types.data.ItemizableItem;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
-import com.krisapps.incomeutility_v2.types.pricer.Product;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 
-public class ItemizePricerProductCell extends ListCell<ItemizableItem> {
+public class TransactionItemCell extends ListCell<ItemizableItem> {
     @FXML
     private VBox rootPane;
 
@@ -32,14 +31,20 @@ public class ItemizePricerProductCell extends ListCell<ItemizableItem> {
     private HBox itemSetupPanel;
 
     @FXML
-    private ComboBox<Product> itemPicker;
+    private TextField nameField;
 
     @FXML
-    private Button commitButton;
+    private TextField priceField;
+
+    @FXML
+    private Button editButton;
+
+    @FXML
+    private Button deleteButton;
 
     private final CurrencyConfig currencyConfig;
 
-    public ItemizePricerProductCell(CurrencyConfig currencyConfig) {
+    public TransactionItemCell(CurrencyConfig currencyConfig) {
         this.currencyConfig = currencyConfig;
 
         loadFXML();
@@ -47,7 +52,7 @@ public class ItemizePricerProductCell extends ListCell<ItemizableItem> {
 
     private void loadFXML() {
         try {
-            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/ui/itemize_pricer_product_cell.fxml"));
+            FXMLLoader loader = new FXMLLoader(IncomeUtilityApplication.class.getResource("layouts/ui/itemize_item_cell.fxml"));
             loader.setController(this);
             rootPane = loader.load();
         } catch (IOException e) {
@@ -62,5 +67,13 @@ public class ItemizePricerProductCell extends ListCell<ItemizableItem> {
     @Override
     public void updateItem(ItemizableItem item, boolean empty) {
         super.updateItem(item, empty);
+
+        if (item == null || empty) {
+            setText(null);
+            setGraphic(null);
+        } else {
+            setText(null);
+            setGraphic(rootPane);
+        }
     }
 }

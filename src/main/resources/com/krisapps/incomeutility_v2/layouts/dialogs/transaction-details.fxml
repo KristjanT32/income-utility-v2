@@ -117,7 +117,7 @@
              <Insets top="20.0"/>
          </VBox.margin>
       </VBox>
-       <TitledPane fx:id="itemizedBreakdownPanel" disable="true" expanded="false" text="Itemized breakdown">
+       <TitledPane fx:id="itemizedBreakdownPanel" expanded="false" text="Itemized breakdown">
            <content>
                <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308"
                            maxWidth="1.7976931348623157E308">
@@ -125,12 +125,13 @@
                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
                    </padding>
                    <content>
-                       <ListView maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"/>
+                       <ListView fx:id="transactionItemsList" maxHeight="1.7976931348623157E308"
+                                 maxWidth="1.7976931348623157E308"/>
                    </content>
                </ScrollPane>
            </content>
        </TitledPane>
-       <TitledPane text="More info">
+       <TitledPane expanded="false" text="More info">
            <content>
                <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308"
                            maxWidth="1.7976931348623157E308">
@@ -200,7 +201,15 @@
             <Insets top="10.0" />
          </VBox.margin>
          <children>
-            <Button fx:id="editButton" alignment="BASELINE_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Edit" textAlignment="CENTER" HBox.hgrow="SOMETIMES">
+             <Button fx:id="itemizeButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Itemize"
+                     HBox.hgrow="ALWAYS">
+                 <graphic>
+                     <FontIcon iconLiteral="fltfmz-text-bullet-list-add-24" iconSize="12"/>
+                 </graphic>
+             </Button>
+             <Button fx:id="editButton" alignment="BASELINE_CENTER" maxHeight="1.7976931348623157E308"
+                     maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Edit" textAlignment="CENTER"
+                     HBox.hgrow="ALWAYS">
                <graphic>
                   <FontIcon iconLiteral="fltfal-edit-20" iconSize="12" textAlignment="CENTER" wrappingWidth="12.0" />
                </graphic>

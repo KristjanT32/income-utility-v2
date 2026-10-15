@@ -213,6 +213,19 @@ public class DataManager {
                      	FOREIGN KEY("productId") REFERENCES "products"("id")
                      )
                     """);
+
+            statement.execute("""
+                    CREATE TABLE IF NOT EXISTS "transaction_items" (
+                    	"id"	INTEGER NOT NULL,
+                    	"transaction_id"	INTEGER NOT NULL,
+                    	"product_id"	INTEGER,
+                    	"custom_product_name"	TEXT,
+                    	"custom_product_price"	REAL,
+                    	PRIMARY KEY("id" AUTOINCREMENT),
+                    	FOREIGN KEY("product_id") REFERENCES "products"("id"),
+                    	FOREIGN KEY("transaction_id") REFERENCES "transactions"("id")
+                    )
+                    """);
             statement.execute("PRAGMA user_version = 1");
 
             statement.execute("INSERT OR IGNORE INTO transaction_categories (id, displayName) VALUES (0, 'No custom category')");
@@ -420,7 +433,8 @@ public class DataManager {
                     TransactionCategory.valueOf(row.getString("category")),
                     row.getString("displayName"),
                     row.getString("comment"),
-                    uuid
+                    uuid,
+                    row.getInt("id")
             );
             case TRANSFER -> t = new Transaction(
                     type,
@@ -431,7 +445,8 @@ public class DataManager {
                     TransactionCategory.valueOf(row.getString("category")),
                     row.getString("displayName"),
                     row.getString("comment"),
-                    uuid
+                    uuid,
+                    row.getInt("id")
             );
         }
         if (cashewTransactionId != null) {
@@ -758,9 +773,9 @@ public class DataManager {
      * @param timeFilter1          The first time parameter for filtering
      * @param dateFilter2          The second date parameter for filtering
      * @param timeFilter2          The second time parameter for filtering
-     * @param amountFilteringMode The mode for amount filtering. Refer to the documentation for {@link AmountFilterMode} for more info.
-     * @param amount1 The first amount argument for filtering
-     * @param amount2 The second amount argument for filtering
+     * @param amountFilteringMode  The mode for amount filtering. Refer to the documentation for {@link AmountFilterMode} for more info.
+     * @param amount1              The first amount argument for filtering
+     * @param amount2              The second amount argument for filtering
      * @param commentFilter        The comment filter. Must follow the pattern for being included in <code>LIKE</code> statement, e.g. use percent signs in the string for partial matches.
      * @param customCategoryFilter The custom category filter. Must follow the pattern for being included in <code>LIKE</code> statement, e.g. use percent signs in the string for partial matches.
      * @param accountFilter        The account ID whose transactions to query.
@@ -1968,6 +1983,28 @@ public class DataManager {
             statement.executeUpdate();
         } catch (SQLException e) {
             PopupManager.showPopup("Failed to write data!", "An SQL error was encountered while updating transaction item data. Error details:\n" + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    public void updateTransactionItems(int transactionId, List<ItemizableItem> newItems) {
+        List<ItemizableItem> current = getTransactionItems(transactionId);
+        for (ItemizableItem old : current) {
+
+            // Check if an item was deleted
+            Optional<ItemizableItem> match = newItems.stream().filter(item -> item.relationId() == old.relationId()).findFirst();
+            match.ifPresentOrElse(
+                    // Update old item with new data, in case there are any changes
+                    itemizableItem -> updateTransactionItem(old.relationId(), itemizableItem),
+                    () -> {
+                        deleteTransactionItem(old.relationId());
+                    }
+            );
+        }
+
+        for (ItemizableItem newItem : newItems) {
+            if (current.stream().noneMatch(i -> i.relationId() == newItem.relationId())) {
+                addTransactionItem(transactionId, newItem);
+            }
         }
     }
 
