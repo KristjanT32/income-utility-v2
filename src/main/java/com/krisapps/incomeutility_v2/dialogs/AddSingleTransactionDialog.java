@@ -25,7 +25,7 @@ import java.util.function.UnaryOperator;
 public class AddSingleTransactionDialog extends IncomeUtilityDialog<Transaction> {
 
     private final DataManager data = DataManager.getInstance();
-    private final Transaction outputTransaction = new Transaction(null, 0.0d, null, null, null, null, null, null);
+    private final Transaction outputTransaction = new Transaction(null, 0.0d, null, null, null, null, null, null, -1);
     private final UnaryOperator<TextFormatter.Change> numbersOnlyFormatter = (change) -> {
         if (change.getControlNewText().isEmpty()) {
             return change;

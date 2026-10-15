@@ -1,5 +1,6 @@
 package com.krisapps.incomeutility_v2.dialogs;
 
+import com.krisapps.incomeutility_v2.types.data.ItemizableItem;
 import com.krisapps.incomeutility_v2.types.fiscal.Account;
 import com.krisapps.incomeutility_v2.types.fiscal.CurrencyConfig;
 import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
@@ -9,11 +10,13 @@ import com.krisapps.incomeutility_v2.types.transaction.TransactionType;
 import com.krisapps.incomeutility_v2.util.DataManager;
 import com.krisapps.incomeutility_v2.util.Formatting;
 import com.krisapps.incomeutility_v2.util.PopupManager;
+import com.krisapps.incomeutility_v2.util.services.TransactionService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.util.HashMap;
 import java.util.Optional;
 
 public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
@@ -22,6 +25,8 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
     private final String DEPOSIT_ICON = "fltral-add-circle-24";
     private final String TRANSFER_ICON = "fltral-arrow-swap-24";
     private final DataManager dataManager = DataManager.getInstance();
+    private final TransactionService transactions = TransactionService.getInstance();
+
     @FXML
     private VBox rootPane;
     @FXML
@@ -58,6 +63,9 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
     private Label pairedIdLabel;
 
     @FXML
+    private Button itemizeButton;
+
+    @FXML
     private Button editButton;
 
     @FXML
@@ -65,6 +73,9 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
 
     @FXML
     private TitledPane itemizedBreakdownPanel;
+
+    @FXML
+    private ListView<ItemizableItem> transactionItemsList;
 
     private final Transaction transaction;
 
@@ -76,8 +87,20 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
         getDialogPane().getButtonTypes().setAll(cancelButton);
         getDialogPane().setMaxWidth(450);
 
+        itemizeButton.managedProperty().bind(itemizeButton.visibleProperty());
         editButton.managedProperty().bind(editButton.visibleProperty());
         deleteButton.managedProperty().bind(deleteButton.visibleProperty());
+
+        itemizeButton.setOnAction((ev) -> {
+            ItemizeTransactionDialog dialog = new ItemizeTransactionDialog(transaction.getDatabaseId(), transactions.getTransactionItems(transaction));
+            Optional<HashMap<ItemizableItem, Integer>> response = dialog.showAndWait();
+            if (response.isPresent()) {
+                HashMap<ItemizableItem, Integer> items = response.get();
+
+                // FIXME: Figure out update logic
+                // dataManager.updateTransactionItems(transaction.getDatabaseId());
+            }
+        });
 
         editButton.setOnAction((ev) -> {
             EditTransactionDialog editDialog = new EditTransactionDialog(transaction, selectedAccount);
@@ -110,6 +133,7 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
         transferPanel.managedProperty().bindBidirectional(transferPanel.visibleProperty());
         amountLabel.managedProperty().bindBidirectional(amountLabel.visibleProperty());
         pairedInfoBox.managedProperty().bind(pairedInfoBox.visibleProperty());
+        itemizedBreakdownPanel.managedProperty().bindBidirectional(itemizedBreakdownPanel.visibleProperty());
 
         updateUI();
     }
@@ -184,5 +208,12 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
         }
 
         idLabel.setText(transaction.getId().toString() + " (Local)");
+
+        if (transactions.isItemized(transaction)) {
+            transactionItemsList.getItems().setAll(transactions.getTransactionItems(transaction));
+            itemizedBreakdownPanel.setVisible(true);
+        } else {
+            itemizedBreakdownPanel.setVisible(false);
+        }
     }
 }

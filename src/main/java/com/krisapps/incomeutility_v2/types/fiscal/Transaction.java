@@ -14,6 +14,7 @@ import java.util.UUID;
 
 public class Transaction {
     private final UUID id;
+    private final int databaseId;
     private TransactionType type;
     private double amount;
     private UUID sourceAccountId;
@@ -23,7 +24,7 @@ public class Transaction {
     private String comment;
     private LocalDateTime timestamp;
 
-    public Transaction(TransactionType type, double amount, UUID account, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, @Nullable UUID id) {
+    public Transaction(TransactionType type, double amount, UUID account, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, @Nullable UUID id, int databaseId) {
         this.type = type;
         this.amount = amount;
         if (type == TransactionType.DEPOSIT || type == TransactionType.WITHDRAWAL) {
@@ -34,9 +35,11 @@ public class Transaction {
         this.comment = comment == null ? "" : comment;
 
         this.id = (id == null ? UUID.randomUUID() : id);
+        this.databaseId = databaseId;
         this.timestamp = timestamp;
     }
-    public Transaction(TransactionType type, double amount, UUID from, UUID to, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, @Nullable UUID id) {
+
+    public Transaction(TransactionType type, double amount, UUID from, UUID to, LocalDateTime timestamp, TransactionCategory category, String customCategory, String comment, @Nullable UUID id, int databaseId) {
         this.type = type;
         this.amount = amount;
         this.sourceAccountId = from;
@@ -45,6 +48,7 @@ public class Transaction {
         this.customCategory = customCategory == null ? "" : customCategory;
         this.comment = comment == null ? "" : comment;
         this.id = (id == null ? UUID.randomUUID() : id);
+        this.databaseId = databaseId;
         this.timestamp = timestamp;
     }
     public Transaction() {
@@ -56,6 +60,7 @@ public class Transaction {
         this.customCategory = "";
         this.comment = "";
         this.id = UUID.randomUUID();
+        this.databaseId = -1;
         this.timestamp = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
     }
 
@@ -202,7 +207,12 @@ public class Transaction {
                 this.category,
                 this.customCategory,
                 this.comment,
-                this.id
+                this.id,
+                this.databaseId
         );
+    }
+
+    public int getDatabaseId() {
+        return this.databaseId;
     }
 }
