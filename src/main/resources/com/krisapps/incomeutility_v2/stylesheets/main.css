@@ -46,6 +46,10 @@
     -fx-padding: 5px;
 }
 
+.itemize-item-list {
+    -fx-padding: 5px;
+}
+
 /* <editor-fold desc="Utility cell"> */
 
 
@@ -153,6 +157,26 @@
     -fx-border-color: black;
 }
 
+/* </editor-fold> */
+
+/* <editor-fold desc="Itemized item cell"> */
+.itemized-item-list {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.itemize-item-list .list-cell:filled, .itemized-item-list {
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-padding: 2px;
+}
+
+.itemize-item-list .list-cell:selected, .itemized-item-list .list-cell:focused {
+    -fx-border-color: black;
+}
 /* </editor-fold> */
 
 /* <editor-fold desc="Ingredient cell"> */

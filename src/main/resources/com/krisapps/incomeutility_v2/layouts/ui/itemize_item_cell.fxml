@@ -8,12 +8,20 @@
 <?import java.lang.String?>
 <?import java.net.URL?>
 <VBox fx:id="rootPane" alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
-      styleClass="product-cell" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+      styleClass="itemized-item-cell" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <HBox fx:id="itemSetupPanel" spacing="5.0" VBox.vgrow="ALWAYS">
             <children>
-                <TextField maxWidth="1.7976931348623157E308" promptText="Enter item name..." HBox.hgrow="ALWAYS"/>
-                <TextField maxWidth="100.0" promptText="Enter price..." HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="nameField" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                           promptText="Enter item name..." HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="priceField" maxHeight="1.7976931348623157E308" maxWidth="100.0"
+                           promptText="Enter price..." HBox.hgrow="ALWAYS"/>
+                <Button fx:id="saveButton" maxHeight="1.7976931348623157E308" minHeight="35.0" minWidth="35.0"
+                        mnemonicParsing="false" styleClass="add-button">
+                    <graphic>
+                        <FontIcon iconLiteral="fltfmz-save-24" iconSize="16"/>
+                    </graphic>
+                </Button>
             </children>
         </HBox>
         <HBox fx:id="itemInfoPanel" alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308"
@@ -48,14 +56,14 @@
                         </Label>
                         <HBox alignment="CENTER" spacing="5.0">
                             <children>
-                                <Button fx:id="editButton" maxHeight="35.0" maxWidth="35.0" mnemonicParsing="false"
-                                        styleClass="edit-button">
+                                <Button fx:id="editButton" maxHeight="1.7976931348623157E308" minHeight="35.0"
+                                        minWidth="35.0" mnemonicParsing="false" styleClass="edit-button">
                                     <graphic>
                                         <FontIcon iconLiteral="fltfal-edit-24" iconSize="16"/>
                                     </graphic>
                                 </Button>
-                                <Button fx:id="deleteButton" maxHeight="1.7976931348623157E308" mnemonicParsing="false"
-                                        styleClass="destructive">
+                                <Button fx:id="deleteButton" maxHeight="1.7976931348623157E308" minHeight="35.0"
+                                        minWidth="35.0" mnemonicParsing="false" styleClass="destructive">
                                     <graphic>
                                         <FontIcon iconLiteral="fltral-delete-24" iconSize="16"/>
                                     </graphic>

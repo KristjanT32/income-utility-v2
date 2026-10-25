@@ -128,4 +128,10 @@ public class IncomeUtilityApplication extends Application {
             System.exit(0);
         });
     }
+
+    public static boolean isDevelopmentEnvironment() {
+        Package pkg = IncomeUtilityApplication.class.getPackage();
+        String version = pkg.getImplementationVersion();
+        return version == null;
+    }
 }

@@ -1,21 +1,19 @@
 package com.krisapps.incomeutility_v2.dialogs;
 
 import com.krisapps.incomeutility_v2.types.data.ItemizableItem;
+import com.krisapps.incomeutility_v2.types.fiscal.Transaction;
 import com.krisapps.incomeutility_v2.types.pricer.Product;
 import com.krisapps.incomeutility_v2.ui.listview.ItemizeItemCellFactory;
 import com.krisapps.incomeutility_v2.util.DataManager;
+import com.krisapps.incomeutility_v2.util.Formatting;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-public class ItemizeTransactionDialog extends IncomeUtilityDialog<HashMap<ItemizableItem, Integer>> {
+public class ItemizeTransactionDialog extends IncomeUtilityDialog<ArrayList<ItemizableItem>> {
 
     @FXML
     private ListView<ItemizableItem> itemList;
@@ -26,13 +24,19 @@ public class ItemizeTransactionDialog extends IncomeUtilityDialog<HashMap<Itemiz
     @FXML
     private Button addPricerItemButton;
 
-    private final int transactionId;
+    @FXML
+    private Label itemizedTotalLabel;
+
+    @FXML
+    private Label unitemizedTotalLabel;
+
+    private final Transaction transaction;
     private final ArrayList<ItemizableItem> items;
     private final DataManager data = DataManager.getInstance();
 
-    public ItemizeTransactionDialog(int transactionId, List<ItemizableItem> currentItems) {
+    public ItemizeTransactionDialog(Transaction t, List<ItemizableItem> currentItems) {
         super("itemize-transaction.fxml", "Itemize transaction");
-        this.transactionId = transactionId;
+        this.transaction = t;
         this.items = new ArrayList<>(currentItems);
 
         getDialogPane().getButtonTypes().setAll(
@@ -40,22 +44,49 @@ public class ItemizeTransactionDialog extends IncomeUtilityDialog<HashMap<Itemiz
                 new ButtonType(!currentItems.isEmpty() ? "Discard changes" : "Cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
         );
 
+        setResultConverter(button -> {
+            if (button.getButtonData().equals(ButtonBar.ButtonData.APPLY)) {
+                return items;
+            } else {
+                return null;
+            }
+        });
+
         initUI();
     }
 
+    private void refreshUI() {
+        double itemizedTotal = items.stream().mapToDouble(ItemizableItem::price).sum();
+        itemizedTotalLabel.setText(Formatting.formatMoney(itemizedTotal));
+        unitemizedTotalLabel.setText(Formatting.formatMoney(transaction.getAbsoluteAmount() - itemizedTotal));
+        itemList.getItems().setAll(items);
+        itemList.refresh();
+    }
+
     private void initUI() {
-        itemList.setCellFactory(new ItemizeItemCellFactory(DataManager.getInstance().getPricerCurrencyConfiguration()));
-        itemList.getItems().addAll(items);
+        itemList.setCellFactory(new ItemizeItemCellFactory(DataManager.getInstance().getPricerCurrencyConfiguration(), (oldItem, newItem) -> {
+            items.removeIf(i -> i.isEmpty() || i.is(oldItem));
+            items.add(newItem);
+            refreshUI();
+        }, (item) -> {
+            items.removeIf(i -> i.is(item));
+            refreshUI();
+        }));
 
         addCustomItemButton.setOnAction(_ -> {
-
+            items.add(new ItemizableItem(-1, transaction.getDatabaseId(), -1, null, null));
+            itemList.getItems().setAll(items);
         });
 
         addPricerItemButton.setOnAction(_ -> {
-            ProductPickerDialog dialog = new ProductPickerDialog("Select an existing product to add to the transaction", data.getProducts());
+            ProductPickerDialog dialog = new ProductPickerDialog("Product picker");
+            dialog.setPrimaryLabel("Select an existing product to add to the transaction");
+            dialog.setItems(data.getProducts());
             Optional<Product> selection = dialog.showAndWait();
 
-            selection.ifPresent(product -> items.add(ItemizableItem.ofPricerProduct(product, transactionId)));
+            selection.ifPresent(product -> items.add(ItemizableItem.ofPricerProduct(product, transaction.getDatabaseId())));
+            itemList.getItems().setAll(items);
         });
+        refreshUI();
     }
 }

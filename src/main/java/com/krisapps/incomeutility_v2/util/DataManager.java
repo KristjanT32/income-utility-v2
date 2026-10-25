@@ -493,14 +493,14 @@ public class DataManager {
         }
     }
 
-    public static ItemizableItem mapResultSetToTransactionItem(ResultSet response) throws SQLException {
+    public static ItemizableItem mapResultSetToTransactionItem(ResultSet response, boolean usePricerProductData) throws SQLException {
         try {
             return new ItemizableItem(
                     response.getInt("id"),
                     response.getInt("transaction_id") == 0 ? -1 : response.getInt("transaction_id"),
                     response.getInt("product_id") == 0 ? -1 : response.getInt("product_id"),
-                    response.getString("custom_product_name"),
-                    response.getDouble("custom_product_price")
+                    usePricerProductData ? response.getString("name") : response.getString("custom_product_name"),
+                    usePricerProductData ? response.getDouble("price") : response.getDouble("custom_product_price")
             );
         } catch (SQLException e) {
             log("Failed to map the supplied ResultSet to a ItemizableItem record!");
@@ -1153,11 +1153,11 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transaction_items;")) {
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transaction_items JOIN products pr ON product_id = pr.id;")) {
             try (ResultSet response = stmt.executeQuery()) {
                 List<ItemizableItem> out = new ArrayList<>();
                 while (response.next()) {
-                    out.add(mapResultSetToTransactionItem(response));
+                    out.add(mapResultSetToTransactionItem(response, true));
                 }
 
                 return out;
@@ -1173,13 +1173,13 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transaction_items WHERE transaction_id = ?;")) {
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transaction_items JOIN products pr ON product_id = pr.id WHERE transaction_id = ?;")) {
             stmt.setInt(1, transactionId);
 
             try (ResultSet response = stmt.executeQuery()) {
                 List<ItemizableItem> out = new ArrayList<>();
                 while (response.next()) {
-                    out.add(mapResultSetToTransactionItem(response));
+                    out.add(mapResultSetToTransactionItem(response, true));
                 }
 
                 return out;
@@ -1195,12 +1195,12 @@ public class DataManager {
             currentConnection = getDatabaseConnection();
         }
 
-        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transaction_items WHERE id = ?;")) {
+        try (PreparedStatement stmt = currentConnection.prepareStatement("SELECT * FROM transaction_items JOIN products pr ON product_id = pr.id WHERE transaction_items.id = ?;")) {
             stmt.setInt(1, itemId);
 
             try (ResultSet response = stmt.executeQuery()) {
                 if (response.next()) {
-                    return Optional.of(mapResultSetToTransactionItem(response));
+                    return Optional.of(mapResultSetToTransactionItem(response, true));
                 } else {
                     return Optional.empty();
                 }
@@ -1950,8 +1950,8 @@ public class DataManager {
                 statement.setNull(4, Types.REAL);
             } else {
                 statement.setNull(2, Types.INTEGER);
-                statement.setString(3, item.itemName());
-                statement.setDouble(4, item.itemPrice());
+                statement.setString(3, item.name());
+                statement.setDouble(4, item.price());
             }
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -1976,8 +1976,8 @@ public class DataManager {
                 statement.setNull(4, Types.REAL);
             } else {
                 statement.setNull(2, Types.INTEGER);
-                statement.setString(3, data.itemName());
-                statement.setDouble(4, data.itemPrice());
+                statement.setString(3, data.name());
+                statement.setDouble(4, data.price());
             }
             statement.setInt(5, itemId);
             statement.executeUpdate();
@@ -1987,8 +1987,8 @@ public class DataManager {
     }
 
     public void updateTransactionItems(int transactionId, List<ItemizableItem> newItems) {
-        List<ItemizableItem> current = getTransactionItems(transactionId);
-        for (ItemizableItem old : current) {
+        List<ItemizableItem> oldItems = getTransactionItems(transactionId);
+        for (ItemizableItem old : oldItems) {
 
             // Check if an item was deleted
             Optional<ItemizableItem> match = newItems.stream().filter(item -> item.relationId() == old.relationId()).findFirst();
@@ -2002,7 +2002,7 @@ public class DataManager {
         }
 
         for (ItemizableItem newItem : newItems) {
-            if (current.stream().noneMatch(i -> i.relationId() == newItem.relationId())) {
+            if (oldItems.stream().noneMatch(i -> i.relationId() == newItem.relationId())) {
                 addTransactionItem(transactionId, newItem);
             }
         }

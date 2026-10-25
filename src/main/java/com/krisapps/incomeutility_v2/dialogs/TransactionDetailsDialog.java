@@ -16,7 +16,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Optional;
 
 public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
@@ -92,14 +92,11 @@ public class TransactionDetailsDialog extends IncomeUtilityDialog<Void> {
         deleteButton.managedProperty().bind(deleteButton.visibleProperty());
 
         itemizeButton.setOnAction((ev) -> {
-            ItemizeTransactionDialog dialog = new ItemizeTransactionDialog(transaction.getDatabaseId(), transactions.getTransactionItems(transaction));
-            Optional<HashMap<ItemizableItem, Integer>> response = dialog.showAndWait();
-            if (response.isPresent()) {
-                HashMap<ItemizableItem, Integer> items = response.get();
-
-                // FIXME: Figure out update logic
-                // dataManager.updateTransactionItems(transaction.getDatabaseId());
-            }
+            ItemizeTransactionDialog dialog = new ItemizeTransactionDialog(transaction, transactions.getTransactionItems(transaction));
+            Optional<ArrayList<ItemizableItem>> response = dialog.showAndWait();
+            response.ifPresent(items -> {
+                dataManager.updateTransactionItems(transaction.getDatabaseId(), items);
+            });
         });
 
         editButton.setOnAction((ev) -> {

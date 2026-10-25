@@ -62,7 +62,8 @@
                         <Insets bottom="5.0"/>
                     </VBox.margin>
                 </VBox>
-                <ListView fx:id="itemList" maxWidth="1.7976931348623157E308" VBox.vgrow="SOMETIMES"/>
+                <ListView fx:id="itemList" maxWidth="1.7976931348623157E308" styleClass="itemize-item-list"
+                          VBox.vgrow="SOMETIMES"/>
             </children>
         </VBox>
         <HBox spacing="25.0">
@@ -71,8 +72,8 @@
                     <children>
                         <Label maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Itemized total:"
                                HBox.hgrow="ALWAYS"/>
-                        <Label alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="0.00"
-                               HBox.hgrow="SOMETIMES">
+                        <Label fx:id="itemizedTotalLabel" alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308"
+                               text="0.00" HBox.hgrow="SOMETIMES">
                             <styleClass>
                                 <String fx:value="medium-label"/>
                                 <String fx:value="bold"/>
@@ -84,8 +85,8 @@
                     <children>
                         <Label maxWidth="1.7976931348623157E308" styleClass="medium-label" text="Miscellaneous:"
                                HBox.hgrow="ALWAYS"/>
-                        <Label alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" text="0.00"
-                               HBox.hgrow="SOMETIMES">
+                        <Label fx:id="unitemizedTotalLabel" alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308"
+                               text="0.00" HBox.hgrow="SOMETIMES">
                             <styleClass>
                                 <String fx:value="medium-label"/>
                                 <String fx:value="bold"/>
